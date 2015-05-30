@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.22823.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smoke_test", "smoke_test\smoke_test.vcxproj", "{6EC13C16-751C-47D6-A991-6D13F85ACBED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6EC13C16-751C-47D6-A991-6D13F85ACBED}.Debug|x86.ActiveCfg = Debug|Win32
+		{6EC13C16-751C-47D6-A991-6D13F85ACBED}.Debug|x86.Build.0 = Debug|Win32
+		{6EC13C16-751C-47D6-A991-6D13F85ACBED}.Release|x86.ActiveCfg = Release|Win32
+		{6EC13C16-751C-47D6-A991-6D13F85ACBED}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
