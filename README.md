@@ -13,7 +13,7 @@ Unicode Transformation Format encodings UTF-8, UTF-16, and UTF-32.
 The relationship between character type and supported encodings is shown in the
 following table:
 
-| Type | Encodings ||
+| Type | Encodings |
 | ----- | ------ |
 | `char` | native, any with `codecvt<wchar_t, char>`, UTF-8 |
 | `wchar_t` | native |
