@@ -49,18 +49,52 @@ namespace string_encoding
 
 namespace detail
 {
+
+  //  narrow to narrow
   template <class InputIterator, class OutputIterator, class ErrorHandler>
   OutputIterator recode(narrow, narrow,
     InputIterator first, InputIterator last, OutputIterator result,
     const std::locale& loc, ErrorHandler)
   {
-    static_assert(std::is_same<std::iterator_traits<InputIterator>::value_type, char>::value,
-      "narrow encoding requires InputIterator value_type be char");
-    //static_assert(std::is_same<std::iterator_traits<OutputIterator>::value_type, char>::value,
-    //  "narrow encoding requires OutputIterator value_type be char");
-
     for (; first != last; ++first, ++result)
       *result = *first;
+    return result;
+  }
+
+  //  narrow to wide
+  template <class InputIterator, class OutputIterator, class ErrorHandler>
+  OutputIterator recode(narrow, wide,
+    InputIterator first, InputIterator last, OutputIterator result,
+    const std::locale& loc, ErrorHandler eh)
+  {
+    constexpr std::size_t buf_size = 20;  // TODO increase this after initial testing
+    char in[buf_size];
+    const char* in_end = &in[0] + buf_size;
+    wchar_t out[buf_size];
+    const std::codecvt<wchar_t,char,mbstate_t>& cvt =
+      std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(loc);
+    std::mbstate_t state  = std::mbstate_t();
+    wchar_t* out_next;
+
+    while (first != last)
+    {
+      //  fill the in buffer
+      char* in_last = &in[0];
+      for (; first != last && in_last != in_end; ++in_last, ++first)
+        *in_last = *first;
+
+      //  convert in buffer to out buffer
+      const char* in_next;
+      std::codecvt_base::result cvt_result
+        = cvt.in(state, in, in_last, in_next, out, out + buf_size, out_next);
+
+      // need to deal with cvt_result  ok, partial, error, noconv
+
+      //  copy the out buffer to result
+      for (const wchar_t* itr = &out[0]; itr != out_next; ++itr, ++result)
+        *result = *itr;
+    }
+
     return result;
   }
 
