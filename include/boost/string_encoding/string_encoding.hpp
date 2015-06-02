@@ -3,6 +3,8 @@
 
 #include <iterator>
 #include <type_traits>
+#include <boost/config.hpp>
+#include <boost/assert.hpp>
 
 namespace boost
 {
@@ -73,7 +75,7 @@ namespace detail
     wchar_t out[buf_size];
     const std::codecvt<wchar_t,char,mbstate_t>& cvt =
       std::use_facet<std::codecvt<wchar_t, char, std::mbstate_t> >(loc);
-    std::mbstate_t state  = std::mbstate_t();
+    std::mbstate_t mbstate  = std::mbstate_t();
     wchar_t* out_next;
 
     while (first != last)
@@ -83,16 +85,38 @@ namespace detail
       for (; first != last && in_last != in_end; ++in_last, ++first)
         *in_last = *first;
 
-      //  convert in buffer to out buffer
-      const char* in_next;
-      std::codecvt_base::result cvt_result
-        = cvt.in(state, in, in_last, in_next, out, out + buf_size, out_next);
+      //  loop until the entire input buffer is processed by the codecvt facet; 
+      //  required because the codecvt facet will not process the entire input sequence
+      //  when an error occurs or the in buffer ended with only a portion of a multibyte
+      //  character.
+      char* in_first = &in[0];
+      for (; in_first != in_last;)
+      {
+        //  convert in buffer to out buffer
+        const char* in_next;
+        std::codecvt_base::result cvt_result
+          = cvt.in(mbstate, in, in_last, in_next, out, out + buf_size, out_next);
 
-      // need to deal with cvt_result  ok, partial, error, noconv
+        BOOST_ASSERT(cvt_result != std::codecvt_base::noconv);
 
-      //  copy the out buffer to result
-      for (const wchar_t* itr = &out[0]; itr != out_next; ++itr, ++result)
-        *result = *itr;
+        if (cvt_result == std::codecvt_base::error)
+        {
+          //BOOST_ASSERT_MSG(false, "error handling not implemented yet")
+          wchar_t placeholder = eh()
+        }
+
+        //  Note: it is not necessary to further distinguish between an error, partial,
+        //  or ok result. The distinctiion is already captured in the mbstate.
+
+        //  copy out buffer to result
+        for (const wchar_t* itr = &out[0]; itr != out_next; ++itr, ++result)
+          *result = *itr;
+
+        in_first = in_next;
+      }
+
+      //  process cvt_result ok, partial, error
+
     }
 
     return result;
