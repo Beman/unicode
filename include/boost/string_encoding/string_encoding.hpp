@@ -60,32 +60,41 @@ namespace string_encoding
   //  to eh(itr) may throw an exception, write a sequence of charT to itr, or do nothing.
 
   template <class charT, class OutputIterator>
-  class throw_cvt;   // default error handler; throws exception of type conversion_error
+  class throw_cvt_error;   // default error handler; throws exception of type conversion_error
 
   //  recode  --------------------------------------------------------------------------//
 
-  //template <class FromEncoding, class ToEncoding, class InputIterator,
-  //class OutputIterator, class ErrorHandler = error_handler>
-  //  OutputIterator
-  //  recode(InputIterator first, InputIterator last, OutputIterator result,
-  //    const std::locale& loc, ErrorHandler eh = error_handler());
+  template <class FromEncoding, class ToEncoding, class InputIterator,
+  class OutputIterator, class ErrorHandler = error_handler>
+  inline OutputIterator
+    recode(InputIterator first, InputIterator last, OutputIterator result,
+      Error eh = throw_cvt_error<>());
 
-  //template <class FromEncoding, class ToEncoding, class InputIterator,
-  //class OutputIterator, class ErrorHandler = error_handler>
-  //  OutputIterator
-  //  recode(InputIterator first, InputIterator last, OutputIterator result,
-  //    ErrorHandler eh = error_handler());
+  template <class FromEncoding, class ToEncoding, class InputIterator,
+  class OutputIterator, class ErrorHandler = error_handler>
+    OutputIterator
+    recode(InputIterator first, InputIterator last, OutputIterator result,
+      const std::codecvt<wchar_t, char>& loc, Error eh = error_handler());
 
-  //  to_*string family  ---------------------------------------------------------------//
+  //  make_recoded_string
 
-  template <class charT, class traits, template<class> class Error = error_handler<char>,
-  class ToTraits = std::char_traits<charT>, class ToAlloc = std::allocator < charT >>
-    inline std::basic_string<char, ToTraits, ToAlloc>  
-    to_string(const boost::basic_string_ref<charT, traits>& sv,
-      Error eh = Error())
-    {
-      cout << "to_string\n"; 
-    }
+  template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
+    std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>, class class Error>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>  
+    make_recoded_string_via_codecvt(const boost::basic_string_ref<FromCharT, FromTraits>& v,
+      Error eh = Error<ToCharT, OutputIterator>, const std::codecvt<wchar_t, char>&)
+
+  ////  to_*string family  ---------------------------------------------------------------//
+
+  //template <class charT, class traits, template<class> class Error = error_handler<char>,
+  //class ToTraits = std::char_traits<charT>, class ToAlloc = std::allocator < charT >>
+  //  inline std::basic_string<char, ToTraits, ToAlloc>  
+  //  to_string(const boost::basic_string_ref<charT, traits>& sv,
+  //    Error eh = Error())
+  //  {
+  //    cout << "to_string\n"; 
+  //  }
 
 
 //--------------------------------------------------------------------------------------//
