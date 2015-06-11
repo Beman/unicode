@@ -31,6 +31,15 @@ namespace
     cout << "  recode_test done" << endl;
   }
 
+  void make_recoded_string_test()
+  {
+    cout << "make_recoded_string_test" << endl;
+    boost::string_ref csref(cs);
+    u16string ru16 = make_recoded_string<utf8, utf16>(csref);
+    BOOST_TEST(ru16 == cu16);
+    cout << "  make_recoded_string_test done" << endl;
+  }
+
 }  // unnamed namespace
 
 int main()
@@ -47,7 +56,7 @@ int main()
   //assert(w == wresult);
 
   recode_test();
-
+  make_recoded_string_test();
 
   return boost::report_errors();
 }

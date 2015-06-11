@@ -35,23 +35,16 @@ namespace string_encoding
   struct utf16 {};   // char16_t
   struct utf32 {};   // char32_t
 
-//  //  default encodings
-//  template <class Char>
-//  struct encoding;
-//  template <> struct encoding<char>     { typedef utf8  type; };
-//  template <> struct encoding<wchar_t>  { typedef utf16 type; };  // Windows
-////  template <> struct encoding<wchar_t>  { typedef utf32 type; };
-//  template <> struct encoding<char16_t> { typedef utf16 type; };
-//  template <> struct encoding<char32_t> { typedef utf32 type; };
 
+  //  encoding value_type type-trait
 
-  //template <class Encoding>
-  //struct encoding{ typedef void value_type; };
-  //template <> struct encoding<narrow> { typedef char value_type; };
-  //template <> struct encoding<wide> { typedef wchar_t value_type; };
-  //template <> struct encoding<utf8> { typedef char value_type; };
-  //template <> struct encoding<utf16> { typedef char16_t value_type; };
-  //template <> struct encoding<utf32> { typedef char32_t value_type; };
+  template <class Encoding> struct encoded;
+  template <> struct encoded<narrow> { typedef char type; };
+  template <> struct encoded<wide>   { typedef wchar_t type; };
+  template <> struct encoded<utf8>   { typedef char type; };
+  template <> struct encoded<utf16>  { typedef char16_t type; };
+  template <> struct encoded<utf32>  { typedef char32_t type; };
+
 
   //  Error handling  ------------------------------------------------------------------//
 
@@ -104,18 +97,21 @@ namespace string_encoding
 
   //  make_recoded_string  -------------------------------------------------------------//
 
-  //template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
-  //  std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
-  //class ToAlloc = std::allocator<ToCharT>, class class Error>
-  //  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-  //  make_recoded_string(const boost::basic_string_ref<FromCharT, FromTraits>& v,
-  //    Error eh = Error<ToCharT, OutputIterator>, const ToAlloc& a)
-  //{
-  //  std::basic_string<encoding<ToEncoding>::value_type, ToTraits, ToAlloc>
-  //    tmp(a);
-  //  recode(v.cbegin(), v.cend(), std::back_inserter<tmp>, eh);
-  //  return tmp;
-  //}
+  template <class FromEncoding, class ToEncoding, class FromTraits =
+    std::char_traits<encoded<FromEncoding>::type>,
+    class ToTraits = std::char_traits<encoded<ToEncoding>::type>,
+    class ToAlloc = std::allocator<encoded<ToEncoding>::type> /*,
+    class class Error*/>
+  inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
+    make_recoded_string(const boost::basic_string_ref<typename encoded<FromEncoding>::type,
+      FromTraits>& v,
+      /*Error eh = Error<ToCharT, OutputIterator>,*/
+      const ToAlloc& a = std::allocator<typename encoded<ToEncoding>::type>())
+  {
+    std::basic_string<encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
+    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp) /*, eh*/);
+    return tmp;
+  }
 
   //template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
   //  std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
