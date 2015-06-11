@@ -35,14 +35,14 @@ namespace string_encoding
   struct utf16 {};   // char16_t
   struct utf32 {};   // char32_t
 
-  //  default encodings
-  template <class Char>
-  struct encoding;
-  template <> struct encoding<char>     { typedef utf8  type; };
-  template <> struct encoding<wchar_t>  { typedef utf16 type; };  // Windows
-//  template <> struct encoding<wchar_t>  { typedef utf32 type; };
-  template <> struct encoding<char16_t> { typedef utf16 type; };
-  template <> struct encoding<char32_t> { typedef utf32 type; };
+//  //  default encodings
+//  template <class Char>
+//  struct encoding;
+//  template <> struct encoding<char>     { typedef utf8  type; };
+//  template <> struct encoding<wchar_t>  { typedef utf16 type; };  // Windows
+////  template <> struct encoding<wchar_t>  { typedef utf32 type; };
+//  template <> struct encoding<char16_t> { typedef utf16 type; };
+//  template <> struct encoding<char32_t> { typedef utf32 type; };
 
 
   //template <class Encoding>
@@ -53,6 +53,8 @@ namespace string_encoding
   //template <> struct encoding<utf16> { typedef char16_t value_type; };
   //template <> struct encoding<utf32> { typedef char32_t value_type; };
 
+  //  Error handling  ------------------------------------------------------------------//
+
   //  Template template parameters named Error are error handling function object types
   //  taking two template parameters class charT and class OutputIterator.
   //  Requirements : if itr is an object of type OutputIterator and c is an object of type
@@ -60,30 +62,67 @@ namespace string_encoding
   //  to eh(itr) may throw an exception, write a sequence of charT to itr, or do nothing.
 
   template <class charT, class OutputIterator>
-  class throw_cvt_error;   // default error handler; throws exception of type conversion_error
+  class err_hdlr;   // default error handler
+
+  //  recode helpers -------------------------------------------------------------------//
+
+  namespace detail
+  {
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf8, utf16,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf8 to 16" << endl;
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator recode(utf16, utf8, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      cout << "  utf16 to 8" << endl;
+    }
+  } // namespace detail
 
   //  recode  --------------------------------------------------------------------------//
 
   template <class FromEncoding, class ToEncoding, class InputIterator,
-  class OutputIterator, class ErrorHandler = error_handler>
+    class OutputIterator/*,
+    class Error = err_hdlr<encoding<ToEncoding>::value_type, OutputIterator>*/>
   inline OutputIterator
-    recode(InputIterator first, InputIterator last, OutputIterator result,
-      Error eh = throw_cvt_error<>());
+    recode(InputIterator first, InputIterator last, OutputIterator result /*,
+      Error eh = Error()*/)
+    {
+      return detail::recode(FromEncoding(), ToEncoding(), first, last, result /*, eh*/);
+    }
 
-  template <class FromEncoding, class ToEncoding, class InputIterator,
-  class OutputIterator, class ErrorHandler = error_handler>
-    OutputIterator
-    recode(InputIterator first, InputIterator last, OutputIterator result,
-      const std::codecvt<wchar_t, char>& loc, Error eh = error_handler());
+  //template <class FromEncoding, class ToEncoding, class InputIterator,
+  //class OutputIterator, class ErrorHandler = error_handler>
+  //  OutputIterator
+  //  recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
+  //    const std::codecvt<wchar_t, char>& loc, Error eh = error_handler());
 
-  //  make_recoded_string
+  //  make_recoded_string  -------------------------------------------------------------//
 
-  template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
-    std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>, class class Error>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>  
-    make_recoded_string_via_codecvt(const boost::basic_string_ref<FromCharT, FromTraits>& v,
-      Error eh = Error<ToCharT, OutputIterator>, const std::codecvt<wchar_t, char>&)
+  //template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
+  //  std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
+  //class ToAlloc = std::allocator<ToCharT>, class class Error>
+  //  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //  make_recoded_string(const boost::basic_string_ref<FromCharT, FromTraits>& v,
+  //    Error eh = Error<ToCharT, OutputIterator>, const ToAlloc& a)
+  //{
+  //  std::basic_string<encoding<ToEncoding>::value_type, ToTraits, ToAlloc>
+  //    tmp(a);
+  //  recode(v.cbegin(), v.cend(), std::back_inserter<tmp>, eh);
+  //  return tmp;
+  //}
+
+  //template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
+  //  std::char_traits<FromCharT>, class ToCharT, class  ToTraits = std::char_traits<ToCharT>,
+  //class ToAlloc = std::allocator<ToCharT>, class class Error>
+  //  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //  make_recoded_string_via_codecvt(const boost::basic_string_ref<FromCharT, FromTraits>& v,
+  //    Error eh = Error<ToCharT, OutputIterator>, const std::codecvt<wchar_t, char>&);
 
   ////  to_*string family  ---------------------------------------------------------------//
 
@@ -94,6 +133,20 @@ namespace string_encoding
   //    Error eh = Error())
   //  {
   //    cout << "to_string\n"; 
+  //  }
+
+  //  convenience functions  -----------------------------------------------------------//
+
+  //template <class ToTraits = std::char_traits<char16_t>,
+  //  class ToAlloc = std::allocator<char16_t>,
+  //  class FromTraits = std::char_traits<char>>
+  //  inline
+  //  std::basic_string<char16_t, ToTraits, ToAlloc>
+  //    utf8_to_utf16(boost::basic_string_ref<char, FromTraits>& v,
+  //    const ToAlloc& a = ToAlloc())
+  //  {
+  //    return make_recoded_string<utf8, utf16, char, FromTraits, char16_t, ToTraits,
+  //      ToAlloc>(v, a);
   //  }
 
 
