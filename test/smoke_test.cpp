@@ -1,4 +1,5 @@
 #include <iostream>
+#include <typeinfo>
 #include "../include/boost/string_encoding/string_encoding.hpp"
 #include <cassert>
 #include <string>
@@ -40,6 +41,19 @@ namespace
     cout << "  make_recoded_string_test done" << endl;
   }
 
+  void to_utf16_test()
+  {
+    cout << "to_utf16_test" << endl;
+    boost::string_ref csref(cs);
+    //to_utf16(csref);
+    to_utf16<utf8>(csref);
+    to_utf16<utf8>(cs);
+    boost::wstring_ref cwref(cw);
+    to_utf16(cwref);
+    to_utf16(cw);
+    cout << "  to_utf16_test done" << endl;
+  }
+
 }  // unnamed namespace
 
 int main()
@@ -57,6 +71,7 @@ int main()
 
   recode_test();
   make_recoded_string_test();
+  to_utf16_test();
 
   return boost::report_errors();
 }
