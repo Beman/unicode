@@ -69,6 +69,75 @@ namespace string_encoding
       return result;
     }
 
+    //  utf-8 to utf-32 via finite state machine,
+    //  inspired by Richard Gillam "Unicode Demystified", page 543
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf8, utf32,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf8 to utf32" << endl;
+      constexpr unsigned char X = -1;  // illegal leading byte
+      constexpr unsigned char Y = -2;  // illegal trailing byte
+      constexpr unsigned char states[4][32] =
+      {
+        //00 08 10 18 20 28 30 38 40 48 50 58 60 68 70 78
+        // 80 88 90 98 A0 A8 B0 B8 C0 C8 D0 D8 E0 E8 F0 F8
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 2, 2, 3, 4 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5 }
+      };
+      constexpr unsigned char masks[4] = {0x7F, 0x1F, 0x0F, 0x07};
+
+      int state = 0;
+      unsigned char mask = 0u;
+      char32_t u32 = char32_t(0);  // UTF-32 character being built up
+
+      for (; first != last;)
+      {
+        int c = *first & 0xff;
+        state = states[state][c >> 3];
+
+        BOOST_ASSERT_MSG(state >= 0 && state <= 5, "program logic error");
+
+        switch (state)
+        {
+        case 0:  // last utf-8 character for code point
+          *result++ = u32 + (c & 0x7F);
+          ++first;
+          u32 = char32_t(0);
+          mask = 0;
+          break;
+
+        case 1:
+        case 2:
+        case 3:
+          if (mask == 0)
+            mask = masks[state];
+          u32 += c & mask;
+          u32 <<= 6;
+          mask = static_cast<unsigned char>(0x3F);
+          ++first;
+          break;
+
+        case 4:
+          ++first;
+          // fall through
+        case 5:
+          *result++ = 0xFFFD;
+          state = 0;
+          mask = 0;
+          break;
+        }
+      }
+      return result;
+    }
+
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(narrow, utf16,
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
@@ -157,6 +226,19 @@ namespace string_encoding
     std::cout << " to_utf16() from char" << std::endl;
     std::cout << "   FromEncoding: " <<typeid(FromEncoding).name() << std::endl;;
     return make_recoded_string<FromEncoding, utf16, std::char_traits<char>,
+      ToTraits, ToAlloc>(v, a);
+  }
+
+  //  narrow and utf8 to utf32
+  template <class FromEncoding,
+    class ToTraits = std::char_traits<char32_t>, class ToAlloc = std::allocator<char32_t>>
+  inline std::basic_string<char32_t, ToTraits, ToAlloc>
+    to_utf32(const boost::basic_string_ref<char>& v,
+      const ToAlloc& a = std::allocator<char32_t>())
+  {
+    std::cout << " to_utf32() from char" << std::endl;
+    std::cout << "   FromEncoding: " <<typeid(FromEncoding).name() << std::endl;;
+    return make_recoded_string<FromEncoding, utf32, std::char_traits<char>,
       ToTraits, ToAlloc>(v, a);
   }
 

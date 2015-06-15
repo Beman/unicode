@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <typeinfo>
 #include "../include/boost/string_encoding/string_encoding.hpp"
 #include <cassert>
@@ -54,6 +54,31 @@ namespace
     cout << "  to_utf16_test done" << endl;
   }
 
+  void to_utf32_test()
+  {
+    cout << "to_utf32_test" << endl;
+    boost::string_ref csref(cs);
+    //to_utf32(csref);
+    to_utf32<utf8>(csref);
+    BOOST_TEST(to_utf32<utf8>(cs) == cu32);
+
+    const char32_t kosme[6] = {0x3BA, 0x1F79, 0x3C, 0x3BC, 0x3B5, 0x0};
+//    u32string kosme;
+
+    string u8s(u8"$¢€𐍈");
+    BOOST_TEST_EQ(u8s.size(), 10u);
+    u32string u32r = to_utf32<utf8>(u8s);
+    BOOST_TEST_EQ(u32r.size(), 4u);
+    u32string u32s = {0x24, 0xA2, 0x20AC, 0x10348};
+    BOOST_TEST(u32r == u32s);
+
+
+    //boost::wstring_ref cwref(cw);
+    //to_utf32(cwref);
+    //to_utf32(cw);
+    cout << "  to_utf32_test done" << endl;
+  }
+
 }  // unnamed namespace
 
 int main()
@@ -72,6 +97,7 @@ int main()
   recode_test();
   make_recoded_string_test();
   to_utf16_test();
+  to_utf32_test();
 
   return boost::report_errors();
 }
