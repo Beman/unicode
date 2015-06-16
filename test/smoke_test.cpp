@@ -51,6 +51,16 @@ namespace
     boost::wstring_ref cwref(cw);
     to_utf16(cwref);
     to_utf16(cw);
+
+    u32string u32s(U"$€𐐷𤭢");
+    u16string u16s(u"$€𐐷𤭢");
+    cout << "  u32s.size() " << u32s.size() << endl;
+    cout << "  u16s.size() " << u16s.size() << endl;
+    u16string u16r = to_utf16(u32s);
+    cout << "  u16r.size() " << u16r.size() << endl;
+    BOOST_TEST_EQ(u16r.size(), 6u);
+    BOOST_TEST(u16r == u16s);
+
     cout << "  to_utf16_test done" << endl;
   }
 
@@ -71,6 +81,9 @@ namespace
     BOOST_TEST_EQ(u32r.size(), 4u);
     u32string u32s = {0x24, 0xA2, 0x20AC, 0x10348};
     BOOST_TEST(u32r == u32s);
+
+    u32string u32s2(U"$¢€𐍈");
+    cout << "****" << u32s2.size() << endl;
 
 
     //boost::wstring_ref cwref(cw);

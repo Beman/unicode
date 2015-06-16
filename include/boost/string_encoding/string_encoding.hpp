@@ -7,6 +7,7 @@
 //#include <type_traits>
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
+#include <boost/cstdint.hpp>
 
 //--------------------------------------------------------------------------------------//
 
@@ -61,6 +62,10 @@ namespace string_encoding
 
   namespace detail
   {
+    constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
+    constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
+    constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
+
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
@@ -154,7 +159,7 @@ namespace string_encoding
       return result;
     }
 
-    template <class InputIterator, class OutputIterator, class Error> inline
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf16, utf16, 
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
@@ -162,11 +167,90 @@ namespace string_encoding
       return std::copy(first, last, result);
     }
 
-    template <class InputIterator, class OutputIterator, class Error> inline
+    template <class InputIterator, class OutputIterator/*, class Error*/> inline
     OutputIterator recode(utf32, utf16, 
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf32 to utf16" << endl;
+
+      for (; first != last;)
+      {
+        char32_t c = *first++;
+
+        if (c < 0xD800u)
+        {
+          *result++ = static_cast<char16_t>(c);  // single code unit code point
+        }
+
+        else if (c < 0xDC00)
+        {
+          // c is low surrogate so must be followed by high surrogate
+          if (first != last && *first >= 0xDC00 && *first <= 0xDFFF)
+          {
+            *result++ = static_cast<char16_t>(c);         // low surrogate
+            *result++ = static_cast<char16_t>(*first++);  // high surrogate
+          }
+          else  // low surrogate was not followed by high surrogate
+          {
+            // treat as U+FFFD
+            *result++ = static_cast<char16_t>(0xFFFDu);
+          }
+        }
+
+        else if (c <= 0x10FFFFu)
+        {
+          // split into two surrogates:
+          *result++ = detail::high_surrogate_base + static_cast<char16_t>(c >> 10);
+          *result++ = detail::low_surrogate_base
+            + static_cast<char16_t>(c & detail::ten_bit_mask);
+        }
+        else  // invalid code point
+        {
+          // treat as U+FFFD
+          *result++ = static_cast<char16_t>(0xFFFDu);
+        }
+      }
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator recode(utf32, utf8, 
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf32 to utf8" << endl;
+      
+      for (; first != last; ++first)
+      {
+        char32_t c = *first;
+
+        if (c <= 0x007Fu)
+          *result++ = static_cast<unsigned char>(c);
+        else if (c <= 0x07FFu)
+        {
+          *result++ = static_cast<unsigned char>(0xC0u + (c >> 6));
+          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
+        }
+        else if (c <= 0xFFFFu)
+        {
+          *result++ = static_cast<unsigned char>(0xE0u + (c >> 12));
+          *result++ = static_cast<unsigned char>(0x80u + ((c >> 6) & 0x3Fu));
+          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
+        }
+        else if (c <= 0x10FFFFu)
+        {
+          *result++ = static_cast<unsigned char>(0xF0u + (c >> 18));
+          *result++ = static_cast<unsigned char>(0x80u + ((c >> 12) & 0x3Fu));
+          *result++ = static_cast<unsigned char>(0x80u + ((c >> 6) & 0x3Fu));
+          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
+        }
+        else  // report invalid code point as U+FFFD
+        {
+          *result++ = 0xEF;
+          *result++ = 0xBF;
+          *result++ = 0xBD;
+        }
+      }
+      return result;
     }
 
   } // namespace detail
