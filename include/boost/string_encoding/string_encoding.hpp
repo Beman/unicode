@@ -67,6 +67,40 @@ namespace string_encoding
     constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
 
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(wide, wide,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  wide to wide" << endl;
+      return std::copy(first, last, result);
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf8, utf8,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf8 to utf8" << endl;
+      return std::copy(first, last, result);
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf16, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf16 to utf16" << endl;
+      return std::copy(first, last, result);
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf32, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf32 to utf32" << endl;
+      return std::copy(first, last, result);
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
@@ -189,14 +223,6 @@ namespace string_encoding
     {
       cout << "  wide to utf16" << endl;
       return result;
-    }
-
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
-    OutputIterator recode(utf16, utf16, 
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
-    {
-      cout << "  utf16 to utf16" << endl;
-      return std::copy(first, last, result);
     }
 
     template <class InputIterator, class OutputIterator/*, class Error*/> inline
