@@ -5,6 +5,7 @@
 #include <string>
 #include <iterator>
 #include <boost/core/lightweight_test.hpp>
+#include <boost/endian/conversion.hpp>
 
 using namespace boost::string_encoding;
 using std::string;
@@ -22,7 +23,43 @@ namespace
   const u16string cu16(u"foo bar bah");
   const u32string cu32(U"foo bar bah");
 
-  void recode_test()
+  template <class T>
+  std::string to_hex(T x)
+  {
+    const char hex[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
+    std::string tmp;
+    T big_x;
+    if (sizeof(T) == 1)
+      big_x = boost::endian::native_to_big(static_cast<uint8_t>(x));
+    else if (sizeof(T) == 2)
+      big_x = boost::endian::native_to_big(static_cast<uint16_t>(x));
+    else
+      big_x = boost::endian::native_to_big(x);
+
+    const unsigned char* p = reinterpret_cast<const unsigned char*>(&big_x);
+    const unsigned char* e = p + sizeof(T);
+
+    for (; p < e; ++p)
+    {
+      tmp += hex[*p >> 4];    // high-order nibble
+      tmp += hex[*p & 0x0f];  // low-order nibble
+    }
+    return tmp;
+  }
+
+  template <class String>
+  std::string hex_string(const String& s)
+  {
+    std::string tmp;
+    for (auto x : s)
+    {
+      tmp += " 0x";
+      tmp += to_hex(x);
+    }
+    return tmp;
+  }
+
+void recode_test()
   {
     cout << "recode_test" << endl;
     u16string ru16;
@@ -85,6 +122,17 @@ namespace
     u32string u32s2(U"$¢€𐍈");
     cout << "****" << u32s2.size() << endl;
 
+    u32string u32s3(U"$€𐐷𤭢");
+    BOOST_TEST_EQ(u32s3.size(), 4u);
+    u16string u16s3(u"$€𐐷𤭢");
+    BOOST_TEST_EQ(u16s3.size(), 6u);
+    u32string u32sr3 = to_utf32(u16s3);
+    BOOST_TEST_EQ(u32sr3.size(), 4u);
+    BOOST_TEST(u32sr3 == u32s3);
+
+    cout << "u16s3 :" << hex_string(u16s3) << endl;
+    cout << "u32sr3:" << hex_string(u32sr3) << endl;
+    cout << "u32s3 :" << hex_string(u32s3) << endl;
 
     //boost::wstring_ref cwref(cw);
     //to_utf32(cwref);

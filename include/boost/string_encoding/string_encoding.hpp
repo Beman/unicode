@@ -134,10 +134,42 @@ namespace string_encoding
           ++first;
           // fall through
         case 5:
-          *result++ = 0xFFFD;
+          *result++ = 0xFFFD;  // report error
           state = 0;
           mask = 0;
           break;
+        }
+      }
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf16, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf16 to utf32" << endl;
+
+      for (; first != last;)
+      {
+        char16_t c = *first++;
+
+        if (c < 0xD800 || c > 0xDFFF)  // not a surrogate
+          *result++ = c; // BMP
+        //  verify we have a valid surrogate pair
+        else if (first != last
+                 && (c & 0xFC00) == 0xD800        // 0xD800 to 0xDBFF aka low surrogate
+                 && (*first & 0xFC00) == 0xDC00)  // 0xDC00 to 0xDFFF aka high surrogate
+        {
+          // combine the surrogate pair into a single UTF-32 code point
+          *result++ = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
+        }
+        else
+        {
+          *result++ = 0xFFFD;   // report error
+          // note that first has already been incremented
+          // cases: c was high surrogate          action: do not increment first again
+          //        *first is not high surrogate  action: do not increment first again
+          //        first == last                 action: do not increment first again
         }
       }
       return result;
@@ -346,6 +378,17 @@ namespace string_encoding
   {
     std::cout << " to_utf16() from char16_t" << std::endl;
     return make_recoded_string<utf16, utf16>(v, a);
+  }
+
+  //  utf16 to utf32
+  template <class ToTraits = std::char_traits<char32_t>,
+    class ToAlloc = std::allocator<char32_t>>
+  inline std::basic_string<char32_t, ToTraits, ToAlloc>
+    to_utf32(const boost::basic_string_ref<char16_t>& v,
+      const ToAlloc& a = std::allocator<char32_t>())
+  {
+    std::cout << " to_utf32() from char16_t" << std::endl;
+    return make_recoded_string<utf16, utf32>(v, a);
   }
 
   //  utf32 to utf16
