@@ -106,9 +106,9 @@ void recode_test()
     //to_utf16(csref);
     to_utf16<utf8>(csref);
     to_utf16<utf8>(cs);
-    boost::wstring_ref cwref(cw);
-    to_utf16(cwref);
-    to_utf16(cw);
+    //boost::wstring_ref cwref(cw);
+    //to_utf16(cwref);
+    //to_utf16(cw);
 
     const u32string u32s(U"$€𐐷𤭢");
     const u16string u16s(u"$€𐐷𤭢");
