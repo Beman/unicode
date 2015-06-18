@@ -100,14 +100,6 @@ namespace string_encoding
       return std::copy(first, last, result);
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
-    OutputIterator recode(utf8, utf16,
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
-    {
-      cout << "  utf8 to utf16" << endl;
-      return result;
-    }
-
     //  utf-8 to utf-32 via finite state machine,
     //  inspired by Richard Gillam "Unicode Demystified", page 543
 
@@ -271,7 +263,7 @@ namespace string_encoding
       return result;
     }
 
-    template <class InputIterator, class OutputIterator, class Error> inline
+    template <class InputIterator, class OutputIterator/*, class Error*/> inline
     OutputIterator recode(utf32, utf8, 
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
@@ -303,12 +295,32 @@ namespace string_encoding
         }
         else  // report invalid code point as U+FFFD
         {
-          *result++ = 0xEF;
-          *result++ = 0xBF;
-          *result++ = 0xBD;
+          *result++ = 0xEFu;
+          *result++ = 0xBFu;
+          *result++ = 0xBDu;
         }
       }
       return result;
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf8, utf16,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf8 to utf16" << endl;
+      std::u32string tmp;
+      detail::recode(utf8(), utf32(), first, last, std::back_inserter(tmp));
+      return detail::recode(utf32(), utf16(), tmp.cbegin(), tmp.cend(), result);
+    }
+
+    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    OutputIterator recode(utf16, utf8,
+      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+    {
+      cout << "  utf16 to utf8" << endl;
+      std::u32string tmp;
+      detail::recode(utf16(), utf32(), first, last, std::back_inserter(tmp));
+      return detail::recode(utf32(), utf8(), tmp.cbegin(), tmp.cend(), result);
     }
 
   } // namespace detail
@@ -356,7 +368,40 @@ namespace string_encoding
   //  make_recoded_string_via_codecvt(const boost::basic_string_ref<FromCharT, FromTraits>& v,
   //    Error eh = Error<ToCharT, OutputIterator>, const std::codecvt<wchar_t, char>&);
 
-  //  convenience functions  -----------------------------------------------------------//
+  //------------------------------------------------------------------------------------//
+  //  convenience functions                                                             //
+  //------------------------------------------------------------------------------------//
+
+  //  to_narrow  -----------------------------------------------------------------------//
+  
+  //  to_wide  -------------------------------------------------------------------------//
+
+  //  to_utf8  -------------------------------------------------------------------------//
+
+  //  utf16 to utf8
+  template <class ToTraits = std::char_traits<char>,
+    class ToAlloc = std::allocator<char>>
+  inline std::basic_string<char, ToTraits, ToAlloc>
+    to_utf8(const boost::basic_string_ref<char16_t>& v,
+      const ToAlloc& a = std::allocator<char>())
+  {
+    std::cout << " to_utf8() from char16_t" << std::endl;
+    return make_recoded_string<utf16, utf8>(v, a);
+  }
+
+
+  //  to_utf16  ------------------------------------------------------------------------//
+ 
+  //  wide to utf16
+  template <class ToTraits = std::char_traits<char16_t>,
+    class ToAlloc = std::allocator<char16_t>>
+  inline std::basic_string<char16_t, ToTraits, ToAlloc>
+    to_utf16(const boost::basic_string_ref<wchar_t>& v,
+      const ToAlloc& a = std::allocator<char16_t>())
+  {
+    std::cout << " to_utf16() from wchar_t" << std::endl;
+    return make_recoded_string<wide, utf16>(v, a);
+  }
 
   //  narrow and utf8 to utf16
   template <class FromEncoding,
@@ -371,6 +416,30 @@ namespace string_encoding
       ToTraits, ToAlloc>(v, a);
   }
 
+  //  utf16 to utf16
+  template <class ToTraits = std::char_traits<char16_t>,
+    class ToAlloc = std::allocator<char16_t>>
+  inline std::basic_string<char16_t, ToTraits, ToAlloc>
+    to_utf16(const boost::basic_string_ref<char16_t>& v,
+      const ToAlloc& a = std::allocator<char16_t>())
+  {
+    std::cout << " to_utf16() from char16_t" << std::endl;
+    return make_recoded_string<utf16, utf16>(v, a);
+  }
+
+  //  utf32 to utf16
+  template <class ToTraits = std::char_traits<char16_t>,
+    class ToAlloc = std::allocator<char16_t>>
+  inline std::basic_string<char16_t, ToTraits, ToAlloc>
+    to_utf16(const boost::basic_string_ref<char32_t>& v,
+      const ToAlloc& a = std::allocator<char16_t>())
+  {
+    std::cout << " to_utf16() from char32_t" << std::endl;
+    return make_recoded_string<utf32, utf16>(v, a);
+  }
+
+  //  to_utf32  ------------------------------------------------------------------------//
+
   //  narrow and utf8 to utf32
   template <class FromEncoding,
     class ToTraits = std::char_traits<char32_t>, class ToAlloc = std::allocator<char32_t>>
@@ -384,28 +453,6 @@ namespace string_encoding
       ToTraits, ToAlloc>(v, a);
   }
 
-  //  wide to utf16
-  template <class ToTraits = std::char_traits<char16_t>,
-    class ToAlloc = std::allocator<char16_t>>
-  inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<wchar_t>& v,
-      const ToAlloc& a = std::allocator<char16_t>())
-  {
-    std::cout << " to_utf16() from wchar_t" << std::endl;
-    return make_recoded_string<wide, utf16>(v, a);
-  }
-
-  //  utf16 to utf16
-  template <class ToTraits = std::char_traits<char16_t>,
-    class ToAlloc = std::allocator<char16_t>>
-  inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char16_t>& v,
-      const ToAlloc& a = std::allocator<char16_t>())
-  {
-    std::cout << " to_utf16() from char16_t" << std::endl;
-    return make_recoded_string<utf16, utf16>(v, a);
-  }
-
   //  utf16 to utf32
   template <class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t>>
@@ -415,17 +462,6 @@ namespace string_encoding
   {
     std::cout << " to_utf32() from char16_t" << std::endl;
     return make_recoded_string<utf16, utf32>(v, a);
-  }
-
-  //  utf32 to utf16
-  template <class ToTraits = std::char_traits<char16_t>,
-    class ToAlloc = std::allocator<char16_t>>
-  inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char32_t>& v,
-      const ToAlloc& a = std::allocator<char16_t>())
-  {
-    std::cout << " to_utf16() from char32_t" << std::endl;
-    return make_recoded_string<utf32, utf16>(v, a);
   }
 
 

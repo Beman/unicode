@@ -4,6 +4,7 @@
 #include <cassert>
 #include <string>
 #include <iterator>
+#include <cwchar>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
 
@@ -23,18 +24,23 @@ namespace
   const u16string cu16(u"foo bar bah");
   const u32string cu32(U"foo bar bah");
 
+  template <class T> struct underlying;
+  template<> struct underlying<char> { typedef unsigned char type; };
+  template<> struct underlying<char16_t> { typedef boost::uint_least16_t type; };
+  template<> struct underlying<char32_t> { typedef boost::uint_least32_t type; };
+#if WCHAR_MAX >= 0xFFFFFFFFu
+  template<> struct underlying<wchar_t> { typedef boost::uint_least32_t type; };
+#else
+  template<> struct underlying<wchar_t> { typedef boost::uint_least16_t type; };
+#endif
+
   template <class T>
   std::string to_hex(T x)
   {
     const char hex[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
     std::string tmp;
-    T big_x;
-    if (sizeof(T) == 1)
-      big_x = boost::endian::native_to_big(static_cast<uint8_t>(x));
-    else if (sizeof(T) == 2)
-      big_x = boost::endian::native_to_big(static_cast<uint16_t>(x));
-    else
-      big_x = boost::endian::native_to_big(x);
+    underlying<T>::type big_x
+      = boost::endian::native_to_big(static_cast<underlying<T>::type>(x));
 
     const unsigned char* p = reinterpret_cast<const unsigned char*>(&big_x);
     const unsigned char* e = p + sizeof(T);
@@ -77,6 +83,21 @@ void recode_test()
     BOOST_TEST(ru16 == cu16);
     cout << "  make_recoded_string_test done" << endl;
   }
+ 
+  void to_utf8_test()
+  {
+    cout << "to_utf8_test" << endl;
+    u16string u16s(u"$€𐐷𤭢");
+    string u8s(u8"$€𐐷𤭢");
+    cout << u8s.size() << endl;
+
+    string u8r = to_utf8(u16s);
+    BOOST_TEST_EQ(u8r.size(), u8s.size());
+    BOOST_TEST(u8r == u8s);
+    cout << "u8r :" << hex_string(u8r) << endl;
+
+    cout << "  to_utf8_test done" << endl;
+  }
 
   void to_utf16_test()
   {
@@ -89,13 +110,19 @@ void recode_test()
     to_utf16(cwref);
     to_utf16(cw);
 
-    u32string u32s(U"$€𐐷𤭢");
-    u16string u16s(u"$€𐐷𤭢");
+    const u32string u32s(U"$€𐐷𤭢");
+    const u16string u16s(u"$€𐐷𤭢");
+    const string u8s(u8"$€𐐷𤭢");
     cout << "  u32s.size() " << u32s.size() << endl;
     cout << "  u16s.size() " << u16s.size() << endl;
     u16string u16r = to_utf16(u32s);
     cout << "  u16r.size() " << u16r.size() << endl;
     BOOST_TEST_EQ(u16r.size(), 6u);
+    BOOST_TEST(u16r == u16s);
+
+    u16r.clear();
+    u16r = to_utf16<utf8>(u8s);
+    BOOST_TEST_EQ(u16r.size(), u16s.size());
     BOOST_TEST(u16r == u16s);
 
     cout << "  to_utf16_test done" << endl;
@@ -157,6 +184,7 @@ int main()
 
   recode_test();
   make_recoded_string_test();
+  to_utf8_test();
   to_utf16_test();
   to_utf32_test();
 
