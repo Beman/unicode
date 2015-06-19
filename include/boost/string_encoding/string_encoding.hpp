@@ -447,7 +447,7 @@ namespace string_encoding
   {
     std::cout << " char to_wide()" << std::endl;
     std::cout << "   FromEncoding: " <<typeid(FromEncoding).name() << std::endl;;
-    return make_recoded_string<FromEncoding, wide, std::char_traits<wchar_t>,
+    return make_recoded_string<FromEncoding, wide, std::char_traits<char>,
       ToTraits, ToAlloc>(v, a);
   }
 
