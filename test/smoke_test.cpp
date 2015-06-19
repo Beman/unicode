@@ -134,21 +134,48 @@ void recode_test()
     cout << "  to_utf32_test done" << endl;
   }
 
+  void all_test()
+  {
+    cout << "all_test" << endl;
+
+    BOOST_TEST(to_wide(wstr) == wstr);
+    BOOST_TEST(to_wide<utf8>(u8str) == wstr);
+    BOOST_TEST(to_wide(u16str) == wstr);
+    BOOST_TEST(to_wide(u32str) == wstr);
+
+    BOOST_TEST(to_utf8(wstr) == u8str);
+    BOOST_TEST(to_utf8<utf8>(u8str) == u8str);
+    BOOST_TEST(to_utf8(u16str) == u8str);
+    BOOST_TEST(to_utf8(u32str) == u8str);
+
+    BOOST_TEST(to_utf16(wstr) == u16str);
+    BOOST_TEST(to_utf16<utf8>(u8str) == u16str);
+    BOOST_TEST(to_utf16(u16str) == u16str);
+    BOOST_TEST(to_utf16(u32str) == u16str);
+
+    BOOST_TEST(to_utf32(wstr) == u32str);
+    BOOST_TEST(to_utf32<utf8>(u8str) == u32str);
+    BOOST_TEST(to_utf32(u16str) == u32str);
+    BOOST_TEST(to_utf32(u32str) == u32str);
+
+    cout << "  all_test done" << endl;
+  }
+
 }  // unnamed namespace
 
 int main()
 {
-
+  cout << "wstr   :" << hex_string(wstr) << endl;
   cout << "u8str  :" << hex_string(u8str) << endl;
   cout << "u16str :" << hex_string(u16str) << endl;
   cout << "u32str :" << hex_string(u32str) << endl;
-  cout << "  wstr :" << hex_string(wstr) << endl;
 
   recode_test();
   make_recoded_string_test();
   to_utf8_test();
   to_utf16_test();
   to_utf32_test();
+  all_test();
 
   return boost::report_errors();
 }

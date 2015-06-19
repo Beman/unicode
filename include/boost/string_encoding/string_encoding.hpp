@@ -28,7 +28,7 @@ namespace string_encoding
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
 
-  //  encodings
+  //     encoding       value-type
 
   struct narrow {};  // char
   struct wide {};    // wchar_t
@@ -62,8 +62,10 @@ namespace string_encoding
 
   namespace detail
   {
-    //  wide character encoding is assumed to be utf16 or narrow; this type-trait
-    //  determines which.
+    //  This implementation assumes that wide (i.e. wchar_t) character encoding is always
+    //  UTF-16 or UTF-32. As a result, only conversions between the three UTF encodings
+    //  need to be supported. The type-trait actual<t>::encoding folds wide encoding into
+    //  utf16 or utf32 encoding depending upon the platform.
   
     template <class T> struct actual { typedef T encoding; };
 # if WCHAR_MAX >= 0xFFFFFFFFu
@@ -71,19 +73,14 @@ namespace string_encoding
 # else
     template<> struct actual<wide> { typedef utf16 encoding; };
 # endif
+
+//--------------------------------------------------------------------------------------//
+//                      tag dispatched recode implementations                           //
+//--------------------------------------------------------------------------------------//
     
     constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
     constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
     constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
-
-    //template <class InputIterator, class OutputIterator /*, class Error*/> inline
-    //OutputIterator recode(wide, wide,
-    //  InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
-    //{
-    //  cout << "  wide to wide" << endl;
-    //  return std::copy(first, last, result);
-    //  return result;
-    //}
 
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf8, utf8,
@@ -118,10 +115,10 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf8 to utf32" << endl;
-      constexpr unsigned char X = -1;  // illegal leading byte
-      constexpr unsigned char Y = -2;  // illegal trailing byte
       constexpr unsigned char states[4][32] =
       {
+        // state table
+
         //00 08 10 18 20 28 30 38 40 48 50 58 60 68 70 78
         // 80 88 90 98 A0 A8 B0 B8 C0 C8 D0 D8 E0 E8 F0 F8
         { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -144,18 +141,25 @@ namespace string_encoding
         int c = *first & 0xff;
         state = states[state][c >> 3];
 
+        //   valid state values
+        //
+        //   0 = last, and possibly only, utf-8 character for the current code point;
+        //   1, 2, 3 = more utf-8 input characters to come
+        //   4 = illegal leading byte.
+        //   5 = illegal trailing byte.
+
         BOOST_ASSERT_MSG(state >= 0 && state <= 5, "program logic error");
 
         switch (state)
         {
-        case 0:  // last utf-8 character for code point
+        case 0:  // last utf-8 input character for code point
           *result++ = u32 + (c & 0x7F);
           ++first;
           u32 = char32_t(0);
           mask = 0;
           break;
 
-        case 1:
+        case 1:  // more utf-8 input characters to come
         case 2:
         case 3:
           if (mask == 0)
@@ -367,7 +371,9 @@ namespace string_encoding
       const ToAlloc& a = std::allocator<typename encoded<ToEncoding>::type>())
   {
     std::basic_string<encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
-    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp) /*, eh*/);
+    recode<detail::actual<FromEncoding>::encoding,
+      detail::actual<ToEncoding>::encoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp) /*, eh*/);
     return tmp;
   }
 
