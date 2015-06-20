@@ -355,8 +355,8 @@ namespace string_encoding
     recode(InputIterator first, InputIterator last, OutputIterator result /*,
       Error eh = Error()*/)
     {
-      return detail::recode(detail::actual<FromEncoding>::encoding(),
-        detail::actual<ToEncoding>::encoding(), first, last, result /*, eh*/);
+      return detail::recode(typename detail::actual<FromEncoding>::encoding(),
+        typename detail::actual<ToEncoding>::encoding(), first, last, result /*, eh*/);
     }
 
   //template <class FromEncoding, class ToEncoding, class InputIterator,
@@ -368,9 +368,9 @@ namespace string_encoding
   //  make_recoded_string  -------------------------------------------------------------//
 
   template <class FromEncoding, class ToEncoding, class FromTraits =
-    std::char_traits<encoded<FromEncoding>::type>,
-    class ToTraits = std::char_traits<encoded<ToEncoding>::type>,
-    class ToAlloc = std::allocator<encoded<ToEncoding>::type> /*,
+    std::char_traits<typename encoded<FromEncoding>::type>,
+    class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
+    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type> /*,
     class class Error*/>
   inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
     make_recoded_string(const boost::basic_string_ref<typename encoded<FromEncoding>::type,
@@ -378,7 +378,7 @@ namespace string_encoding
       /*Error eh = Error<ToCharT, OutputIterator>,*/
       const ToAlloc& a = std::allocator<typename encoded<ToEncoding>::type>())
   {
-    std::basic_string<encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
+    std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
     recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp) /*, eh*/);
     return tmp;
   }

@@ -6,6 +6,8 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include <iostream>
+using std::cout;
+using std::endl;
 #include <typeinfo>
 #include "../include/boost/string_encoding/string_encoding.hpp"
 #include <cassert>
@@ -20,8 +22,6 @@ using std::string;
 using std::wstring;
 using std::u16string;
 using std::u32string;
-using std::cout;
-using std::endl;
 
 namespace
 {
@@ -45,8 +45,8 @@ namespace
   {
     const char hex[] = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
     std::string tmp;
-    underlying<T>::type big_x
-      = boost::endian::native_to_big(static_cast<underlying<T>::type>(x));
+    typename underlying<T>::type big_x
+      = boost::endian::native_to_big(static_cast<typename underlying<T>::type>(x));
 
     const unsigned char* p = reinterpret_cast<const unsigned char*>(&big_x);
     const unsigned char* e = p + sizeof(T);
