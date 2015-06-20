@@ -1,0 +1,22 @@
+# Boost String Encoding Library test Jamfile
+
+# Copyright Beman Dawes 2015
+
+# Distributed under the Boost Software License, Version 1.0.
+# See http://www.boost.org/LICENSE_1_0.txt
+
+project
+    : requirements
+      <toolset>msvc:<asynch-exceptions>on
+    ;
+   
+   test-suite "string_encoding"
+       :
+         [ run smoke_test.cpp # sources
+           : # command line
+           : # input files
+           : # requirements
+           : # target name
+         ]
+#         [ run floating_point_test.cpp : : : <test-info>always_show_run_output ]
+       ;
