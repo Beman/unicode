@@ -1,3 +1,10 @@
+//  boost/string_encoding/string_encoding.hpp  -----------------------------------------//
+
+//  © Copyright Beman Dawes 2015
+
+//  Distributed under the Boost Software License, Version 1.0.
+//  See http://www.boost.org/LICENSE_1_0.txt
+
 #if !defined(BOOST_STRING_ENCODING_HPP)
 #define BOOST_STRING_ENCODING_HPP
 
