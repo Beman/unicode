@@ -355,7 +355,8 @@ namespace string_encoding
     recode(InputIterator first, InputIterator last, OutputIterator result /*,
       Error eh = Error()*/)
     {
-      return detail::recode(FromEncoding(), ToEncoding(), first, last, result /*, eh*/);
+      return detail::recode(detail::actual<FromEncoding>::encoding(),
+        detail::actual<ToEncoding>::encoding(), first, last, result /*, eh*/);
     }
 
   //template <class FromEncoding, class ToEncoding, class InputIterator,
@@ -378,9 +379,7 @@ namespace string_encoding
       const ToAlloc& a = std::allocator<typename encoded<ToEncoding>::type>())
   {
     std::basic_string<encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
-    recode<detail::actual<FromEncoding>::encoding,
-      detail::actual<ToEncoding>::encoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp) /*, eh*/);
+    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp) /*, eh*/);
     return tmp;
   }
 
