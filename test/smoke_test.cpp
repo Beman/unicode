@@ -106,7 +106,7 @@ void recode_test()
   void to_utf16_test()
   {
     cout << "to_utf16_test" << endl;
-    to_utf16<utf8>(u8str);
+    to_utf16(u8str);
 
     cout << "  u32s.size() " << u32str.size() << endl;
     cout << "  u16s.size() " << u16str.size() << endl;
@@ -116,7 +116,7 @@ void recode_test()
     BOOST_TEST(u16r == u16str);
 
     u16r.clear();
-    u16r = to_utf16<utf8>(u8str);
+    u16r = to_utf16(u8str);
     BOOST_TEST_EQ(u16r.size(), u16str.size());
     BOOST_TEST(u16r == u16str);
 
@@ -126,11 +126,11 @@ void recode_test()
   void to_utf32_test()
   {
     cout << "to_utf32_test" << endl;
-    BOOST_TEST(to_utf32<utf8>(u8str) == u32str);
+    BOOST_TEST(to_utf32(u8str) == u32str);
 
     string u8s(u8"$¢€𐍈");
     BOOST_TEST_EQ(u8s.size(), 10u);
-    u32string u32r = to_utf32<utf8>(u8s);
+    u32string u32r = to_utf32(u8s);
     BOOST_TEST_EQ(u32r.size(), 4u);
     u32string u32s = {0x24, 0xA2, 0x20AC, 0x10348};
     BOOST_TEST(u32r == u32s);
@@ -146,22 +146,22 @@ void recode_test()
     cout << "all_test" << endl;
 
     BOOST_TEST(to_wide(wstr) == wstr);
-    BOOST_TEST(to_wide<utf8>(u8str) == wstr);
+    BOOST_TEST(to_wide(u8str) == wstr);
     BOOST_TEST(to_wide(u16str) == wstr);
     BOOST_TEST(to_wide(u32str) == wstr);
 
     BOOST_TEST(to_utf8(wstr) == u8str);
-    BOOST_TEST(to_utf8<utf8>(u8str) == u8str);
+    BOOST_TEST(to_utf8(u8str) == u8str);
     BOOST_TEST(to_utf8(u16str) == u8str);
     BOOST_TEST(to_utf8(u32str) == u8str);
 
     BOOST_TEST(to_utf16(wstr) == u16str);
-    BOOST_TEST(to_utf16<utf8>(u8str) == u16str);
+    BOOST_TEST(to_utf16(u8str) == u16str);
     BOOST_TEST(to_utf16(u16str) == u16str);
     BOOST_TEST(to_utf16(u32str) == u16str);
 
     BOOST_TEST(to_utf32(wstr) == u32str);
-    BOOST_TEST(to_utf32<utf8>(u8str) == u32str);
+    BOOST_TEST(to_utf32(u8str) == u32str);
     BOOST_TEST(to_utf32(u16str) == u32str);
     BOOST_TEST(to_utf32(u32str) == u32str);
 
