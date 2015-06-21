@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "smoke_test", "smoke_test\sm
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "c4566", "c4566\c4566.vcxproj", "{5D2C877A-613E-46A7-8DFD-CF0D8E64F284}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "invalid_utf_test", "invalid_utf_test\invalid_utf_test.vcxproj", "{38BF988E-7C69-49B0-8DB1-5CBECD780C41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -21,6 +23,10 @@ Global
 		{5D2C877A-613E-46A7-8DFD-CF0D8E64F284}.Debug|x86.Build.0 = Debug|Win32
 		{5D2C877A-613E-46A7-8DFD-CF0D8E64F284}.Release|x86.ActiveCfg = Release|Win32
 		{5D2C877A-613E-46A7-8DFD-CF0D8E64F284}.Release|x86.Build.0 = Release|Win32
+		{38BF988E-7C69-49B0-8DB1-5CBECD780C41}.Debug|x86.ActiveCfg = Debug|Win32
+		{38BF988E-7C69-49B0-8DB1-5CBECD780C41}.Debug|x86.Build.0 = Debug|Win32
+		{38BF988E-7C69-49B0-8DB1-5CBECD780C41}.Release|x86.ActiveCfg = Release|Win32
+		{38BF988E-7C69-49B0-8DB1-5CBECD780C41}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

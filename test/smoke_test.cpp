@@ -1,4 +1,4 @@
-﻿//  string_encoding/test/s  ------------------------------------------------------------//
+﻿//  string_encoding/test/smoke_test.cpp  -----------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
