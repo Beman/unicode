@@ -11,10 +11,11 @@
 #include <iterator>
 #include <string>
 #include <boost/utility/string_ref.hpp> 
-//#include <type_traits>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/utility/enable_if.hpp>
 
 //--------------------------------------------------------------------------------------//
 
@@ -52,15 +53,12 @@ namespace string_encoding
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
-
-  //  Error handling  ------------------------------------------------------------------//
-
+  //  Error handling:
   //  Template template parameters named Error are error handling function object types
   //  taking two template parameters class charT and class OutputIterator.
   //  Requirements : if itr is an object of type OutputIterator and c is an object of type
   //  charT, *itr = c is well formed. if eh is an error handler function object, a call
   //  to eh(itr) may throw an exception, write a sequence of charT to itr, or do nothing.
-
   template <class charT, class OutputIterator>
   class err_hdlr;   // default error handler
 
@@ -74,7 +72,7 @@ namespace string_encoding
 
   //  recode_codecvt
   template <class FromEncoding, class ToEncoding, class InputIterator,
-    class OutputIterator, class ErrorHandler = error_handler>
+    class OutputIterator/*, class ErrorHandler = error_handler*/>
   inline OutputIterator
     recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
       const codecvt_type& ccvt /*, Error eh = error_handler()*/);
@@ -86,15 +84,19 @@ namespace string_encoding
     class ToAlloc = std::allocator<typename encoded<ToEncoding>::type> /*,
     class class Error*/>
   inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
-    make_recoded_string(const boost::basic_string_ref<typename encoded<FromEncoding>::type,
-     FromTraits>& v, const ToAlloc& a = ToAlloc());
+    make_recoded_string(
+      const boost::basic_string_ref<typename encoded<FromEncoding>::type, FromTraits>& v,
+      const ToAlloc& a = ToAlloc());
 
     //  make_codecvted_string
-  template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits =
-    std::char_traits<FromCharT>, class ToCharT, class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>/*, class Error*/>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    make_codecvted_string(const boost::basic_string_ref<FromCharT, FromTraits>& v,
+  template <class FromEncoding, class ToEncoding, class FromTraits =
+    std::char_traits<typename encoded<FromEncoding>::type>,
+    class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
+    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type> /*,
+    class class Error*/>
+  inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
+    make_codecvted_string(
+      const boost::basic_string_ref<typename encoded<FromEncoding>::type, FromTraits>& v,
       const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
   //  codecvt facet based conversion convenience functions 
@@ -121,11 +123,12 @@ namespace string_encoding
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
 
-  //  to_wide (from utf8 encoding)
-  template <class ToTraits = std::char_traits<wchar_t>,
-    class ToAlloc = std::allocator<wchar_t >>
-  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+  ////  to_wide (from utf8 encoding)
+  //template <class ToTraits = std::char_traits<wchar_t>,
+  //  class ToAlloc = std::allocator<wchar_t >>
+  //inline
+  //typename disable_if<boost::is_same<ToAlloc, codecvt_type>, std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
+  //  to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf16 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
@@ -507,20 +510,19 @@ namespace string_encoding
         //  required because the codecvt facet will not process the entire input sequence
         //  when an error occurs or the in buffer ended with only a portion of a multibyte
         //  character.
-        char* in_first = &in[0];
+        const char* in_first = &in[0];
         for (; in_first != in_last;)
         {
           //  convert in buffer to out buffer
           const char* in_next;
           std::codecvt_base::result cvt_result
-            = cvt.in(mbstate, in, in_last, in_next, out, out + buf_size, out_next);
+            = ccvt.in(mbstate, in, in_last, in_next, out, out + buf_size, out_next);
 
           BOOST_ASSERT(cvt_result != std::codecvt_base::noconv);
 
           if (cvt_result == std::codecvt_base::error)
           {
-            //BOOST_ASSERT_MSG(false, "error handling not implemented yet")
-            wchar_t placeholder = eh()
+            BOOST_ASSERT_MSG(false, "error handling not implemented yet");
           }
 
           //  Note: it is not necessary to further distinguish between an error, partial,
@@ -578,7 +580,8 @@ namespace string_encoding
   template <class FromEncoding, class ToEncoding, class FromTraits, class ToTraits,
     class ToAlloc /*, class class Error*/>
   inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
-    make_recoded_string(const boost::basic_string_ref<typename encoded<FromEncoding>::type,
+    make_recoded_string(
+      const boost::basic_string_ref<typename encoded<FromEncoding>::type,
       FromTraits>& v, const ToAlloc& a)
   {
     std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
@@ -586,16 +589,19 @@ namespace string_encoding
     return tmp;
   }
 
-  template <class FromEncoding, class ToEncoding, class FromCharT, class FromTraits,
-    class ToCharT, class ToTraits, class ToAlloc/*, class Error*/>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    make_codecvted_string(const boost::basic_string_ref<FromCharT, FromTraits>& v,
+  template <class FromEncoding, class ToEncoding, class FromTraits, class ToTraits,
+    class ToAlloc /*, class class Error*/>
+  inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
+    make_codecvted_string(
+      const boost::basic_string_ref<typename encoded<FromEncoding>::type, FromTraits>& v,
       const codecvt_type& ccvt, const ToAlloc& a)
   {
     std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
-    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt);
+    recode_codecvt<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp), ccvt);
     return tmp;
   }
+
   //------------------------------------------------------------------------------------// 
   //  codecvt based convenience function implementations                                //
   //------------------------------------------------------------------------------------// 
@@ -607,7 +613,7 @@ namespace string_encoding
       const ToAlloc& a)
   {
     std::cout << " narrow to_wide()" << std::endl;
-    return make_codecvted_string<narrow, wide, ToTraits, ToAlloc>(v, ccvt, a);
+    return make_codecvted_string<narrow, wide>(v, ccvt, a);
   }
 
   //  wide to narrow
@@ -617,7 +623,7 @@ namespace string_encoding
       const ToAlloc& a)
   {
     std::cout << " wide to_narrow()" << std::endl;
-    return make_recoded_string<wide, narrow>(v, a);
+    return make_codecvted_string<wide, narrow>(v, ccvt, a);
   }
 
   //------------------------------------------------------------------------------------//

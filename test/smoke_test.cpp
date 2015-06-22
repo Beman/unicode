@@ -14,6 +14,7 @@ using std::endl;
 #include <string>
 #include <iterator>
 #include <cwchar>
+#include <codecvt>  // for codecvt_utf8
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
 
@@ -29,6 +30,8 @@ namespace
   const u16string u16str(u"$€𐐷𤭢");
   const u32string u32str(U"$€𐐷𤭢");
   const wstring     wstr(L"$€𐐷𤭢");
+
+  std::codecvt_utf8<wchar_t> ccvt_utf8; 
 
   template <class T> struct underlying;
   template<> struct underlying<char> { typedef unsigned char type; };
@@ -141,12 +144,12 @@ void recode_test()
     cout << "  to_utf32_test done" << endl;
   }
 
-  void all_test()
+  void all_utf_test()
   {
-    cout << "all_test" << endl;
+    cout << "all_utf_test" << endl;
 
     BOOST_TEST(to_wide(wstr) == wstr);
-    BOOST_TEST(to_wide(u8str) == wstr);
+//    BOOST_TEST(to_wide(u8str) == wstr);
     BOOST_TEST(to_wide(u16str) == wstr);
     BOOST_TEST(to_wide(u32str) == wstr);
 
@@ -165,7 +168,21 @@ void recode_test()
     BOOST_TEST(to_utf32(u16str) == u32str);
     BOOST_TEST(to_utf32(u32str) == u32str);
 
-    cout << "  all_test done" << endl;
+    cout << "  all_utf_test done" << endl;
+  }
+
+  void all_codecvt_test()
+  {
+    cout << "all_codecvt_test" << endl;
+
+    wstring w = to_wide(u8str, ccvt_utf8);
+    cout << w.size() << endl;
+    cout << hex_string(w) << endl;
+
+    BOOST_TEST(to_wide(u8str, ccvt_utf8) == wstr);
+//    BOOST_TEST(to_narrow(wstr, ccvt_utf8) == u8str);
+
+    cout << "  all_codecvt_test done" << endl;
   }
 
 }  // unnamed namespace
@@ -182,7 +199,8 @@ int main()
   to_utf8_test();
   to_utf16_test();
   to_utf32_test();
-  all_test();
+  all_utf_test();
+  all_codecvt_test();
 
   return boost::report_errors();
 }
