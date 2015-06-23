@@ -221,7 +221,32 @@ namespace string_encoding
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
 
-  //  recode helpers -------------------------------------------------------------------//
+/*  Description of valid values extracted from:
+      https://en.wikipedia.org/wiki/UTF-16#Description
+
+    U+0000 to U+D7FF and U+E000 to U+FFFF: Code points making up the Basic Multilingual
+    Plane (BMP).
+    https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane
+
+    U+10000 to U+10FFFF: "Code points from the other planes (called Supplementary Planes)
+    are encoded in as two 16-bit code units called surrogate pairs"
+
+    U+D800 to U+DFFF: "The Unicode standard permanently reserves these code point values
+    for UTF-16 encoding of the high and low surrogates, and they will never be assigned a
+    character, so there should be no reason to encode them. The official Unicode standard
+    says that no UTF forms, including UTF-16, can encode these code points.
+
+    However UCS-2, UTF-8, and UTF-32 can encode these code points in trivial and obvious
+    ways, and large amounts of software does so even though the standard states that such
+    arrangements should be treated as encoding errors.
+
+    Because the most commonly used characters are all in the Basic Multilingual Plane,
+    handling of surrogate pairs is often not thoroughly tested. This leads to persistent
+    bugs and potential security holes, even in popular and well-reviewed application
+    software (e.g. CVE-2008-2938, CVE-2012-2135)."
+*/
+
+//  recode helpers ---------------------------------------------------------------------//
 
   namespace detail
   {
@@ -242,10 +267,10 @@ namespace string_encoding
     constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
 
 //--------------------------------------------------------------------------------------//
-//  Algorithms for converting to and from a single UTF-32 encoded char32_t; these can   //
-//  then be composed into complete conversion functions without having to duplicate     //
-//  a lot of complex code and without the need for intermediate strings, such as in a   //
-//  UTF-8 to UTF-16 conversion.                                                         //
+//  Algorithms for converting UTF-8 and UTF-16 to and from a single UTF-32 encoded      //
+//  char32_t; these can then be composed into complete conversion functions without     //
+//  having to duplicate a lot of complex code and without the need for intermediate     //
+//  strings, such as in a UTF-8 to UTF-16 conversion.                                   //
 //--------------------------------------------------------------------------------------//
 
     template <class InputIterator>
@@ -398,6 +423,21 @@ namespace string_encoding
     inline
     OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result)
     {
+      if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <=0xFFFFu))  // valid code point in BMP
+      {
+        *result++ = static_cast<char16_t>(u32);  
+      }
+      else if (u32 >= 0x10000u && u32 <= 0x10FFFFu) // valid code point needing surrogate pair
+      {
+        *result++ = detail::high_surrogate_base + static_cast<char16_t>(u32 >> 10);
+        *result++ = detail::low_surrogate_base
+          + static_cast<char16_t>(u32 & detail::ten_bit_mask);
+      }
+      else  // invalid code point
+      {
+        *result++ = static_cast<char16_t>(0xFFFDu);
+      }
+      return result;
     }
 
 //--------------------------------------------------------------------------------------//
@@ -463,45 +503,12 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf32 to utf16" << endl;
-
-      for (; first != last;)
+      for (; first != last; ++first)
       {
-        char32_t c = *first++;
-
-        if (c < 0xD800u)
-        {
-          *result++ = static_cast<char16_t>(c);  // single code unit code point
-        }
-
-        else if (c < 0xDC00)
-        {
-          // c is low surrogate so must be followed by high surrogate
-          if (first != last && *first >= 0xDC00 && *first <= 0xDFFF)
-          {
-            *result++ = static_cast<char16_t>(c);         // low surrogate
-            *result++ = static_cast<char16_t>(*first++);  // high surrogate
-          }
-          else  // low surrogate was not followed by high surrogate
-          {
-            // treat as U+FFFD
-            *result++ = static_cast<char16_t>(0xFFFDu);
-          }
-        }
-
-        else if (c <= 0x10FFFFu)
-        {
-          // split into two surrogates:
-          *result++ = detail::high_surrogate_base + static_cast<char16_t>(c >> 10);
-          *result++ = detail::low_surrogate_base
-            + static_cast<char16_t>(c & detail::ten_bit_mask);
-        }
-        else  // invalid code point
-        {
-          // treat as U+FFFD
-          *result++ = static_cast<char16_t>(0xFFFDu);
-        }
+        result = char32_t_to_utf16(*first, result);
       }
       return result;
+
     }
 
     template <class InputIterator, class OutputIterator/*, class Error*/> inline
