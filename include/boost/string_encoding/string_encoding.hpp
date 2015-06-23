@@ -105,14 +105,14 @@ namespace string_encoding
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char>& v,
+    to_wide(const boost::string_ref& v,
       const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
   //  to_narrow (from wide encoding)
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char>>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_narrow(const boost::basic_string_ref<wchar_t>& v,
+    to_narrow(const boost::wstring_ref& v,
       const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
   //  Unicode Transformation Format (UTF) based conversion convenience functions 
@@ -121,7 +121,7 @@ namespace string_encoding
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf8 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
@@ -129,91 +129,91 @@ namespace string_encoding
   inline
     typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
       typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
-    to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf16 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf32 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from wide encoding)
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf8 encoding)
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char>>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf16 encoding)
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf32 encoding)
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from wide encoding)
   template <class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t >>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from utf8 encoding)
   template <class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t>>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
  
   //  to_utf16 (from utf16 encoding)
   template <class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t >>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from utf32 encoding)
   template <class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t >>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from wide encoding)
   template <class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t >>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from utf8 encoding)
   template <class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t>>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from utf16 encoding)
   template <class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t >>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from utf32 encoding)
   template <class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t >>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
@@ -660,7 +660,7 @@ namespace string_encoding
   //  narrow to wide
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char>& v, const codecvt_type& ccvt,
+    to_wide(const boost::string_ref& v, const codecvt_type& ccvt,
       const ToAlloc& a)
   {
     std::cout << " narrow to_wide()" << std::endl;
@@ -670,7 +670,7 @@ namespace string_encoding
   //  wide to narrow
   template <class ToTraits,  class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_narrow(const boost::basic_string_ref<wchar_t>& v,  const codecvt_type& ccvt,
+    to_narrow(const boost::wstring_ref& v,  const codecvt_type& ccvt,
       const ToAlloc& a)
   {
     std::cout << " wide to_narrow()" << std::endl;
@@ -688,7 +688,7 @@ namespace string_encoding
   inline
     typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
       typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
-    to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a)
+    to_wide(const boost::string_ref& v, const ToAlloc& a)
   {
     std::cout << " char to_wide()" << std::endl;
     return make_recoded_string<utf8, wide, std::char_traits<char>,
@@ -698,7 +698,7 @@ namespace string_encoding
   //  wide to wide
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a)
+    to_wide(const boost::wstring_ref& v, const ToAlloc& a)
   {
     std::cout << " wide to_wide()" << std::endl;
     return make_recoded_string<wide, wide>(v, a);
@@ -708,7 +708,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a)
+    to_wide(const boost::u16string_ref& v, const ToAlloc& a)
   {
     std::cout << " char16_t to_wide()" << std::endl;
     return make_recoded_string<utf16, wide>(v, a);
@@ -718,7 +718,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a)
+    to_wide(const boost::u32string_ref& v, const ToAlloc& a)
   {
     std::cout << " char32_t to_wide()" << std::endl;
     return make_recoded_string<utf32, wide>(v, a);
@@ -729,7 +729,7 @@ namespace string_encoding
   //  utf8 to utf8
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char>& v, const ToAlloc& a)
+    to_utf8(const boost::string_ref& v, const ToAlloc& a)
   {
     std::cout << " char to_utf8()" << std::endl;
     return make_recoded_string<utf8, utf8, std::char_traits<char>,
@@ -740,7 +740,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a)
+    to_utf8(const boost::wstring_ref& v, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf8()" << std::endl;
     return make_recoded_string<wide, utf8>(v, a);
@@ -750,7 +750,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a)
+    to_utf8(const boost::u16string_ref& v, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf8()" << std::endl;
     return make_recoded_string<utf16, utf8>(v, a);
@@ -760,7 +760,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::basic_string_ref<char32_t>& v,
+    to_utf8(const boost::u32string_ref& v,
       const ToAlloc& a)
   {
     std::cout << " char32_t to_utf8()" << std::endl;
@@ -772,7 +772,7 @@ namespace string_encoding
   // utf8 to utf16
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char>& v, const ToAlloc& a)
+    to_utf16(const boost::string_ref& v, const ToAlloc& a)
   {
     std::cout << " char to_utf16()" << std::endl;
     return make_recoded_string<utf8, utf16, std::char_traits<char>,
@@ -783,7 +783,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a)
+    to_utf16(const boost::wstring_ref& v, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf16()" << std::endl;
     return make_recoded_string<wide, utf16>(v, a);
@@ -793,7 +793,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a)
+    to_utf16(const boost::u16string_ref& v, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf16()" << std::endl;
     return make_recoded_string<utf16, utf16>(v, a);
@@ -803,7 +803,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a)
+    to_utf16(const boost::u32string_ref& v, const ToAlloc& a)
   {
     std::cout << " char32_t to_utf16()" << std::endl;
     return make_recoded_string<utf32, utf16>(v, a);
@@ -814,7 +814,7 @@ namespace string_encoding
   //  utf8 to utf32
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char>& v, const ToAlloc& a)
+    to_utf32(const boost::string_ref& v, const ToAlloc& a)
   {
     std::cout << " char to_utf32()" << std::endl;
     return make_recoded_string<utf8, utf32, std::char_traits<char>,
@@ -825,7 +825,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a)
+    to_utf32(const boost::wstring_ref& v, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf32()" << std::endl;
     return make_recoded_string<wide, utf32>(v, a);
@@ -835,7 +835,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char16_t>& v, const ToAlloc& a)
+    to_utf32(const boost::u16string_ref& v, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf32()" << std::endl;
     return make_recoded_string<utf16, utf32>(v, a);
@@ -845,7 +845,7 @@ namespace string_encoding
   template <class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::basic_string_ref<char32_t>& v, const ToAlloc& a)
+    to_utf32(const boost::u32string_ref& v, const ToAlloc& a)
   {
     std::cout << " char32_t to_utf32()" << std::endl;
     return make_recoded_string<utf32, utf32>(v, a);
