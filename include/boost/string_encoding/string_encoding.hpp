@@ -123,12 +123,13 @@ namespace string_encoding
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::basic_string_ref<wchar_t>& v, const ToAlloc& a = ToAlloc());
 
-  ////  to_wide (from utf8 encoding)
-  //template <class ToTraits = std::char_traits<wchar_t>,
-  //  class ToAlloc = std::allocator<wchar_t >>
-  //inline
-  //typename disable_if<boost::is_same<ToAlloc, codecvt_type>, std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
-  //  to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
+  //  to_wide (from utf8 encoding)
+  template <class ToTraits = std::char_traits<wchar_t>,
+    class ToAlloc = std::allocator<wchar_t >>
+  inline
+    typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
+      typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
+    to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf16 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
@@ -684,7 +685,9 @@ namespace string_encoding
 
   //  utf8 to wide
   template <class ToTraits, class ToAlloc>
-  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
+  inline
+    typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
+      typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
     to_wide(const boost::basic_string_ref<char>& v, const ToAlloc& a)
   {
     std::cout << " char to_wide()" << std::endl;

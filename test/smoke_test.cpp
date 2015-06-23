@@ -149,9 +149,11 @@ void recode_test()
     cout << "all_utf_test" << endl;
 
     BOOST_TEST(to_wide(wstr) == wstr);
-//    BOOST_TEST(to_wide(u8str) == wstr);
+    BOOST_TEST(to_wide(u8str) == wstr);
+    BOOST_TEST(to_wide(u8str, std::allocator<wchar_t>()) == wstr);
     BOOST_TEST(to_wide(u16str) == wstr);
     BOOST_TEST(to_wide(u32str) == wstr);
+    BOOST_TEST(to_wide(u32str, std::allocator<wchar_t>()) == wstr);
 
     BOOST_TEST(to_utf8(wstr) == u8str);
     BOOST_TEST(to_utf8(u8str) == u8str);
@@ -187,7 +189,11 @@ void recode_test()
     cout << hex_string(w) << endl;
     BOOST_TEST(w == ws);
 
+    BOOST_TEST(to_wide(u8s, ccvt_utf8) == ws);
+    BOOST_TEST(to_wide(u8s, ccvt_utf8, std::allocator<wchar_t>()) == ws);
+
     BOOST_TEST(to_narrow(ws, ccvt_utf8) == u8s);
+    BOOST_TEST(to_narrow(ws, ccvt_utf8, std::allocator<char>()) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
   }
