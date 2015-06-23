@@ -236,15 +236,174 @@ namespace string_encoding
 # else
     template<> struct actual<wide> { typedef utf16 encoding; };
 # endif
+    
+    constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
+    constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
+    constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
+
+//--------------------------------------------------------------------------------------//
+//  Algorithms for converting to and from a single UTF-32 encoded char32_t; these can   //
+//  then be composed into complete conversion functions without having to duplicate     //
+//  a lot of complex code and without the need for intermediate strings, such as in a   //
+//  UTF-8 to UTF-16 conversion.                                                         //
+//--------------------------------------------------------------------------------------//
+
+    template <class InputIterator>
+    inline
+    InputIterator utf8_to_char32_t(InputIterator first, InputIterator last, char32_t& u32)
+    //  Effects: Converts the UTF-8 encoded code point that begins at first to UTF-32
+    //  encoding and places it in u32. If invalid encoding is detected c is set to \uFFFD.
+    //
+    //  Returns: An iterator to the element in the input sequence following the last element
+    //           of a valid code point. Otherwise, an iterator to the element following
+    //           the first invalid element. 
+    {
+      constexpr unsigned char states[4][32] =
+      {
+        //  utf-8 to utf-32 via finite state machine,
+        //  inspired by Richard Gillam "Unicode Demystified", page 543
+
+        // state table
+
+        //00 08 10 18 20 28 30 38 40 48 50 58 60 68 70 78
+        // 80 88 90 98 A0 A8 B0 B8 C0 C8 D0 D8 E0 E8 F0 F8
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 2, 2, 3, 4 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5 },
+        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+          2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5 }
+      };
+      constexpr unsigned char masks[4] = {0x7F, 0x1F, 0x0F, 0x07};
+
+      int state = 0;
+      unsigned char mask = 0u;
+      u32 = char32_t(0);  // UTF-32 character being built up
+
+      for (; first != last;)
+      {
+        int c = *first & 0xff;
+        state = states[state][c >> 3];
+
+        //   valid state values
+        //
+        //   0 = last, and possibly only, utf-8 character for the current code point;
+        //   1, 2, 3 = more utf-8 input characters to come
+        //   4 = illegal leading byte.
+        //   5 = illegal trailing byte.
+
+        BOOST_ASSERT_MSG(state >= 0 && state <= 5, "program logic error");
+
+        switch (state)
+        {
+        case 0:  // last utf-8 input character for code point
+          u32 += (c & 0x7F);
+          return ++first;
+
+        case 1:  // more utf-8 input characters to come
+        case 2:
+        case 3:
+          if (mask == 0)
+            mask = masks[state];
+          u32 += c & mask;
+          u32 <<= 6;
+          mask = static_cast<unsigned char>(0x3F);
+          ++first;
+          break;
+
+        case 4:
+          ++first;
+          // fall through
+        case 5:
+          u32 = 0xFFFD;  // report error
+          return first;
+        }
+      }
+      u32 = 0xFFFD;  // report error
+      return first;
+    }
+
+    template <class OutputIterator>
+    inline
+    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result)
+    {
+      if (u32 <= 0x007Fu)
+        *result++ = static_cast<unsigned char>(u32);
+      else if (u32 <= 0x07FFu)
+      {
+        *result++ = static_cast<unsigned char>(0xC0u + (u32 >> 6));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else if (u32 <= 0xFFFFu)
+      {
+        *result++ = static_cast<unsigned char>(0xE0u + (u32 >> 12));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else if (u32 <= 0x10FFFFu)
+      {
+        *result++ = static_cast<unsigned char>(0xF0u + (u32 >> 18));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 12) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else  // report invalid code point as U+FFFD
+      {
+        *result++ = 0xEFu;
+        *result++ = 0xBFu;
+        *result++ = 0xBDu;
+      }
+      return result;
+    }
+
+    template <class InputIterator>
+    inline
+      InputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
+        char32_t& u32)
+    {
+      if (first == last)
+      {
+        u32 = 0xFFFD;  // report error
+        return first;
+      }
+
+      char16_t c = *first++;
+
+      if (c < 0xD800 || c > 0xDFFF)  // not a surrogate
+      {
+        u32 = c; // BMP
+      }
+      //  verify we have a valid surrogate pair
+      else if (first != last
+                && (c & 0xFC00) == 0xD800        // 0xD800 to 0xDBFF aka low surrogate
+                && (*first & 0xFC00) == 0xDC00)  // 0xDC00 to 0xDFFF aka high surrogate
+      {
+        // combine the surrogate pair into a single UTF-32 code point
+        u32 = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
+      }
+      else
+      {
+        u32 = 0xFFFD;   // report error
+        // note that first has already been incremented
+        // cases: c was high surrogate          action: do not increment first again
+        //        *first is not high surrogate  action: do not increment first again
+        //        first == last                 action: do not increment first again
+      }
+      return first;
+    }
+
+    template <class OutputIterator>
+    inline
+    OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result)
+    {
+    }
 
 //--------------------------------------------------------------------------------------//
 //                              recode implementation                                   //
 //                         overloads selected by tag dispatch                           //
 //--------------------------------------------------------------------------------------//
-    
-    constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
-    constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
-    constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
 
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf8, utf8,
@@ -271,78 +430,16 @@ namespace string_encoding
       return std::copy(first, last, result);
     }
 
-    //  utf-8 to utf-32 via finite state machine,
-    //  inspired by Richard Gillam "Unicode Demystified", page 543
-
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
     OutputIterator recode(utf8, utf32,
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf8 to utf32" << endl;
-      constexpr unsigned char states[4][32] =
-      {
-        // state table
-
-        //00 08 10 18 20 28 30 38 40 48 50 58 60 68 70 78
-        // 80 88 90 98 A0 A8 B0 B8 C0 C8 D0 D8 E0 E8 F0 F8
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 2, 2, 3, 4 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5 }
-      };
-      constexpr unsigned char masks[4] = {0x7F, 0x1F, 0x0F, 0x07};
-
-      int state = 0;
-      unsigned char mask = 0u;
-      char32_t u32 = char32_t(0);  // UTF-32 character being built up
-
       for (; first != last;)
       {
-        int c = *first & 0xff;
-        state = states[state][c >> 3];
-
-        //   valid state values
-        //
-        //   0 = last, and possibly only, utf-8 character for the current code point;
-        //   1, 2, 3 = more utf-8 input characters to come
-        //   4 = illegal leading byte.
-        //   5 = illegal trailing byte.
-
-        BOOST_ASSERT_MSG(state >= 0 && state <= 5, "program logic error");
-
-        switch (state)
-        {
-        case 0:  // last utf-8 input character for code point
-          *result++ = u32 + (c & 0x7F);
-          ++first;
-          u32 = char32_t(0);
-          mask = 0;
-          break;
-
-        case 1:  // more utf-8 input characters to come
-        case 2:
-        case 3:
-          if (mask == 0)
-            mask = masks[state];
-          u32 += c & mask;
-          u32 <<= 6;
-          mask = static_cast<unsigned char>(0x3F);
-          ++first;
-          break;
-
-        case 4:
-          ++first;
-          // fall through
-        case 5:
-          *result++ = 0xFFFD;  // report error
-          state = 0;
-          mask = 0;
-          break;
-        }
+        char32_t u32;
+        first = utf8_to_char32_t(first, last, u32);
+        *result++ = u32;
       }
       return result;
     }
@@ -352,29 +449,11 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf16 to utf32" << endl;
-
       for (; first != last;)
       {
-        char16_t c = *first++;
-
-        if (c < 0xD800 || c > 0xDFFF)  // not a surrogate
-          *result++ = c; // BMP
-        //  verify we have a valid surrogate pair
-        else if (first != last
-                 && (c & 0xFC00) == 0xD800        // 0xD800 to 0xDBFF aka low surrogate
-                 && (*first & 0xFC00) == 0xDC00)  // 0xDC00 to 0xDFFF aka high surrogate
-        {
-          // combine the surrogate pair into a single UTF-32 code point
-          *result++ = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
-        }
-        else
-        {
-          *result++ = 0xFFFD;   // report error
-          // note that first has already been incremented
-          // cases: c was high surrogate          action: do not increment first again
-          //        *first is not high surrogate  action: do not increment first again
-          //        first == last                 action: do not increment first again
-        }
+        char32_t u32;
+        first = utf16_to_char32_t(first, last, u32);
+        *result++ = u32;
       }
       return result;
     }
@@ -430,37 +509,9 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf32 to utf8" << endl;
-      
       for (; first != last; ++first)
       {
-        char32_t c = *first;
-
-        if (c <= 0x007Fu)
-          *result++ = static_cast<unsigned char>(c);
-        else if (c <= 0x07FFu)
-        {
-          *result++ = static_cast<unsigned char>(0xC0u + (c >> 6));
-          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
-        }
-        else if (c <= 0xFFFFu)
-        {
-          *result++ = static_cast<unsigned char>(0xE0u + (c >> 12));
-          *result++ = static_cast<unsigned char>(0x80u + ((c >> 6) & 0x3Fu));
-          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
-        }
-        else if (c <= 0x10FFFFu)
-        {
-          *result++ = static_cast<unsigned char>(0xF0u + (c >> 18));
-          *result++ = static_cast<unsigned char>(0x80u + ((c >> 12) & 0x3Fu));
-          *result++ = static_cast<unsigned char>(0x80u + ((c >> 6) & 0x3Fu));
-          *result++ = static_cast<unsigned char>(0x80u + (c & 0x3Fu));
-        }
-        else  // report invalid code point as U+FFFD
-        {
-          *result++ = 0xEFu;
-          *result++ = 0xBFu;
-          *result++ = 0xBDu;
-        }
+        result = char32_t_to_utf8(*first, result);
       }
       return result;
     }
