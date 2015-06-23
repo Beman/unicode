@@ -175,12 +175,19 @@ void recode_test()
   {
     cout << "all_codecvt_test" << endl;
 
-    wstring w = to_wide(u8str, ccvt_utf8);
+    //  for now, limit code points to the BMP to ensure test codecvt facet support
+
+    const string     u8s(u8"$€Ꭶ❄");
+    const wstring      ws(L"$€Ꭶ❄");
+
+    cout << u8s.size() << endl;
+    cout << hex_string(u8s) << endl;
+    wstring w = to_wide(u8s, ccvt_utf8);
     cout << w.size() << endl;
     cout << hex_string(w) << endl;
+    BOOST_TEST(w == ws);
 
-    BOOST_TEST(to_wide(u8str, ccvt_utf8) == wstr);
-//    BOOST_TEST(to_narrow(wstr, ccvt_utf8) == u8str);
+    BOOST_TEST(to_narrow(ws, ccvt_utf8) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
   }

@@ -492,10 +492,11 @@ namespace string_encoding
       const codecvt_type& ccvt /*, Error eh*/)
     {
       cout << "  narrow to wide" << endl;
-      constexpr std::size_t buf_size = 20;  // TODO increase this after initial testing
-      char in[buf_size];
-      const char* in_end = &in[0] + buf_size;
-      wchar_t out[buf_size];
+      constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
+      constexpr std::size_t out_size = 20;  // TODO increase this after initial testing
+      char in[in_size];
+      const char* in_end = &in[0] + in_size;
+      wchar_t out[out_size];
       std::mbstate_t mbstate  = std::mbstate_t();
       wchar_t* out_next;
 
@@ -516,7 +517,7 @@ namespace string_encoding
           //  convert in buffer to out buffer
           const char* in_next;
           std::codecvt_base::result cvt_result
-            = ccvt.in(mbstate, in, in_last, in_next, out, out + buf_size, out_next);
+            = ccvt.in(mbstate, in, in_last, in_next, out, out + out_size, out_next);
 
           BOOST_ASSERT(cvt_result != std::codecvt_base::noconv);
 
@@ -548,6 +549,55 @@ namespace string_encoding
       const codecvt_type& ccvt /*, Error eh*/)
     {
       cout << "  wide to narrow" << endl;
+      constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
+      constexpr std::size_t out_size = 60;  // TODO increase this after initial testing
+      wchar_t in[in_size];
+      const wchar_t* in_end = &in[0] + in_size;
+      char out[out_size];
+      std::mbstate_t mbstate  = std::mbstate_t();
+      char* out_next;
+
+      while (first != last)
+      {
+        //  fill the in buffer
+        wchar_t* in_last = &in[0];
+        for (; first != last && in_last != in_end; ++in_last, ++first)
+          *in_last = *first;
+
+        //  loop until the entire input buffer is processed by the codecvt facet; 
+        //  required because the codecvt facet will not process the entire input sequence
+        //  when an error occurs or the in buffer ended with only a portion of a multibyte
+        //  character.
+        const wchar_t* in_first = &in[0];
+        for (; in_first != in_last;)
+        {
+          //  convert in buffer to out buffer
+          const wchar_t* in_next;
+          std::codecvt_base::result cvt_result
+            = ccvt.out(mbstate, in, in_last, in_next, out, out + out_size, out_next);
+
+          BOOST_ASSERT(cvt_result != std::codecvt_base::noconv);
+
+          if (cvt_result == std::codecvt_base::error)
+          {
+            BOOST_ASSERT_MSG(false, "error handling not implemented yet");
+          }
+
+          //  Note: it is not necessary to further distinguish between an error, partial,
+          //  or ok result. The distinctiion is already captured in the mbstate.
+
+          //  copy out buffer to result
+          for (const char* itr = &out[0]; itr != out_next; ++itr, ++result)
+            *result = *itr;
+
+          in_first = in_next;
+        }
+
+        //  process cvt_result ok, partial, error
+
+      }
+
+      return result;
     }
 
   } // namespace detail
