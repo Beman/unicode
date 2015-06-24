@@ -528,9 +528,13 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf8 to utf16" << endl;
-      std::u32string tmp;
-      detail::recode(utf8(), utf32(), first, last, std::back_inserter(tmp));
-      return detail::recode(utf32(), utf16(), tmp.cbegin(), tmp.cend(), result);
+      for (; first != last;)
+      {
+        char32_t u32;
+        first = utf8_to_char32_t(first, last, u32);  // get a UTF-32 code point
+        result = char32_t_to_utf16(u32, result);
+      }
+      return result;
     }
 
     template <class InputIterator, class OutputIterator /*, class Error*/> inline
@@ -538,9 +542,13 @@ namespace string_encoding
       InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
     {
       cout << "  utf16 to utf8" << endl;
-      std::u32string tmp;
-      detail::recode(utf16(), utf32(), first, last, std::back_inserter(tmp));
-      return detail::recode(utf32(), utf8(), tmp.cbegin(), tmp.cend(), result);
+      for (; first != last;)
+      {
+        char32_t u32;
+        first = utf16_to_char32_t(first, last, u32);  // get a UTF-32 code point
+        result = char32_t_to_utf8(u32, result);
+      }
+      return result;
     }
 
     //  recode_codecvt
