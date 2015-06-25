@@ -11,11 +11,9 @@
 #include <iterator>
 #include <string>
 #include <boost/utility/string_ref.hpp> 
-#include <boost/type_traits/is_same.hpp>
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/utility/enable_if.hpp>
 
 //--------------------------------------------------------------------------------------//
 
@@ -101,18 +99,18 @@ namespace string_encoding
 
   //  codecvt facet based conversion convenience functions 
 
-  //  to_wide (from narrow encoding)
+  //  narrow_to_wide
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::string_ref& v,
+    narrow_to_wide(const boost::string_ref& v,
       const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
-  //  to_narrow (from wide encoding)
+  //   wide__to_narrow
   template <class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char>>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_narrow(const boost::wstring_ref& v,
+    wide_to_narrow(const boost::wstring_ref& v,
       const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
   //  Unicode Transformation Format (UTF) based conversion convenience functions 
@@ -126,9 +124,7 @@ namespace string_encoding
   //  to_wide (from utf8 encoding)
   template <class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
-  inline
-    typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
-      typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
+  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf16 encoding)
@@ -768,7 +764,7 @@ Encoding Form Conversion (D93) extract:
   //  narrow to wide
   template <class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::string_ref& v, const codecvt_type& ccvt,
+    narrow_to_wide(const boost::string_ref& v, const codecvt_type& ccvt,
       const ToAlloc& a)
   {
     std::cout << " narrow to_wide()" << std::endl;
@@ -778,7 +774,7 @@ Encoding Form Conversion (D93) extract:
   //  wide to narrow
   template <class ToTraits,  class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_narrow(const boost::wstring_ref& v,  const codecvt_type& ccvt,
+    wide_to_narrow(const boost::wstring_ref& v,  const codecvt_type& ccvt,
       const ToAlloc& a)
   {
     std::cout << " wide to_narrow()" << std::endl;
@@ -793,9 +789,7 @@ Encoding Form Conversion (D93) extract:
 
   //  utf8 to wide
   template <class ToTraits, class ToAlloc>
-  inline
-    typename boost::enable_if<typename boost::is_same<typename ToAlloc::value_type, wchar_t>,
-      typename std::basic_string<wchar_t, ToTraits, ToAlloc>>::type
+  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::string_ref& v, const ToAlloc& a)
   {
     std::cout << " char to_wide()" << std::endl;
