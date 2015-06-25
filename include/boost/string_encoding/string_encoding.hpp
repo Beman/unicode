@@ -221,29 +221,71 @@ namespace string_encoding
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
 
-/*  Description of valid values extracted from:
-      https://en.wikipedia.org/wiki/UTF-16#Description
+/*
 
-    U+0000 to U+D7FF and U+E000 to U+FFFF: Code points making up the Basic Multilingual
-    Plane (BMP).
-    https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane
+Unicode Standard Conformance (as of version 7.0)
 
-    U+10000 to U+10FFFF: "Code points from the other planes (called Supplementary Planes)
-    are encoded in as two 16-bit code units called surrogate pairs"
+References: For example, (3.4 D10) refers to the Unicode Standard, Core Specification,
+chapter 3, section 4, sub-section D10. See http://www.unicode.org/versions/latest/
 
-    U+D800 to U+DFFF: "The Unicode standard permanently reserves these code point values
-    for UTF-16 encoding of the high and low surrogates, and they will never be assigned a
-    character, so there should be no reason to encode them. The official Unicode standard
-    says that no UTF forms, including UTF-16, can encode these code points.
+Definitions:
 
-    However UCS-2, UTF-8, and UTF-32 can encode these code points in trivial and obvious
-    ways, and large amounts of software does so even though the standard states that such
-    arrangements should be treated as encoding errors.
+* Code point (3.4 D10): "Code point: Any value in the Unicode codespace."
 
-    Because the most commonly used characters are all in the Basic Multilingual Plane,
-    handling of surrogate pairs is often not thoroughly tested. This leads to persistent
-    bugs and potential security holes, even in popular and well-reviewed application
-    software (e.g. CVE-2008-2938, CVE-2012-2135)."
+  Informally, a code point can be thought of as a Unicode character.
+
+  (Appendix A - Notational Conventions):
+  "In running text, an individual Unicode code point is expressed as U+n, where n is four
+   to six hexadecimal digits, using the digits 0–9 and uppercase letters A–F (for 10
+   through 15, respectively). Leading zeros are omitted, unless the code point would have
+   fewer than four hexadecimal digits—for example, U+0001, U+0012, U+0123, U+1234,
+   U+12345, U+102345.
+
+   [e.g] U+0416 is the Unicode code point for the character named CYRILLIC CAPITAL
+   LETTER ZHE."
+
+* Code unit (3.9 D77): "The minimal bit combination that can represent a unit of encoded text
+  for processing or interchange. Code units are particular units of computer storage. ...
+  The Unicode Standard uses 8-bit code units in the UTF-8 encoding form, 16-bit
+  code units in the UTF-16 encoding form, and 32-bit code units in the UTF-32
+  encoding form."
+
+  In C++: one char, wchar_t, char16_t, or char32_t character holds one code unit.
+  One to four code units (type char) are required to hold a UTF-8 encodee code point.
+  One or two code units (type char16_t) are required to hold a UTF-16 encoded code point.
+  One code unit (type char32_t) is required to hold a UTF-32 code point.
+
+UTF-32 (D90) extract:
+
+* "Because surrogate code points are not included in the set of Unicode scalar values,
+   UTF-32 code units in the range U+D800..U+DFFF are ill-formed."
+
+* "Any UTF-32 code unit greater than U+10FFFF is ill-formed."
+
+UTF-16 (D91) extract:
+
+* "Because surrogate code points are not Unicode scalar values, isolated UTF-16
+   code units in the range U+D800..U+DFFF are ill-formed."
+
+UTD-8 (D92) extract:
+
+* "Any UTF-8 byte sequence that does not match the patterns listed in Table 3-7 is
+   ill-formed."
+
+* "... “non-shortest form” byte sequences in UTF-8 ... are ill-formed ..."
+
+* "Because surrogate code points are not Unicode scalar values, any UTF-8 byte
+   sequence that would otherwise map to code points D800..DFFF is ill-formed."
+
+Encoding Form Conversion (D93) extract:
+
+* "A conformant encoding form conversion will treat any ill-formed code unit
+   sequence as an error condition. ... it will neither interpret nor emit an ill-formed
+   code unit sequence. Any implementation of encoding form conversion must take this
+   requirement into account, because an encoding form conversion implicitly involves a
+   verification that the Unicode strings being converted do, in fact, contain well-formed
+   code unit sequences."
+
 */
 
 //  recode helpers ---------------------------------------------------------------------//
