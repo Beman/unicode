@@ -52,8 +52,9 @@ namespace string_encoding
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
   //  Error handler function object operator()() is called with no arguments and either
-  //  throws an exception or returns a const pointer to a C-style string of type
-  //  encoded<ToEncoding>::type encoded as specified by ToEncoding.
+  //  throws an exception or returns a const pointer to a possibly empty C-style string of
+  //  type encoded<ToEncoding>::type. The returned string is required to be encoded as
+  //  specified by ToEncoding.
 
   //  default error handler:
   //    function object returns C-string of U+FFFD, encoded via ToEncoding.
@@ -180,8 +181,8 @@ namespace string_encoding
     to_utf16(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from utf32 encoding)
-  template <class ToTraits = std::char_traits<char16_t>,
-    class ToAlloc = std::allocator<char16_t>, class Error = err_hdlr<utf16>>
+  template <class Error = err_hdlr<utf16>,
+    class ToTraits = std::char_traits<char16_t>, class ToAlloc = std::allocator<char16_t>>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::u32string_ref& v,
       Error eh = Error(), const ToAlloc& a = ToAlloc());
@@ -926,7 +927,7 @@ Encoding Form Conversion (D93) extract:
   }
 
   //  utf32 to utf16
-  template <class ToTraits, class ToAlloc, class Error>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
