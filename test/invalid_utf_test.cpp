@@ -93,13 +93,28 @@ namespace
 //  }
 
   //  User supplied error handler
-
   constexpr char16_t* my_ill_formed = u"***ill-formed***";
   class my_err_hdlr
   {
   public:
     constexpr char16_t* operator()() const noexcept
     { return my_ill_formed; }
+  };
+
+  constexpr char32_t* my_ill_formed32 = U"*ill-formed*";
+  class my_err_hdlr32
+  {
+  public:
+    constexpr char32_t* operator()() const noexcept
+    { return my_ill_formed32; }
+  };
+
+  constexpr char32_t* my_ill_formed32e = U"";
+  class my_err_hdlr32e
+  {
+  public:
+    constexpr char32_t* operator()() const noexcept
+    { return my_ill_formed32e; }
   };
 
 void default_arguments()
@@ -135,12 +150,23 @@ void ill_formed_utf32()
     cout << "  ill_formed_utf32 test done" << endl;
   }
 
+void ill_formed_utf8()
+  {
+    cout << "ill_formed_utf8 test" << endl;
+    //u32string x = to_utf32(u8"$€\xed\xa0\x80𐐷𤭢");
+    //cout << hex_string(x) << endl;
+    BOOST_TEST(to_utf32("\xed\xa0\x80") == U"\uFFFD");
+    BOOST_TEST(to_utf32<my_err_hdlr32>("\xed\xa0\x80") == U"*ill-formed*");
+    BOOST_TEST(to_utf32<my_err_hdlr32e>("\xed\xa0\x80") == U"");
+    cout << "  ill_formed_utf8 test done" << endl;
+  }
+
 }  // unnamed namespace
 
 int main()
 {
-
-  //ill_formed_utf32();
+  ill_formed_utf8();
+  ill_formed_utf32();
   default_arguments();
   //invalid_utf8_characters();
   return boost::report_errors();

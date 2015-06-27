@@ -115,101 +115,114 @@ namespace string_encoding
   //  Unicode Transformation Format (UTF) based conversion convenience functions 
 
   //  to_wide (from wide encoding)
-  template <class ToTraits = std::char_traits<wchar_t>,
+  template <class Error = err_hdlr<wide>, class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::wstring_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf8 encoding)
-  template <class ToTraits = std::char_traits<wchar_t>,
+  template <class Error = err_hdlr<wide>, class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::string_ref& v, Error eh = Error(), const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf16 encoding)
-  template <class ToTraits = std::char_traits<wchar_t>,
+  template <class Error = err_hdlr<wide>, class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::u16string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_wide (from utf32 encoding)
-  template <class ToTraits = std::char_traits<wchar_t>,
+  template <class Error = err_hdlr<wide>, class ToTraits = std::char_traits<wchar_t>,
     class ToAlloc = std::allocator<wchar_t >>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
+    to_wide(const boost::u32string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from wide encoding)
-  template <class ToTraits = std::char_traits<char>,
+  template <class Error = err_hdlr<utf8>, class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::wstring_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf8 encoding)
-  template <class ToTraits = std::char_traits<char>,
+  template <class Error = err_hdlr<utf8>, class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char>>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::string_ref& v, Error eh = Error(), const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf16 encoding)
-  template <class ToTraits = std::char_traits<char>,
+  template <class Error = err_hdlr<utf8>, class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::u16string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf8 (from utf32 encoding)
-  template <class ToTraits = std::char_traits<char>,
+  template <class Error = err_hdlr<utf8>, class ToTraits = std::char_traits<char>,
     class ToAlloc = std::allocator<char >>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf8(const boost::u32string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from wide encoding)
-  template <class ToTraits = std::char_traits<char16_t>,
+  template <class Error = err_hdlr<utf16>, class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t >>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::wstring_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from utf8 encoding)
-  template <class ToTraits = std::char_traits<char16_t>,
+  template <class Error = err_hdlr<utf16>, class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t>>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
  
   //  to_utf16 (from utf16 encoding)
-  template <class ToTraits = std::char_traits<char16_t>,
+  template <class Error = err_hdlr<utf16>, class ToTraits = std::char_traits<char16_t>,
     class ToAlloc = std::allocator<char16_t >>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::u16string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf16 (from utf32 encoding)
   template <class Error = err_hdlr<utf16>,
     class ToTraits = std::char_traits<char16_t>, class ToAlloc = std::allocator<char16_t>>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::u32string_ref& v,
-      Error eh = Error(), const ToAlloc& a = ToAlloc());
+    to_utf16(const boost::u32string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from wide encoding)
-  template <class ToTraits = std::char_traits<char32_t>,
-    class ToAlloc = std::allocator<char32_t >>
-  inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::wstring_ref& v, const ToAlloc& a = ToAlloc());
-
-  //  to_utf32 (from utf8 encoding)
-  template <class ToTraits = std::char_traits<char32_t>,
+  template <class Error = err_hdlr<utf32>, class ToTraits = std::char_traits<char32_t>,
     class ToAlloc = std::allocator<char32_t>>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::wstring_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
+
+  //  to_utf32 (from utf8 encoding)
+  template <class Error = err_hdlr<utf32>, class ToTraits = std::char_traits<char32_t>,
+    class ToAlloc = std::allocator<char32_t>>
+  inline std::basic_string<char32_t, ToTraits, ToAlloc>
+    to_utf32(const boost::string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from utf16 encoding)
-  template <class ToTraits = std::char_traits<char32_t>,
-    class ToAlloc = std::allocator<char32_t >>
+  template <class Error = err_hdlr<utf32>, class ToTraits = std::char_traits<char32_t>,
+    class ToAlloc = std::allocator<char32_t>>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::u16string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::u16string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
   //  to_utf32 (from utf32 encoding)
-  template <class ToTraits = std::char_traits<char32_t>,
-    class ToAlloc = std::allocator<char32_t >>
+  template <class Error = err_hdlr<utf32>, class ToTraits = std::char_traits<char32_t>,
+    class ToAlloc = std::allocator<char32_t>>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::u32string_ref& v, const ToAlloc& a = ToAlloc());
+    to_utf32(const boost::u32string_ref& v, Error eh = Error(),
+      const ToAlloc& a = ToAlloc());
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
@@ -218,12 +231,26 @@ namespace string_encoding
 //--------------------------------------------------------------------------------------//
   namespace detail
   {
-    constexpr char*     utf8_ill_formed = u8"\uFFFD";
-    constexpr char16_t* utf16_ill_formed = u"\uFFFD";
-    constexpr char32_t* utf32_ill_formed = U"\uFFFD";
+    constexpr char*      narrow_ill_formed = "?";
+    constexpr char*      utf8_ill_formed = u8"\uFFFD";
+    constexpr wchar_t*   wide_ill_formed = L"\uFFFD";
+    constexpr char16_t*  utf16_ill_formed = u"\uFFFD";
+    constexpr char32_t*  utf32_ill_formed = U"\uFFFD";
   }
 
   //  default error handlers
+  template <> class err_hdlr<narrow>
+  {
+  public:
+    constexpr char* operator()() const noexcept { return detail::narrow_ill_formed; }
+  };
+
+  template <> class err_hdlr<wide>
+  {
+  public:
+    constexpr wchar_t* operator()() const noexcept { return detail::wide_ill_formed; }
+  };
+
   template <> class err_hdlr<utf8>
   {
   public:
@@ -336,9 +363,56 @@ Encoding Form Conversion (D93) extract:
 //  strings, such as in a UTF-8 to UTF-16 conversion.                                   //
 //--------------------------------------------------------------------------------------//
 
-    template <class InputIterator>
+    template <class OutputIterator, class OutError>
     inline
-    InputIterator utf8_to_char32_t(InputIterator first, InputIterator last, char32_t& u32)
+    OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, OutError out_eh)
+    {
+      if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <=0xFFFFu))  // valid code point in BMP
+      {
+        *result++ = static_cast<char16_t>(u32);  
+      }
+      else if (u32 >= 0x10000u && u32 <= 0x10FFFFu) // valid code point needing surrogate pair
+      {
+        *result++ = detail::high_surrogate_base + static_cast<char16_t>(u32 >> 10);
+        *result++ = detail::low_surrogate_base
+          + static_cast<char16_t>(u32 & detail::ten_bit_mask);
+      }
+      else  // invalid code point
+      {
+        for (const char16_t* itr = out_eh(); *itr; ++itr)
+          *result++ = *itr;
+      }
+      return result;
+    }
+
+    //  Outputer function object type used by utf8_to_char32_t to recode utf8 -> utf32
+    template <class OutputIterator, class Error>
+    struct fo_32_32
+    {
+       OutputIterator operator()(char32_t x, OutputIterator result, Error) const
+       {
+         *result++ = x;
+         return result;
+       }
+    };
+
+    // Outputer function object type used by utf8_to_char32_t to recode utf8 -> utf16
+    template <class OutputIterator, class Error>
+    struct fo_32_16
+    {
+       OutputIterator operator()(char32_t x, OutputIterator result, Error eh) const
+       {
+         return char32_t_to_utf16(x, result, eh);
+       }
+    };
+
+
+
+    template <class InputIterator, class OutputIterator, class Error, 
+      class Outputer, class OutError>
+    inline
+    OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
+      OutputIterator result, Error eh, Outputer out, OutError out_eh)
     //  Effects: Converts the UTF-8 encoded code point that begins at first to UTF-32
     //  encoding and places it in u32. If invalid encoding is detected c is set to \uFFFD.
     //
@@ -348,6 +422,12 @@ Encoding Form Conversion (D93) extract:
     {
       constexpr unsigned char states[4][32] =
       {
+        //  TODO: replace the conversion portion of this code with something along the
+        //  John Maddox's regex/pending/unicode_iterator.hpp. Easier to understand and
+        //  much better error checking. Too many obvious errors are getting past the
+        //  code below.
+
+
         //  utf-8 to utf-32 via finite state machine,
         //  inspired by Richard Gillam "Unicode Demystified", page 543
 
@@ -368,7 +448,7 @@ Encoding Form Conversion (D93) extract:
 
       int state = 0;
       unsigned char mask = 0u;
-      u32 = char32_t(0);  // UTF-32 character being built up
+      char32_t u32 = char32_t(0);  // UTF-32 character being built up
 
       for (; first != last;)
       {
@@ -387,8 +467,21 @@ Encoding Form Conversion (D93) extract:
         switch (state)
         {
         case 0:  // last utf-8 input character for code point
-          u32 += (c & 0x7F);
-          return ++first;
+          u32 += c & 0x7F;
+          
+          // added error checking to head off at least some of the errors otherwise
+          // slipping by.
+          if (u32 >= 0xD800u && (u32 <= 0xDFFFu || u32 > 0x10FFFFu))
+          {
+            for (const char32_t* itr = eh(); *itr; ++itr)
+              result = out(*itr, result, out_eh);
+          }
+          else
+            result = out(u32, result, out_eh);
+          ++first;
+          u32 = char32_t(0);
+          mask = 0;
+          break;
 
         case 1:  // more utf-8 input characters to come
         case 2:
@@ -404,18 +497,20 @@ Encoding Form Conversion (D93) extract:
         case 4:
           ++first;
           // fall through
-        case 5:
-          u32 = 0xFFFD;  // report error
-          return first;
+        case 5:  // invalid code point
+          for (const char32_t* itr = eh(); *itr; ++itr)
+            result = out(*itr, result, out_eh);
+          state = 0;
+          mask = 0;
+          break;
         }
       }
-      u32 = 0xFFFD;  // report error
-      return first;
+      return result;
     }
 
-    template <class OutputIterator>
+    template <class OutputIterator, class Error>
     inline
-    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result)
+    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh)
     {
       if (u32 <= 0x007Fu)
         *result++ = static_cast<unsigned char>(u32);
@@ -437,23 +532,23 @@ Encoding Form Conversion (D93) extract:
         *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
         *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
       }
-      else  // report invalid code point as U+FFFD
+      else  // invalid code point
       {
-        *result++ = 0xEFu;
-        *result++ = 0xBFu;
-        *result++ = 0xBDu;
+        for (const char* rep = eh(); *rep; ++rep)
+          *result++ = *rep;
       }
       return result;
     }
 
-    template <class InputIterator>
+    template <class InputIterator, class Error>
     inline
       InputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
-        char32_t& u32)
+        char32_t& u32, Error eh)
     {
+      // TODO: is this in fact a precondition error that should be checked via assert?
       if (first == last)
       {
-        u32 = 0xFFFD;  // report error
+        u32 = eh();  // report error
         return first;
       }
 
@@ -471,9 +566,9 @@ Encoding Form Conversion (D93) extract:
         // combine the surrogate pair into a single UTF-32 code point
         u32 = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
       }
-      else
+      else  // invalid code point
       {
-        u32 = 0xFFFD;   // report error
+        u32 = eh();
         // note that first has already been incremented
         // cases: c was high surrogate          action: do not increment first again
         //        *first is not high surrogate  action: do not increment first again
@@ -482,82 +577,54 @@ Encoding Form Conversion (D93) extract:
       return first;
     }
 
-    template <class OutputIterator, class Error>
-    inline
-    OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh)
-    {
-      if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <=0xFFFFu))  // valid code point in BMP
-      {
-        *result++ = static_cast<char16_t>(u32);  
-      }
-      else if (u32 >= 0x10000u && u32 <= 0x10FFFFu) // valid code point needing surrogate pair
-      {
-        *result++ = detail::high_surrogate_base + static_cast<char16_t>(u32 >> 10);
-        *result++ = detail::low_surrogate_base
-          + static_cast<char16_t>(u32 & detail::ten_bit_mask);
-      }
-      else  // invalid code point
-      {
-//        *result++ = static_cast<char16_t>(0xFFFDu);
-        for (const char16_t* rep = eh(); *rep; ++rep)
-          *result++ = *rep;
-      }
-      return result;
-    }
-
 //--------------------------------------------------------------------------------------//
 //                              recode implementation                                   //
 //                         overloads selected by tag dispatch                           //
 //--------------------------------------------------------------------------------------//
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf8, utf8,
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf8" << endl;
       return std::copy(first, last, result);
       return result;
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf16, utf16, 
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf16" << endl;
       return std::copy(first, last, result);
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf32, utf32, 
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf32 to utf32" << endl;
       return std::copy(first, last, result);
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf8, utf32,
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf32" << endl;
-      for (; first != last;)
-      {
-        char32_t u32;
-        first = utf8_to_char32_t(first, last, u32);
-        *result++ = u32;
-      }
-      return result;
+      return utf8_to_char32_t(first, last, result, eh,
+        detail::fo_32_32<OutputIterator, Error>(), eh);
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf16, utf32, 
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf32" << endl;
       for (; first != last;)
       {
         char32_t u32;
-        first = utf16_to_char32_t(first, last, u32);
+        first = utf16_to_char32_t(first, last, u32, eh);
         *result++ = u32;
       }
       return result;
@@ -576,52 +643,47 @@ Encoding Form Conversion (D93) extract:
 
     }
 
-    template <class InputIterator, class OutputIterator/*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf32, utf8, 
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf32 to utf8" << endl;
       for (; first != last; ++first)
       {
-        result = char32_t_to_utf8(*first, result);
+        result = char32_t_to_utf8(*first, result, eh);
       }
       return result;
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf8, utf16,
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf16" << endl;
-      for (; first != last;)
-      {
-        char32_t u32;
-        first = utf8_to_char32_t(first, last, u32);  // get a UTF-32 code point
-        result = char32_t_to_utf16(u32, result);
-      }
-      return result;
+      return utf8_to_char32_t(first, last, result, err_hdlr<utf32>(),
+        detail::fo_32_16<OutputIterator, Error>(), eh);
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode(utf16, utf8,
-      InputIterator first, InputIterator last, OutputIterator result /*, Error eh*/)
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf8" << endl;
       for (; first != last;)
       {
         char32_t u32;
         first = utf16_to_char32_t(first, last, u32);  // get a UTF-32 code point
-        result = char32_t_to_utf8(u32, result);
+        result = char32_t_to_utf8(u32, result, eh);
       }
       return result;
     }
 
     //  recode_codecvt
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode_codecvt(narrow, wide,
       InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt /*, Error eh*/)
+      const codecvt_type& ccvt, Error eh)
     {
       cout << "  narrow to wide" << endl;
       constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
@@ -675,10 +737,10 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-    template <class InputIterator, class OutputIterator /*, class Error*/> inline
+    template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator recode_codecvt(wide, narrow,
       InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt /*, Error eh*/)
+      const codecvt_type& ccvt, Error eh)
     {
       cout << "  wide to narrow" << endl;
       constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
@@ -813,117 +875,110 @@ Encoding Form Conversion (D93) extract:
   //  to_wide  -------------------------------------------------------------------------//
 
   //  utf8 to wide
-  template <class ToTraits, class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::string_ref& v, const ToAlloc& a)
+    to_wide(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char to_wide()" << std::endl;
     return make_recoded_string<utf8, wide, std::char_traits<char>,
-      ToTraits, ToAlloc>(v, a);
+      ToTraits, ToAlloc>(v, eh, a);
   }
 
   //  wide to wide
-  template <class ToTraits, class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::wstring_ref& v, const ToAlloc& a)
+    to_wide(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " wide to_wide()" << std::endl;
-    return make_recoded_string<wide, wide>(v, a);
+    return make_recoded_string<wide, wide>(v, eh, a);
   }
 
   //  utf16 to wide
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::u16string_ref& v, const ToAlloc& a)
+    to_wide(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char16_t to_wide()" << std::endl;
-    return make_recoded_string<utf16, wide>(v, a);
+    return make_recoded_string<utf16, wide>(v, eh, a);
   }
 
   //  utf32 to wide
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    to_wide(const boost::u32string_ref& v, const ToAlloc& a)
+    to_wide(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char32_t to_wide()" << std::endl;
-    return make_recoded_string<utf32, wide>(v, a);
+    return make_recoded_string<utf32, wide>(v, eh, a);
   }
 
   //  to_utf8  -------------------------------------------------------------------------//
 
   //  utf8 to utf8
-  template <class ToTraits, class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::string_ref& v, const ToAlloc& a)
+    to_utf8(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char to_utf8()" << std::endl;
     return make_recoded_string<utf8, utf8, std::char_traits<char>,
-      ToTraits, ToAlloc>(v, a);
+      ToTraits, ToAlloc>(v, eh, a);
   }
 
   //  wide to utf8
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::wstring_ref& v, const ToAlloc& a)
+    to_utf8(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf8()" << std::endl;
-    return make_recoded_string<wide, utf8>(v, a);
+    return make_recoded_string<wide, utf8>(v, eh, a);
   }
 
   //  utf16 to utf8
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::u16string_ref& v, const ToAlloc& a)
+    to_utf8(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf8()" << std::endl;
-    return make_recoded_string<utf16, utf8>(v, a);
+    return make_recoded_string<utf16, utf8>(v, eh, a);
   }
 
   //  utf32 to utf8
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
     to_utf8(const boost::u32string_ref& v,
       const ToAlloc& a)
   {
     std::cout << " char32_t to_utf8()" << std::endl;
-    return make_recoded_string<utf32, utf8>(v, a);
+    return make_recoded_string<utf32, utf8>(v, eh, a);
   }
 
   //  to_utf16  ------------------------------------------------------------------------//
 
   // utf8 to utf16
-  template <class ToTraits, class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::string_ref& v, const ToAlloc& a)
+    to_utf16(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char to_utf16()" << std::endl;
     return make_recoded_string<utf8, utf16, std::char_traits<char>,
-      ToTraits, ToAlloc>(v, a);
+      ToTraits, ToAlloc>(v, eh, a);
   }
  
   //  wide to utf16
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::wstring_ref& v, const ToAlloc& a)
+    to_utf16(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf16()" << std::endl;
-    return make_recoded_string<wide, utf16>(v, a);
+    return make_recoded_string<wide, utf16>(v, eh, a);
   }
 
   //  utf16 to utf16
-  template <class ToTraits,
-    class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
-    to_utf16(const boost::u16string_ref& v, const ToAlloc& a)
+    to_utf16(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf16()" << std::endl;
-    return make_recoded_string<utf16, utf16>(v, a);
+    return make_recoded_string<utf16, utf16>(v, eh, a);
   }
 
   //  utf32 to utf16
@@ -938,43 +993,43 @@ Encoding Form Conversion (D93) extract:
   //  to_utf32  ------------------------------------------------------------------------//
 
   //  utf8 to utf32
-  template <class ToTraits, class ToAlloc>
+  template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::string_ref& v, const ToAlloc& a)
+    to_utf32(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char to_utf32()" << std::endl;
     return make_recoded_string<utf8, utf32, std::char_traits<char>,
-      ToTraits, ToAlloc>(v, a);
+      ToTraits, ToAlloc>(v, eh, a);
   }
 
   //  wide to utf32
-  template <class ToTraits,
+  template <class Error, class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::wstring_ref& v, const ToAlloc& a)
+    to_utf32(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " wchar_t to_utf32()" << std::endl;
-    return make_recoded_string<wide, utf32>(v, a);
+    return make_recoded_string<wide, utf32>(v, eh, a);
   }
 
   //  utf16 to utf32
-  template <class ToTraits,
+  template <class Error, class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::u16string_ref& v, const ToAlloc& a)
+    to_utf32(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char16_t to_utf32()" << std::endl;
-    return make_recoded_string<utf16, utf32>(v, a);
+    return make_recoded_string<utf16, utf32>(v, eh, a);
   }
 
   //  utf32 to utf32
-  template <class ToTraits,
+  template <class Error, class ToTraits,
     class ToAlloc>
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
-    to_utf32(const boost::u32string_ref& v, const ToAlloc& a)
+    to_utf32(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char32_t to_utf32()" << std::endl;
-    return make_recoded_string<utf32, utf32>(v, a);
+    return make_recoded_string<utf32, utf32>(v, eh, a);
   }
 
 //--------------------------------------------------------------------------------------//
