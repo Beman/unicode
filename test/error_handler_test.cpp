@@ -14,6 +14,7 @@ using std::endl;
 #include <string>
 #include <iterator>
 #include <cwchar>
+#define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
 
@@ -26,9 +27,16 @@ using std::u32string;
 namespace
 {
   const string     u8str(u8"$€𐐷𤭢");
-  const u16string u16str(u"$€𐐷𤭢");
-  const u32string u32str(U"$€𐐷𤭢");
-  const wstring     wstr(L"$€𐐷𤭢");
+  const u16string  u16str(u"$€𐐷𤭢");
+  const u32string  u32str(U"$€𐐷𤭢");
+  const wstring    wstr(  L"$€𐐷𤭢");
+
+  const string     ill_u8str
+    = {0x24,char(0xE2),char(0x82),char(0xAC),char(0xF0),char(0x90),char(0x90),char(0xB7),
+    char(0xF0),char(0xA4),char(0xAD),char(0xA2),char(0xED),char(0xA0),char(0x80)};
+  const u16string  ill_u16str(u"$€𐐷𤭢\xD800");
+  const u32string  ill_u32str(U"$€𐐷𤭢\xD800");
+  const wstring    ill_wstr(  L"$€𐐷𤭢\xD800");
 
   template <class T> struct underlying;
   template<> struct underlying<char> { typedef unsigned char type; };
@@ -136,6 +144,15 @@ namespace
     BOOST_TEST(to_utf16(U"A\x110000") == u"A\uFFFD");
     BOOST_TEST(to_utf16(U"\x110000Z") == u"\uFFFDZ");
     BOOST_TEST(to_utf16(U"A\x110000Z") == u"A\uFFFDZ");
+
+    BOOST_TEST(to_wide<errwnul>(ill_u32str) == wstr);
+    BOOST_TEST(to_utf8<err8nul>(ill_u32str) == u8str);
+
+    //  TODO: this test is failing because std::copy is still being used, and that
+    //  fails to detect ill-formed code.
+    BOOST_TEST(to_utf16<err16nul>(ill_u32str) == u16str);
+
+    BOOST_TEST(to_utf32<err32nul>(ill_u32str) == u32str);
     cout << "  ill_formed_utf32_source test done" << endl;
   }
 
@@ -156,6 +173,11 @@ namespace
     BOOST_TEST(to_utf16("\xed\xa0\x80") == u"\uFFFD");
     BOOST_TEST(to_utf16<err16>("\xed\xa0\x80") == u"*ill*");
     BOOST_TEST(to_utf16<err16nul>("\xed\xa0\x80") == u"");
+
+    BOOST_TEST(to_wide<errwnul>(ill_u16str) == wstr);
+    BOOST_TEST(to_utf8<err8nul>(ill_u16str) == u8str);
+    BOOST_TEST(to_utf16<err16nul>(ill_u16str) == u16str);
+    BOOST_TEST(to_utf32<err32nul>(ill_u16str) == u32str);
     cout << "  ill_formed_utf16_source test done" << endl;
   }
 
@@ -180,6 +202,15 @@ namespace
     BOOST_TEST(to_utf16("\xed\xa0\x80") == u"\uFFFD");
     BOOST_TEST(to_utf16<err16>("\xed\xa0\x80") == u"*ill*");
     BOOST_TEST(to_utf16<err16nul>("\xed\xa0\x80") == u"");
+
+    BOOST_TEST(to_wide<errwnul>(ill_u8str) == wstr);
+    BOOST_TEST(to_utf8<err8nul>(ill_u8str) == u8str);
+    //cout << hex_string(u8str) << endl;
+    //cout << hex_string(to_utf8(ill_u8str)) << endl;
+    BOOST_TEST(to_utf16<err16nul>(ill_u8str) == u16str);
+    BOOST_TEST(to_utf32<err32nul>(ill_u8str) == u32str);
+    //cout << hex_string(ill_u8str) << endl;
+    //cout << hex_string(to_utf32<err32nul>(ill_u8str)) << endl;
     cout << "  ill_formed_utf8_source test done" << endl;
   }
 
@@ -197,6 +228,10 @@ namespace
     BOOST_TEST(to_utf16<err16>(wstr) == u16str);
     BOOST_TEST(to_utf32<err32>(wstr) == u32str);
 
+    BOOST_TEST(to_wide<errwnul>(ill_wstr) == wstr);
+    BOOST_TEST(to_utf8<err8nul>(ill_wstr) == u8str);
+    BOOST_TEST(to_utf16<err16nul>(ill_wstr) == u16str);
+    BOOST_TEST(to_utf32<err32nul>(ill_wstr) == u32str);
     cout << "  ill_formed_wide_source test done" << endl;
   }
 

@@ -501,6 +501,11 @@ Encoding Form Conversion (D93) extract:
         *result++ = static_cast<unsigned char>(0xC0u + (u32 >> 6));
         *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
       }
+      else if (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogates are ill-formed
+      {
+        for (const char* rep = eh(); *rep; ++rep)
+          *result++ = *rep;
+      }
       else if (u32 <= 0xFFFFu)
       {
         *result++ = static_cast<unsigned char>(0xE0u + (u32 >> 12));
@@ -570,8 +575,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf8" << endl;
-      return std::copy(first, last, result);
-      return result;
+      return utf8_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -579,7 +583,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf16" << endl;
-      return std::copy(first, last, result);
+      return utf16_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -616,7 +620,6 @@ Encoding Form Conversion (D93) extract:
         result = char32_t_to_utf16(*first, result, eh);
       }
       return result;
-
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline

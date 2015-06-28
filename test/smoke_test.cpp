@@ -15,6 +15,7 @@ using std::endl;
 #include <iterator>
 #include <cwchar>
 #include <codecvt>  // for codecvt_utf8
+#define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
 
