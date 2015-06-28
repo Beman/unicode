@@ -385,7 +385,7 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-    //  Outputer function object type used by utf8_to_char32_t to recode utf8 -> utf32
+    //  Outputer function object type for utf32 to utf32
     template <class OutputIterator, class Error>
     struct fo_32_32
     {
@@ -396,7 +396,7 @@ Encoding Form Conversion (D93) extract:
        }
     };
 
-    // Outputer function object type used by utf8_to_char32_t to recode utf8 -> utf16
+    // Outputer function object type for utf32 to utf16
     template <class OutputIterator, class Error>
     struct fo_32_16
     {
@@ -406,7 +406,15 @@ Encoding Form Conversion (D93) extract:
        }
     };
 
-
+    // Outputer function object type for utf32 to utf8
+    template <class OutputIterator, class Error>
+    struct fo_32_8
+    {
+       OutputIterator operator()(char32_t x, OutputIterator result, Error eh) const
+       {
+         return char32_t_to_utf8(x, result, eh);
+       }
+    };
 
     template <class InputIterator, class OutputIterator, class Error, 
       class Outputer, class OutError>
