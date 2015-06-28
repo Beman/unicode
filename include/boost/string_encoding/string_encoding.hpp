@@ -328,7 +328,7 @@ Encoding Form Conversion (D93) extract:
   
     template <class T> struct actual { typedef T encoding; };
 # if WCHAR_MAX >= 0xFFFFFFFFu
-    template<> struct encoding<wide> { typedef narrow encoding; };
+    template<> struct actual<wide> { typedef narrow encoding; };
 # else
     template<> struct actual<wide> { typedef utf16 encoding; };
 # endif
@@ -366,7 +366,7 @@ Encoding Form Conversion (D93) extract:
       }
       else  // invalid code point
       {
-        for (const char16_t* itr = out_eh(); *itr; ++itr)
+        for (auto itr = out_eh(); *itr; ++itr)
           *result++ = *itr;
       }
       return result;
