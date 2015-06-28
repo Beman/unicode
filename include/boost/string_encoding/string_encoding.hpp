@@ -390,13 +390,13 @@ Encoding Form Conversion (D93) extract:
       return char32_t_to_utf8(x, result, eh);
     }
 
-    template <class OutEncoding, class InputIterator, class OutputIterator, class U32Error,
-      class OutError>
+    template <class OutEncoding, class InputIterator, class OutputIterator,
+      class U32Error, class OutError>
     inline
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
     //  Effects: Converts the UTF-8 encoded code point that begins at first to UTF-32
-    //  encoding and places it in u32. If invalid encoding is detected c is set to \uFFFD.
+    //  encoding and places it in u32.
     //
     //  Returns: An iterator to the element in the input sequence following the last element
     //           of a valid code point. Otherwise, an iterator to the element following
@@ -522,41 +522,42 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-    template <class InputIterator, class Error>
+    template <class OutEncoding, class InputIterator, class OutputIterator,
+      class U32Error, class OutError>
     inline
-      InputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
-        char32_t& u32, Error eh)
+      OutputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
+        OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      // TODO: is this in fact a precondition error that should be checked via assert?
-      if (first == last)
+      for (; first != last;)
       {
-        u32 = eh();  // report error
-        return first;
-      }
+        char32_t u32;
 
-      char16_t c = *first++;
+        char16_t c = *first++;
 
-      if (c < 0xD800 || c > 0xDFFF)  // not a surrogate
-      {
-        u32 = c; // BMP
+        if (c < 0xD800 || c > 0xDFFF)  // not a surrogate
+        {
+          u32 = c; // BMP
+        }
+        //  verify we have a valid surrogate pair
+        else if (first != last
+          && (c & 0xFC00) == 0xD800        // 0xD800 to 0xDBFF aka low surrogate
+          && (*first & 0xFC00) == 0xDC00)  // 0xDC00 to 0xDFFF aka high surrogate
+        {
+          // combine the surrogate pair into a single UTF-32 code point
+          u32 = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
+        }
+        else  // invalid code point
+        {
+          for (const char32_t* itr = u32_eh(); *itr; ++itr)
+            result = u32_outputer(OutEncoding(), *itr, result, out_eh);
+          continue;  // no need to increment first; that has already been done above
+          // cases: c was high surrogate          action: do not increment first again
+          //        *first is not high surrogate  action: do not increment first again
+          //        first == last                 action: do not increment first again
+        }
+        result = u32_outputer(OutEncoding(), u32, result, out_eh);
       }
-      //  verify we have a valid surrogate pair
-      else if (first != last
-                && (c & 0xFC00) == 0xD800        // 0xD800 to 0xDBFF aka low surrogate
-                && (*first & 0xFC00) == 0xDC00)  // 0xDC00 to 0xDFFF aka high surrogate
-      {
-        // combine the surrogate pair into a single UTF-32 code point
-        u32 = (static_cast<char32_t>(c) << 10) + *first++ - 0x35FDC00;
-      }
-      else  // invalid code point
-      {
-        u32 = eh();
-        // note that first has already been incremented
-        // cases: c was high surrogate          action: do not increment first again
-        //        *first is not high surrogate  action: do not increment first again
-        //        first == last                 action: do not increment first again
-      }
-      return first;
+      return result;
     }
 
 //--------------------------------------------------------------------------------------//
@@ -602,13 +603,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf32" << endl;
-      for (; first != last;)
-      {
-        char32_t u32;
-        first = utf16_to_char32_t(first, last, u32, eh);
-        *result++ = u32;
-      }
-      return result;
+      return utf16_to_char32_t<utf32>(first, last, result, eh , eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -649,13 +644,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf16 to utf8" << endl;
-      for (; first != last;)
-      {
-        char32_t u32;
-        first = utf16_to_char32_t(first, last, u32);  // get a UTF-32 code point
-        result = char32_t_to_utf8(u32, result, eh);
-      }
-      return result;
+      return utf16_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     //  recode_codecvt

@@ -146,25 +146,25 @@ namespace
     cout << "  ill_formed_utf32_source test done" << endl;
   }
 
-  //void ill_formed_utf16_source()
-  //{
-  //  cout << "ill_formed_utf16_source test" << endl;
-  //  // test well-formed cases first to ensure these still work
-  //  BOOST_TEST(to_wide(u16str) == wstr);
-  //  BOOST_TEST(to_utf8(u16str) == u8str);
-  //  BOOST_TEST(to_utf16(u16str) == u16str);
-  //  BOOST_TEST(to_utf32(u16str) == u32str);
-  //  // ditto with user supplied error handler
-  //  BOOST_TEST(to_wide<errw>(u16str) == wstr);
-  //  BOOST_TEST(to_utf8<err8>(u16str) == u8str);
-  //  BOOST_TEST(to_utf16<err16>(u16str) == u16str);
-  //  BOOST_TEST(to_utf32<err32>(u16str) == u32str);
+  void ill_formed_utf16_source()
+  {
+    cout << "ill_formed_utf16_source test" << endl;
+    // test well-formed cases first to ensure these still work
+    BOOST_TEST(to_wide(u16str) == wstr);
+    BOOST_TEST(to_utf8(u16str) == u8str);
+    BOOST_TEST(to_utf16(u16str) == u16str);
+    BOOST_TEST(to_utf32(u16str) == u32str);
+    // ditto with user supplied error handler
+    BOOST_TEST(to_wide<errw>(u16str) == wstr);
+    BOOST_TEST(to_utf8<err8>(u16str) == u8str);
+    BOOST_TEST(to_utf16<err16>(u16str) == u16str);
+    BOOST_TEST(to_utf32<err32>(u16str) == u32str);
 
-  //  BOOST_TEST(to_utf16("\xed\xa0\x80") == u"\uFFFD");
-  //  BOOST_TEST(to_utf16<err16>("\xed\xa0\x80") == u"*ill*");
-  //  BOOST_TEST(to_utf16<err16nul>("\xed\xa0\x80") == u"");
-  //  cout << "  ill_formed_utf16_source test done" << endl;
-  //}
+    BOOST_TEST(to_utf16("\xed\xa0\x80") == u"\uFFFD");
+    BOOST_TEST(to_utf16<err16>("\xed\xa0\x80") == u"*ill*");
+    BOOST_TEST(to_utf16<err16nul>("\xed\xa0\x80") == u"");
+    cout << "  ill_formed_utf16_source test done" << endl;
+  }
 
   void ill_formed_utf8_source()
   {
@@ -215,7 +215,7 @@ int main()
 {
   
   ill_formed_utf32_source();
-  //ill_formed_utf16_source();
+  ill_formed_utf16_source();
   ill_formed_utf8_source();
   //ill_formed_wide_source();
 
