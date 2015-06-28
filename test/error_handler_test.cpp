@@ -1,4 +1,4 @@
-﻿//  string_encoding/test/invalid_utf_test  ---------------------------------------------//
+﻿//  string_encoding/test/error_handler_test  -------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
