@@ -126,23 +126,23 @@ namespace
   {
     cout << "ill_formed_utf32_source test" << endl;
     // test well-formed cases first to ensure these still work
-    //BOOST_TEST(to_wide(u32str) == wstr);
-    //BOOST_TEST(to_utf8(u32str) == u8str);
-    //BOOST_TEST(to_utf16(u32str) == u16str);
+//    BOOST_TEST(to_wide(u32str) == wstr);
+    BOOST_TEST(to_utf8(u32str) == u8str);
+    BOOST_TEST(to_utf16(u32str) == u16str);
     BOOST_TEST(to_utf32(u32str) == u32str);
     // ditto with user supplied error handler
     //BOOST_TEST(to_wide<errw>(u32str) == wstr);
-    //BOOST_TEST(to_utf8<err8>(u32str) == u8str);
-    //BOOST_TEST(to_utf16<err16>(u32str) == u16str);
+    BOOST_TEST(to_utf8<err8>(u32str) == u8str);
+    BOOST_TEST(to_utf16<err16>(u32str) == u16str);
     BOOST_TEST(to_utf32<err32>(u32str) == u32str);
 
     //u32string u32s(U"\x110000");
     //u16string u16s = to_utf16(u32s);
     //BOOST_TEST(u16s == u"\uFFFD");
-    //BOOST_TEST(to_utf16(U"\x110000") == u"\uFFFD");
-    //BOOST_TEST(to_utf16(U"A\x110000") == u"A\uFFFD");
-    //BOOST_TEST(to_utf16(U"\x110000Z") == u"\uFFFDZ");
-    //BOOST_TEST(to_utf16(U"A\x110000Z") == u"A\uFFFDZ");
+    BOOST_TEST(to_utf16(U"\x110000") == u"\uFFFD");
+    BOOST_TEST(to_utf16(U"A\x110000") == u"A\uFFFD");
+    BOOST_TEST(to_utf16(U"\x110000Z") == u"\uFFFDZ");
+    BOOST_TEST(to_utf16(U"A\x110000Z") == u"A\uFFFDZ");
     cout << "  ill_formed_utf32_source test done" << endl;
   }
 
@@ -177,7 +177,7 @@ namespace
     // ditto with user supplied error handler
     //BOOST_TEST(to_wide<errw>(u8str) == wstr);
     //BOOST_TEST(to_utf8<err8>(u8str) == u8str);
-    //BOOST_TEST(to_utf16<err16>(u8str) == u16str);
+    BOOST_TEST(to_utf16<err16>(u8str) == u16str);
     BOOST_TEST(to_utf32<err32>(u8str) == u32str);
 
     //u32string x = to_utf32(u8"$€\xed\xa0\x80𐐷𤭢");

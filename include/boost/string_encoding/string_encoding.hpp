@@ -841,7 +841,7 @@ Encoding Form Conversion (D93) extract:
   //  wide to narrow
   template <class ToTraits,  class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    wide_to_narrow(const boost::wstring_ref& v,  const codecvt_type& ccvt,
+    wide_to_narrow(const boost::wstring_ref& v, const codecvt_type& ccvt,
       const ToAlloc& a)
   {
     std::cout << " wide to_narrow()" << std::endl;
@@ -924,8 +924,7 @@ Encoding Form Conversion (D93) extract:
   //  utf32 to utf8
   template <class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<char, ToTraits, ToAlloc>
-    to_utf8(const boost::u32string_ref& v,
-      const ToAlloc& a)
+    to_utf8(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
     std::cout << " char32_t to_utf8()" << std::endl;
     return make_recoded_string<utf32, utf8>(v, eh, a);
