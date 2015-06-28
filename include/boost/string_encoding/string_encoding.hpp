@@ -229,46 +229,27 @@ namespace string_encoding
 //--------------------------------------------------------------------------------------//
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
-  namespace detail
-  {
-    constexpr char*      narrow_ill_formed = "?";
-    constexpr char*      utf8_ill_formed = u8"\uFFFD";
-    constexpr wchar_t*   wide_ill_formed = L"\uFFFD";
-    constexpr char16_t*  utf16_ill_formed = u"\uFFFD";
-    constexpr char32_t*  utf32_ill_formed = U"\uFFFD";
-  }
 
   //  default error handlers
+  //
+  //  The Unicode standard, Conformance chapter, requires conversion functions detect
+  //  ill-formed code points and treat them as errors. It defines what constitutes 
+  //  ill-formed encoding in excruciating detail. It further mandates reporting erros via
+  //  a single code point replacement character and strongly recomments U+FFFD.
+  //  It provides rationale for these requirements that boils down to any other approach
+  //  as a default, including throwing exceptions, can be and has been used as a security
+  //  attack vector.
+
   template <> class err_hdlr<narrow>
-  {
-  public:
-    constexpr char* operator()() const noexcept { return detail::narrow_ill_formed; }
-  };
-
+    { public: const char* operator()() const noexcept { return "?"; } };
   template <> class err_hdlr<wide>
-  {
-  public:
-    constexpr wchar_t* operator()() const noexcept { return detail::wide_ill_formed; }
-  };
-
+    { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
   template <> class err_hdlr<utf8>
-  {
-  public:
-    constexpr char* operator()() const noexcept { return detail::utf8_ill_formed; }
-  };
-
+    { public: const char* operator()() const noexcept { return u8"\uFFFD"; } };
   template <> class err_hdlr<utf16>
-  {
-  public:
-    constexpr char16_t* operator()() const noexcept { return detail::utf16_ill_formed; }
-  };
-
+    { public: const char16_t* operator()() const noexcept { return u"\uFFFD"; } };
   template <> class err_hdlr<utf32>
-  {
-  public:
-    constexpr char32_t* operator()() const noexcept { return detail::utf32_ill_formed; }
-  };
-
+    { public: const char32_t* operator()() const noexcept { return U"\uFFFD"; } };
 
 /*
 Unicode Standard Conformance (as of version 7.0)
@@ -351,7 +332,13 @@ Encoding Form Conversion (D93) extract:
 # else
     template<> struct actual<wide> { typedef utf16 encoding; };
 # endif
-    
+
+    //  for the utf8<-->utf16 encoding conversion, which use utf32 as an intermediary,
+    //  we need a value that can never appear in valid utf32 to pass the error through
+    //  to the final output type and will then be detected as an error and then processed
+    //  by the appropriate error handler for the output type.
+    struct err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
+
     constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
     constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
     constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
@@ -385,42 +372,29 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-    //  Outputer function object type for utf32 to utf32
-    template <class OutputIterator, class Error>
-    struct fo_32_32
+    //  char32_t outputers
+    template <class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf32, char32_t x, OutputIterator result, Error)
     {
-       OutputIterator operator()(char32_t x, OutputIterator result, Error) const
-       {
-         *result++ = x;
-         return result;
-       }
-    };
-
-    // Outputer function object type for utf32 to utf16
-    template <class OutputIterator, class Error>
-    struct fo_32_16
+      *result++ = x;
+      return result;
+    }
+    template <class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf16, char32_t x, OutputIterator result, Error eh)
     {
-       OutputIterator operator()(char32_t x, OutputIterator result, Error eh) const
-       {
-         return char32_t_to_utf16(x, result, eh);
-       }
-    };
-
-    // Outputer function object type for utf32 to utf8
-    template <class OutputIterator, class Error>
-    struct fo_32_8
+      return char32_t_to_utf16(x, result, eh);
+    }
+    template <class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf8, char32_t x, OutputIterator result, Error eh)
     {
-       OutputIterator operator()(char32_t x, OutputIterator result, Error eh) const
-       {
-         return char32_t_to_utf8(x, result, eh);
-       }
-    };
+      return char32_t_to_utf8(x, result, eh);
+    }
 
-    template <class InputIterator, class OutputIterator, class Error, 
-      class Outputer, class OutError>
+    template <class OutEncoding, class InputIterator, class OutputIterator, class U32Error,
+      class OutError>
     inline
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
-      OutputIterator result, Error eh, Outputer out, OutError out_eh)
+      OutputIterator result, U32Error u32_eh, OutError out_eh)
     //  Effects: Converts the UTF-8 encoded code point that begins at first to UTF-32
     //  encoding and places it in u32. If invalid encoding is detected c is set to \uFFFD.
     //
@@ -481,11 +455,11 @@ Encoding Form Conversion (D93) extract:
           // slipping by.
           if (u32 >= 0xD800u && (u32 <= 0xDFFFu || u32 > 0x10FFFFu))
           {
-            for (const char32_t* itr = eh(); *itr; ++itr)
-              result = out(*itr, result, out_eh);
+            for (const char32_t* itr = u32_eh(); *itr; ++itr)
+              result = u32_outputer(OutEncoding(), *itr, result, out_eh);
           }
           else
-            result = out(u32, result, out_eh);
+            result = u32_outputer(OutEncoding(), u32, result, out_eh);
           ++first;
           u32 = char32_t(0);
           mask = 0;
@@ -506,8 +480,8 @@ Encoding Form Conversion (D93) extract:
           ++first;
           // fall through
         case 5:  // invalid code point
-          for (const char32_t* itr = eh(); *itr; ++itr)
-            result = out(*itr, result, out_eh);
+          for (const char32_t* itr = u32_eh(); *itr; ++itr)
+            result = u32_outputer(OutEncoding(), *itr, result, out_eh);
           state = 0;
           mask = 0;
           break;
@@ -620,8 +594,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf32" << endl;
-      return utf8_to_char32_t(first, last, result, eh,
-        detail::fo_32_32<OutputIterator, Error>(), eh);
+      return utf8_to_char32_t<utf32>(first, last, result, eh, eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -668,8 +641,7 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       cout << "  utf8 to utf16" << endl;
-      return utf8_to_char32_t(first, last, result, err_hdlr<utf32>(),
-        detail::fo_32_16<OutputIterator, Error>(), eh);
+      return utf8_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
