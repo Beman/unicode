@@ -395,97 +395,55 @@ Encoding Form Conversion (D93) extract:
     inline
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
-    //  Effects: Converts the UTF-8 encoded code point that begins at first to UTF-32
-    //  encoding and places it in u32.
-    //
-    //  Returns: An iterator to the element in the input sequence following the last element
-    //           of a valid code point. Otherwise, an iterator to the element following
-    //           the first invalid element. 
     {
-      constexpr unsigned char states[4][32] =
-      {
-        //  TODO: replace the conversion portion of this code with something along the
-        //  John Maddox's regex/pending/unicode_iterator.hpp. Easier to understand and
-        //  much better error checking. Too many obvious errors are getting past the
-        //  code below.
-
-
-        //  utf-8 to utf-32 via finite state machine,
-        //  inspired by Richard Gillam "Unicode Demystified", page 543
-
-        // state table
-
-        //00 08 10 18 20 28 30 38 40 48 50 58 60 68 70 78
-        // 80 88 90 98 A0 A8 B0 B8 C0 C8 D0 D8 E0 E8 F0 F8
-        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 2, 2, 3, 4 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5 },
-        { 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-          2, 2, 2, 2, 2, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5 }
-      };
-      constexpr unsigned char masks[4] = {0x7F, 0x1F, 0x0F, 0x07};
-
-      int state = 0;
-      unsigned char mask = 0u;
       char32_t u32 = char32_t(0);  // UTF-32 character being built up
 
       for (; first != last;)
       {
-        int c = *first & 0xff;
-        state = states[state][c >> 3];
+        char32_t u32 = *first++;
 
-        //   valid state values
-        //
-        //   0 = last, and possibly only, utf-8 character for the current code point;
-        //   1, 2, 3 = more utf-8 input characters to come
-        //   4 = illegal leading byte.
-        //   5 = illegal trailing byte.
-
-        BOOST_ASSERT_MSG(state >= 0 && state <= 5, "program logic error");
-
-        switch (state)
+        if (u32 <= 0x7Fu)  // 7-bit ASCII
         {
-        case 0:  // last utf-8 input character for code point
-          u32 += c & 0x7F;
-          
-          // added error checking to head off at least some of the errors otherwise
-          // slipping by.
-          if (u32 >= 0xD800u && (u32 <= 0xDFFFu || u32 > 0x10FFFFu))
-          {
-            for (const char32_t* itr = u32_eh(); *itr; ++itr)
-              result = u32_outputer(OutEncoding(), *itr, result, out_eh);
-          }
-          else
-            result = u32_outputer(OutEncoding(), u32, result, out_eh);
-          ++first;
-          u32 = char32_t(0);
-          mask = 0;
-          break;
+          result = u32_outputer(OutEncoding(), u32, result, out_eh);
+          continue;
+        }
 
-        case 1:  // more utf-8 input characters to come
-        case 2:
-        case 3:
-          if (mask == 0)
-            mask = masks[state];
-          u32 += c & mask;
+        int continues = -1;
+
+        if ((u32 & 0xE0u) == 0xC0u)   // 2 byte sequence
+        {
+          u32 &= 0x1Fu;
+          continues = 1;
+        }
+        else if ((u32 & 0xF0u) == 0xE0u)  // 3 byte sequence
+        {
+          u32 &= 0x0Fu;
+          continues = 2;
+        }
+        else if ((u32 & 0xF8u) == 0xF0u)  // 4 byte sequence
+        {
+          u32 &= 0x07u;
+          continues = 3;
+        }
+
+        //  process the continuation bytes
+        for (; continues > 0
+          && first != last                  // detect missing continuation
+          && ((*first & 0xC0u) == 0x80u);   // detect missing continuation
+          --continues)
+        {
           u32 <<= 6;
-          mask = static_cast<unsigned char>(0x3F);
-          ++first;
-          break;
+          u32 += static_cast<boost::uint8_t>(*first++) & 0x3Fu;
+        }
 
-        case 4:
-          ++first;
-          // fall through
-        case 5:  // invalid code point
+        if (continues != 0
+          || (u32 >= 0xD800u && u32 <= 0xDFFFu) || u32 > 0x10FFFFu)
+        {
           for (const char32_t* itr = u32_eh(); *itr; ++itr)
             result = u32_outputer(OutEncoding(), *itr, result, out_eh);
-          state = 0;
-          mask = 0;
-          break;
         }
+        else
+          result = u32_outputer(OutEncoding(), u32, result, out_eh);
       }
       return result;
     }
