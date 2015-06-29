@@ -69,10 +69,10 @@ namespace string_encoding
 
   //  recode_codecvt
   template <class FromEncoding, class ToEncoding, class InputIterator,
-    class OutputIterator/*, class Error = error_handler*/>
+    class OutputIterator, class Error = err_hdlr<ToEncoding>>
   inline OutputIterator
     recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt /*, Error eh = error_handler()*/);
+      const codecvt_type& ccvt, Error eh = Error());
 
   //  make_recoded_string 
   template <class FromEncoding, class ToEncoding, class FromTraits =
@@ -89,12 +89,12 @@ namespace string_encoding
   template <class FromEncoding, class ToEncoding, class FromTraits =
     std::char_traits<typename encoded<FromEncoding>::type>,
     class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
-    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type> /*,
-    class class Error*/>
+    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
+    class Error>
   inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
     make_codecvted_string(
       const boost::basic_string_ref<typename encoded<FromEncoding>::type, FromTraits>& v,
-      const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+      const codecvt_type& ccvt, Error eh, const ToAlloc& a = ToAlloc());
 
   //  codecvt facet based conversion convenience functions 
 
@@ -769,13 +769,13 @@ Encoding Form Conversion (D93) extract:
   }
 
   template <class FromEncoding, class ToEncoding, class InputIterator,
-    class OutputIterator/*, class ErrorHandler = error_handler*/>
+    class OutputIterator, class Error>
   inline OutputIterator
     recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt /*, Error eh = error_handler()*/)
+      const codecvt_type& ccvt, Error eh)
   {
     return detail::recode_codecvt(FromEncoding(), ToEncoding(), first, last, result,
-      ccvt /*, eh*/);
+      ccvt, eh);
   }
 
   //  make_recoded_string  -------------------------------------------------------------//
@@ -793,15 +793,15 @@ Encoding Form Conversion (D93) extract:
   }
 
   template <class FromEncoding, class ToEncoding, class FromTraits, class ToTraits,
-    class ToAlloc /*, class class Error*/>
+    class ToAlloc, class Error>
   inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
     make_codecvted_string(
       const boost::basic_string_ref<typename encoded<FromEncoding>::type, FromTraits>& v,
-      const codecvt_type& ccvt, const ToAlloc& a)
+      const codecvt_type& ccvt, Error eh, const ToAlloc& a)
   {
     std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
     recode_codecvt<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp), ccvt);
+      std::back_inserter(tmp), ccvt, eh);
     return tmp;
   }
 

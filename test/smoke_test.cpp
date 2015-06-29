@@ -151,10 +151,10 @@ void recode_test()
 
     BOOST_TEST(to_wide(wstr) == wstr);
     BOOST_TEST(to_wide(u8str) == wstr);
-    BOOST_TEST(to_wide(u8str, std::allocator<wchar_t>()) == wstr);
+    BOOST_TEST(to_wide(u8str, err_hdlr<wide>(), std::allocator<wchar_t>()) == wstr);
     BOOST_TEST(to_wide(u16str) == wstr);
     BOOST_TEST(to_wide(u32str) == wstr);
-    BOOST_TEST(to_wide(u32str, std::allocator<wchar_t>()) == wstr);
+    BOOST_TEST(to_wide(u32str, err_hdlr<wide>(), std::allocator<wchar_t>()) == wstr);
 
     BOOST_TEST(to_utf8(wstr) == u8str);
     BOOST_TEST(to_utf8(u8str) == u8str);
