@@ -574,7 +574,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf8, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf8 to utf8" << endl;
       return utf8_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
@@ -582,7 +581,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf16, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf16 to utf16" << endl;
       return utf16_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
@@ -590,7 +588,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf32, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf32 to utf32" << endl;
       return std::copy(first, last, result);
     }
 
@@ -598,7 +595,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf8, utf32,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf8 to utf32" << endl;
       return utf8_to_char32_t<utf32>(first, last, result, eh, eh);
     }
 
@@ -606,7 +602,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf16, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf16 to utf32" << endl;
       return utf16_to_char32_t<utf32>(first, last, result, eh , eh);
     }
 
@@ -614,7 +609,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf32, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf32 to utf16" << endl;
       for (; first != last; ++first)
       {
         result = char32_t_to_utf16(*first, result, eh);
@@ -626,7 +620,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf32, utf8, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf32 to utf8" << endl;
       for (; first != last; ++first)
       {
         result = char32_t_to_utf8(*first, result, eh);
@@ -638,7 +631,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf8 to utf16" << endl;
       return utf8_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
@@ -646,7 +638,6 @@ Encoding Form Conversion (D93) extract:
     OutputIterator recode(utf16, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      cout << "  utf16 to utf8" << endl;
       return utf16_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
@@ -657,9 +648,8 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result,
       const codecvt_type& ccvt, Error eh)
     {
-      cout << "  narrow to wide" << endl;
-      constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
-      constexpr std::size_t out_size = 20;  // TODO increase this after initial testing
+      constexpr std::size_t in_size = 32;  // TODO increase this after initial testing
+      constexpr std::size_t out_size = 32;  // TODO increase this after initial testing
       char in[in_size];
       const char* in_end = &in[0] + in_size;
       wchar_t out[out_size];
@@ -714,7 +704,6 @@ Encoding Form Conversion (D93) extract:
       InputIterator first, InputIterator last, OutputIterator result,
       const codecvt_type& ccvt, Error eh)
     {
-      cout << "  wide to narrow" << endl;
       constexpr std::size_t in_size = 20;  // TODO increase this after initial testing
       constexpr std::size_t out_size = 60;  // TODO increase this after initial testing
       wchar_t in[in_size];
@@ -826,7 +815,6 @@ Encoding Form Conversion (D93) extract:
     narrow_to_wide(const boost::string_ref& v, const codecvt_type& ccvt,
       const ToAlloc& a)
   {
-    std::cout << " narrow to_wide()" << std::endl;
     return make_codecvted_string<narrow, wide>(v, ccvt, a);
   }
 
@@ -836,7 +824,6 @@ Encoding Form Conversion (D93) extract:
     wide_to_narrow(const boost::wstring_ref& v, const codecvt_type& ccvt,
       const ToAlloc& a)
   {
-    std::cout << " wide to_narrow()" << std::endl;
     return make_codecvted_string<wide, narrow>(v, ccvt, a);
   }
 
@@ -851,7 +838,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char to_wide()" << std::endl;
     return make_recoded_string<utf8, wide, std::char_traits<char>,
       ToTraits, ToAlloc>(v, eh, a);
   }
@@ -861,7 +847,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " wide to_wide()" << std::endl;
     return make_recoded_string<wide, wide>(v, eh, a);
   }
 
@@ -870,7 +855,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char16_t to_wide()" << std::endl;
     return make_recoded_string<utf16, wide>(v, eh, a);
   }
 
@@ -879,7 +863,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<wchar_t, ToTraits, ToAlloc>
     to_wide(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char32_t to_wide()" << std::endl;
     return make_recoded_string<utf32, wide>(v, eh, a);
   }
 
@@ -890,7 +873,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char, ToTraits, ToAlloc>
     to_utf8(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char to_utf8()" << std::endl;
     return make_recoded_string<utf8, utf8, std::char_traits<char>,
       ToTraits, ToAlloc>(v, eh, a);
   }
@@ -900,7 +882,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char, ToTraits, ToAlloc>
     to_utf8(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " wchar_t to_utf8()" << std::endl;
     return make_recoded_string<wide, utf8>(v, eh, a);
   }
 
@@ -909,7 +890,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char, ToTraits, ToAlloc>
     to_utf8(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char16_t to_utf8()" << std::endl;
     return make_recoded_string<utf16, utf8>(v, eh, a);
   }
 
@@ -918,7 +898,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char, ToTraits, ToAlloc>
     to_utf8(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char32_t to_utf8()" << std::endl;
     return make_recoded_string<utf32, utf8>(v, eh, a);
   }
 
@@ -929,7 +908,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char to_utf16()" << std::endl;
     return make_recoded_string<utf8, utf16, std::char_traits<char>,
       ToTraits, ToAlloc>(v, eh, a);
   }
@@ -939,7 +917,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " wchar_t to_utf16()" << std::endl;
     return make_recoded_string<wide, utf16>(v, eh, a);
   }
 
@@ -948,7 +925,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char16_t to_utf16()" << std::endl;
     return make_recoded_string<utf16, utf16>(v, eh, a);
   }
 
@@ -957,7 +933,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char16_t, ToTraits, ToAlloc>
     to_utf16(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char32_t to_utf16()" << std::endl;
     return make_recoded_string<utf32, utf16>(v, eh, a);
   }
 
@@ -968,7 +943,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
     to_utf32(const boost::string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char to_utf32()" << std::endl;
     return make_recoded_string<utf8, utf32, std::char_traits<char>,
       ToTraits, ToAlloc>(v, eh, a);
   }
@@ -979,7 +953,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
     to_utf32(const boost::wstring_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " wchar_t to_utf32()" << std::endl;
     return make_recoded_string<wide, utf32>(v, eh, a);
   }
 
@@ -989,7 +962,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
     to_utf32(const boost::u16string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char16_t to_utf32()" << std::endl;
     return make_recoded_string<utf16, utf32>(v, eh, a);
   }
 
@@ -999,7 +971,6 @@ Encoding Form Conversion (D93) extract:
   inline std::basic_string<char32_t, ToTraits, ToAlloc>
     to_utf32(const boost::u32string_ref& v, Error eh, const ToAlloc& a)
   {
-    std::cout << " char32_t to_utf32()" << std::endl;
     return make_recoded_string<utf32, utf32>(v, eh, a);
   }
 
