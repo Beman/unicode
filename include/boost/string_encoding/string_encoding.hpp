@@ -396,48 +396,61 @@ Encoding Form Conversion (D93) extract:
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      char32_t u32 = char32_t(0);  // UTF-32 character being built up
 
       for (; first != last;)
       {
-        char32_t u32 = *first++;
+        char32_t u32 = static_cast<unsigned char>(*first++);
 
         if (u32 <= 0x7Fu)  // 7-bit ASCII
         {
+          //  by definition, 7-bit ASCII is valid UTF-8, so bypass further checking
           result = u32_outputer(OutEncoding(), u32, result, out_eh);
           continue;
         }
 
-        int continues = -1;
+        int continues;
 
-        if ((u32 & 0xE0u) == 0xC0u)   // 2 byte sequence
+        if ((u32 & 0xE0u) == 0xC0u    // 2 byte sequence
+          && (u32 & 0xFEu) != 0xc0)   // not overlong
         {
           u32 &= 0x1Fu;
           continues = 1;
         }
-        else if ((u32 & 0xF0u) == 0xE0u)  // 3 byte sequence
+        else if ((u32 & 0xF0u) == 0xE0u  // 3 byte sequence
+          && (u32 != 0xE0u               // not overlong
+            || (first != last
+              && (static_cast<unsigned char>(*first) & 0xE0u) != 0x80u))
+          )
         {
           u32 &= 0x0Fu;
           continues = 2;
         }
-        else if ((u32 & 0xF8u) == 0xF0u)  // 4 byte sequence
+        else if ((u32 & 0xF8u) == 0xF0u  // 4 byte sequence
+          && (u32 != 0xF0u               // not overlong
+            || (first != last
+              && (static_cast<unsigned char>(*first) & 0xF0u) != 0x80u))
+          )
         {
           u32 &= 0x07u;
           continues = 3;
         }
+        else
+          continues = -1;  // flag as error
 
         //  process the continuation bytes
         for (; continues > 0
-          && first != last                  // detect missing continuation
-          && ((*first & 0xC0u) == 0x80u);   // detect missing continuation
+          && first != last                  // missing continuation
+          && (static_cast<unsigned char>(*first) & 0xC0u) == 0x80u;// missing continuation
           --continues)
         {
           u32 <<= 6;
-          u32 += static_cast<boost::uint8_t>(*first++) & 0x3Fu;
+          u32 += static_cast<unsigned char>(*first++) & 0x3Fu;
         }
 
-        if (continues != 0
-          || (u32 >= 0xD800u && u32 <= 0xDFFFu) || u32 > 0x10FFFFu)
+        if (continues != 0                       // error previously detected
+          || u32 > 0x10FFFFu                     // out-of-range
+          || (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogate (which is ill-formed UTF-32)
+          )
         {
           for (const char32_t* itr = u32_eh(); *itr; ++itr)
             result = u32_outputer(OutEncoding(), *itr, result, out_eh);
