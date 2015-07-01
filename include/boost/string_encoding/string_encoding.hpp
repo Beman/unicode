@@ -408,46 +408,50 @@ Encoding Form Conversion (D93) extract:
           continue;
         }
 
-        int continues;
+        int continues = 0;
+        bool overlong = false;
 
-        if ((u32 & 0xE0u) == 0xC0u    // 2 byte sequence
-          && (u32 & 0xFEu) != 0xc0)   // not overlong
+        if ((u32 & 0xE0u) == 0xC0u)    // 2 byte sequence
         {
           u32 &= 0x1Fu;
           continues = 1;
+          if ((u32 & 0xFEu) == 0xC0)   // overlong?
+            overlong = true;
         }
-        else if ((u32 & 0xF0u) == 0xE0u  // 3 byte sequence
-          && (u32 != 0xE0u               // not overlong
-            || (first != last
-              && (static_cast<unsigned char>(*first) & 0xE0u) != 0x80u))
-          )
+        else if ((u32 & 0xF0u) == 0xE0u)  // 3 byte sequence
         {
           u32 &= 0x0Fu;
           continues = 2;
+          if (u32 == 0xE0u               
+            && first != last
+            && (static_cast<unsigned char>(*first) & 0xE0u) == 0x80u)  // overlong?
+            overlong = true;
         }
-        else if ((u32 & 0xF8u) == 0xF0u  // 4 byte sequence
-          && (u32 != 0xF0u               // not overlong
-            || (first != last
-              && (static_cast<unsigned char>(*first) & 0xF0u) != 0x80u))
-          )
+        else if ((u32 & 0xF8u) == 0xF0u)  // 4 byte sequence
         {
           u32 &= 0x07u;
           continues = 3;
+          if (u32 == 0xF0u               
+            && first != last
+            && (static_cast<unsigned char>(*first) & 0xF0u) == 0x80u)  // overlong?
+            overlong = true;
         }
         else
           continues = -1;  // flag as error
 
         //  process the continuation bytes
+        //    requirement: increment past continuation bytes even if overlong 
         for (; continues > 0
-          && first != last                  // missing continuation
-          && (static_cast<unsigned char>(*first) & 0xC0u) == 0x80u;// missing continuation
+          && first != last                                          // continuation byte
+          && (static_cast<unsigned char>(*first) & 0xC0u) == 0x80u; //   not missing
           --continues)
         {
           u32 <<= 6;
           u32 += static_cast<unsigned char>(*first++) & 0x3Fu;
         }
 
-        if (continues != 0                       // error previously detected
+        if (overlong                             // overlong sequence
+          || continues != 0                      // missing continuation
           || u32 > 0x10FFFFu                     // out-of-range
           || (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogate (which is ill-formed UTF-32)
           )
