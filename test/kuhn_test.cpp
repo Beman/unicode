@@ -39,6 +39,16 @@ using std::u32string;
 namespace
 {
 
+  template <class T> struct underlying;
+  template<> struct underlying<char> { typedef unsigned char type; };
+  template<> struct underlying<char16_t> { typedef boost::uint_least16_t type; };
+  template<> struct underlying<char32_t> { typedef boost::uint_least32_t type; };
+#if WCHAR_MAX >= 0xFFFFFFFFu
+  template<> struct underlying<wchar_t> { typedef boost::uint_least32_t type; };
+#else
+  template<> struct underlying<wchar_t> { typedef boost::uint_least16_t type; };
+#endif
+
   template <class T>
   std::string to_hex(T x)
   {
@@ -74,7 +84,28 @@ namespace
   {
     cout << "Section 2, Boundary condition test cases" << endl;
 
-    string s2_1_1 = "\"\0\"";
+    // 2.1  First possible sequence of a certain length
+
+    string s2_1_1({'"', '\0', '"'});
+    u32string U2_1_1({U'"', U'\0', U'"'});
+    BOOST_TEST(to_utf32(s2_1_1) == U2_1_1);
+
+    string s2_1_2(u8"\"\u0080\"");
+    u32string U2_1_2(U"\"\u0080\"");
+    BOOST_TEST(to_utf32(s2_1_2) == U2_1_2);
+
+    string s2_1_3(u8"\"\u0800\"");
+    u32string U2_1_3(U"\"\u0800\"");
+    BOOST_TEST(to_utf32(s2_1_3) == U2_1_3);
+    cout << s2_1_3.size() << " " << hex_string(s2_1_3) << endl;
+    cout << U2_1_3.size() << " " << hex_string(U2_1_3) << endl;
+
+    string s2_1_4(u8"\"\U00010000\"");
+    u32string U2_1_4({U'"', U'\x10000', U'"'});
+    BOOST_TEST(to_utf32(s2_1_4) == U2_1_4);
+    cout << s2_1_4.size() << " " << hex_string(s2_1_4) << endl;
+    cout << U2_1_4.size() << " " << hex_string(U2_1_4) << endl;
+
     cout << "  Boundary condition test cases done" << endl;
   }
 
