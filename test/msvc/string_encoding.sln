@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "error_handler_test", "error
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clean_utf8", "clean_utf8\clean_utf8.vcxproj", "{7DBBBE9C-EE8E-4C9C-999C-7F9D372746FA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kuhn_test", "kuhn_test\kuhn_test.vcxproj", "{9347FED3-1155-48C8-8861-9CFD3D215C4E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -33,6 +35,10 @@ Global
 		{7DBBBE9C-EE8E-4C9C-999C-7F9D372746FA}.Debug|x86.Build.0 = Debug|Win32
 		{7DBBBE9C-EE8E-4C9C-999C-7F9D372746FA}.Release|x86.ActiveCfg = Release|Win32
 		{7DBBBE9C-EE8E-4C9C-999C-7F9D372746FA}.Release|x86.Build.0 = Release|Win32
+		{9347FED3-1155-48C8-8861-9CFD3D215C4E}.Debug|x86.ActiveCfg = Debug|Win32
+		{9347FED3-1155-48C8-8861-9CFD3D215C4E}.Debug|x86.Build.0 = Debug|Win32
+		{9347FED3-1155-48C8-8861-9CFD3D215C4E}.Release|x86.ActiveCfg = Release|Win32
+		{9347FED3-1155-48C8-8861-9CFD3D215C4E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
