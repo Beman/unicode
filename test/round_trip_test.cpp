@@ -6,14 +6,9 @@
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 #include "../include/boost/string_encoding/string_encoding.hpp"
-#include <cassert>
 #include <string>
-#include <iterator>
-#include <cwchar>
-#include <codecvt>  // for codecvt_utf8
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
-#include <boost/endian/conversion.hpp>
 #include <iostream>
 #include <typeinfo>
 
@@ -29,29 +24,38 @@ using std::u32string;
 namespace
 {
 
-  void utf32_round_trip_test()
+  u32string all_valid_utf32;
+
+  void init()
   {
-    cout << "utf32_round_trip_test" << endl;
-
-    u32string all_valid_utf32;
-
-    for (char32_t c = U'\0'; c < U'\U0000D7FF'; ++c)
+    //  U+D800 to U+DFFF are reserved for surrogates, and so are not included in the
+    //  all_valid_utf32 test data as they must not appear in well-formed UTF-32
+    //  sequences. 
+    for (char32_t c = U'\0'; c <= U'\uD7FF'; ++c)
       all_valid_utf32 += c;
-    for (char32_t c = U'\U0000E000'; c < U'\U0010FFFF'; ++c)
+    for (char32_t c = U'\uE000'; c <= U'\U0010FFFF'; ++c)
       all_valid_utf32 += c;
+  }
 
+  void test()
+  {
+    cout << "UTF-32 to UTF-8 round trip test" << endl;
+    cout << "  " << all_valid_utf32.size() << " code points will be tested" << endl;
     BOOST_TEST(to_utf32(to_utf8(all_valid_utf32)) == all_valid_utf32);
-
-
-    cout << "  utf32_round_trip_test done" << endl;
+    cout << "  UTF-32 to UTF-8 round trip test complete" << endl;
+ 
+    cout << "UTF-32 to UTF-16 round trip test" << endl;
+    cout << "  " << all_valid_utf32.size() << " code points will be tested" << endl;
+    BOOST_TEST(to_utf32(to_utf16(all_valid_utf32)) == all_valid_utf32);
+    cout << "  UTF-32 to UTF-16 round trip test complete" << endl;
   }
 
 }  // unnamed namespace
 
 int main()
 {
-
-  utf32_round_trip_test();
+  init();
+  test();
 
   return boost::report_errors();
 }
