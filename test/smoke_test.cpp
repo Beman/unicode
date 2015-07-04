@@ -14,10 +14,14 @@ using std::endl;
 #include <string>
 #include <iterator>
 #include <cwchar>
-#include <codecvt>  // for codecvt_utf8
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
+
+#include <boost/config.hpp>
+#if !defined(BOOST_NO_CXX11_HDR_CODECVT)
+#  include <codecvt>  // for codecvt_utf8
+#endif
 
 using namespace boost::string_encoding;
 using std::string;
@@ -31,8 +35,6 @@ namespace
   const u16string u16str(u"$€𐐷𤭢");
   const u32string u32str(U"$€𐐷𤭢");
   const wstring     wstr(L"$€𐐷𤭢");
-
-  std::codecvt_utf8<wchar_t> ccvt_utf8; 
 
   template <class T> struct underlying;
   template<> struct underlying<char> { typedef unsigned char type; };
@@ -174,14 +176,18 @@ void recode_test()
     cout << "  all_utf_test done" << endl;
   }
 
+
   void all_codecvt_test()
   {
+#if !defined(BOOST_NO_CXX11_HDR_CODECVT)
     cout << "all_codecvt_test" << endl;
 
     //  for now, limit code points to the BMP to ensure test codecvt facet support
 
     const string     u8s(u8"$€Ꭶ❄");
     const wstring      ws(L"$€Ꭶ❄");
+
+    std::codecvt_utf8<wchar_t> ccvt_utf8; 
 
     cout << u8s.size() << endl;
     cout << hex_string(u8s) << endl;
@@ -197,6 +203,7 @@ void recode_test()
     BOOST_TEST(wide_to_narrow(ws, ccvt_utf8, std::allocator<char>()) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
+#endif
   }
 
 }  // unnamed namespace

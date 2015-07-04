@@ -15,8 +15,10 @@ project
          [ run smoke_test.cpp # sources
            : # command line
            : # input files
-           : # requirements
+           : # requirements, including <test-info>always_show_run_output
            : # target name
          ]
-#         [ run floating_point_test.cpp : : : <test-info>always_show_run_output ]
+         [ run error_handler_test.cpp ]
+         [ run kuhn_test.cpp ]
+         [ run round_trip_test.cpp : : : <variant>release ]
        ;

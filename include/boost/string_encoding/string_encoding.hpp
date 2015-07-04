@@ -10,6 +10,7 @@
 
 #include <iterator>
 #include <string>
+#include <locale>
 #include <boost/utility/string_ref.hpp> 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
@@ -339,9 +340,10 @@ Encoding Form Conversion (D93) extract:
     //  by the appropriate error handler for the output type.
     struct err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
 
-    constexpr ::boost::uint16_t high_surrogate_base = 0xD7C0u;
-    constexpr ::boost::uint16_t low_surrogate_base = 0xDC00u;
-    constexpr ::boost::uint32_t ten_bit_mask = 0x3FFu;
+    //  handy constants
+    constexpr char16_t high_surrogate_base = 0xD7C0u;
+    constexpr char16_t low_surrogate_base = 0xDC00u;
+    constexpr char32_t ten_bit_mask = 0x3FFu;
 
 //--------------------------------------------------------------------------------------//
 //  Algorithms for converting UTF-8 and UTF-16 to and from a single UTF-32 encoded      //
@@ -349,6 +351,43 @@ Encoding Form Conversion (D93) extract:
 //  having to duplicate a lot of complex code and without the need for intermediate     //
 //  strings, such as in a UTF-8 to UTF-16 conversion.                                   //
 //--------------------------------------------------------------------------------------//
+ 
+    template <class OutputIterator, class Error>
+    inline
+    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh)
+    {
+      if (u32 <= 0x007Fu)
+        *result++ = static_cast<unsigned char>(u32);
+      else if (u32 <= 0x07FFu)
+      {
+        *result++ = static_cast<unsigned char>(0xC0u + (u32 >> 6));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else if (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogates are ill-formed
+      {
+        for (const char* rep = eh(); *rep; ++rep)
+          *result++ = *rep;
+      }
+      else if (u32 <= 0xFFFFu)
+      {
+        *result++ = static_cast<unsigned char>(0xE0u + (u32 >> 12));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else if (u32 <= 0x10FFFFu)
+      {
+        *result++ = static_cast<unsigned char>(0xF0u + (u32 >> 18));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 12) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+      }
+      else  // invalid code point
+      {
+        for (const char* rep = eh(); *rep; ++rep)
+          *result++ = *rep;
+      }
+      return result;
+    }
 
     template <class OutputIterator, class OutError>
     inline
@@ -360,9 +399,10 @@ Encoding Form Conversion (D93) extract:
       }
       else if (u32 >= 0x10000u && u32 <= 0x10FFFFu) // valid code point needing surrogate pair
       {
-        *result++ = detail::high_surrogate_base + static_cast<char16_t>(u32 >> 10);
-        *result++ = detail::low_surrogate_base
-          + static_cast<char16_t>(u32 & detail::ten_bit_mask);
+        *result++ = static_cast<char16_t>(high_surrogate_base
+          + static_cast<char16_t>(u32 >> 10));
+        *result++ = static_cast<char16_t>(low_surrogate_base
+          + static_cast<char16_t>(u32 & ten_bit_mask));
       }
       else  // invalid code point
       {
@@ -461,43 +501,6 @@ Encoding Form Conversion (D93) extract:
         }
         else
           result = u32_outputer(OutEncoding(), u32, result, out_eh);
-      }
-      return result;
-    }
-
-    template <class OutputIterator, class Error>
-    inline
-    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh)
-    {
-      if (u32 <= 0x007Fu)
-        *result++ = static_cast<unsigned char>(u32);
-      else if (u32 <= 0x07FFu)
-      {
-        *result++ = static_cast<unsigned char>(0xC0u + (u32 >> 6));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
-      }
-      else if (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogates are ill-formed
-      {
-        for (const char* rep = eh(); *rep; ++rep)
-          *result++ = *rep;
-      }
-      else if (u32 <= 0xFFFFu)
-      {
-        *result++ = static_cast<unsigned char>(0xE0u + (u32 >> 12));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
-      }
-      else if (u32 <= 0x10FFFFu)
-      {
-        *result++ = static_cast<unsigned char>(0xF0u + (u32 >> 18));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 12) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
-      }
-      else  // invalid code point
-      {
-        for (const char* rep = eh(); *rep; ++rep)
-          *result++ = *rep;
       }
       return result;
     }
