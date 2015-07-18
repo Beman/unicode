@@ -1,26 +1,29 @@
-# string_encoding
-String Encoding Conversion Library
+# unicode
+Unicode Support Library
 
 **This library is under development. It is unstable, buggy, and not suitable for production use.**
 
-This library provides algorithms and convenience functions that convert the
-encoding of C++ character sequences.
+This library provides algorithms and convenience functions intended to extend Unicode
+support for the C++ standard library and its technical reports. No modifications are made
+to the existing standard library. Instead, the Unicode support already built into the C++
+language and standard library is extended by providing additional functionality.
 
 Sequences and strings of character types `char`, `wchar_t`, `char16_t`, and `char32_t`
 are supported.
 
-Support is provided for native encodings, `codecvt<wchar_t, char>` supported encodings, and
-Unicode Transformation Format encodings UTF-8, UTF-16, and UTF-32.
+Unicode Transformation Format (UTF) encodings UTF-8, UTF-16, and UTF-32 are supported.
+Converting any other encoding to and from the UTF encodings is also supported if a
+`codecvt<wchar_t, char>` facet is available.
 
-The relationship between character type and supported encodings is shown in the
+The relationship between C++ character types and supported encodings is shown in the
 following table:
 
 | Type | Encodings |
 | ----- | ------ |
-| `char` | native, any encoding with `codecvt<wchar_t, char>` support, UTF-8 |
-| `wchar_t` | native |
+| `char` | UTF-8; conversion from non-UTF encodings is supported by providing a `codecvt<wchar_t, char>` facet |
 | `char16_t` | UTF-16 |
 | `char32_t`| UFT-32 |
+| `wchar_t` | UTF-8, UTF-16, or UFT-32, depending on the size of `wchar_t` |
 
 ---
 
