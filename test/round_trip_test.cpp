@@ -1,11 +1,11 @@
-﻿//  string_encoding/test/smoke_test.cpp  -----------------------------------------------//
+﻿//  unicode/test/round_trip_test.cpp  --------------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-#include "../include/boost/string_encoding/string_encoding.hpp"
+#include "../include/boost/unicode/conversion.hpp"
 #include <string>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
@@ -15,7 +15,7 @@
 using std::cout;
 using std::endl;
 
-using namespace boost::string_encoding;
+using namespace boost::unicode;
 using std::string;
 using std::wstring;
 using std::u16string;

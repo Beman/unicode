@@ -1,4 +1,4 @@
-# Boost String Encoding Library test Jamfile
+# Boost Unicode Library test Jamfile
 
 # Copyright Beman Dawes 2015
 
@@ -10,7 +10,7 @@ project
       <toolset>msvc:<asynch-exceptions>on
     ;
    
-   test-suite "string_encoding"
+   test-suite "unicode"
        :
          [ run smoke_test.cpp # sources
            : # command line

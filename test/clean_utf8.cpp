@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "../include/boost/string_encoding/string_encoding.hpp"
+#include "../include/boost/unicode/conversion.hpp"
 #include <boost/detail/lightweight_main.hpp>
 
 using std::cout;
@@ -46,7 +46,7 @@ int cpp_main(int argc, char* argv[])
   while (in.good())
   {
     getline(in, line);
-    string cleaned_line = boost::string_encoding::to_utf8(line);
+    string cleaned_line = boost::unicode::to_utf8(line);
     cout << cleaned_line << '\n';
   }
 

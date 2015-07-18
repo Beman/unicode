@@ -1,4 +1,4 @@
-﻿//  string_encoding/test/kuhn_test.cpp  ------------------------------------------------//
+﻿//  unicode/test/kuhn_test.cpp  --------------------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
@@ -24,7 +24,7 @@
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/string_encoding/string_encoding.hpp"
+#include "../include/boost/unicode/conversion.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
@@ -33,7 +33,7 @@ using std::endl;
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
 
-using namespace boost::string_encoding;
+using namespace boost::unicode;
 using std::string;
 using std::wstring;
 using std::u16string;

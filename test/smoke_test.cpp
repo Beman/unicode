@@ -1,4 +1,4 @@
-﻿//  string_encoding/test/smoke_test.cpp  -----------------------------------------------//
+﻿//  unicode/test/smoke_test.cpp  -------------------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
@@ -9,7 +9,7 @@
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/string_encoding/string_encoding.hpp"
+#include "../include/boost/unicode/conversion.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
@@ -23,7 +23,7 @@ using std::endl;
 #  include <codecvt>  // for codecvt_utf8
 #endif
 
-using namespace boost::string_encoding;
+using namespace boost::unicode;
 using std::string;
 using std::wstring;
 using std::u16string;
@@ -89,7 +89,7 @@ void recode_test()
   void make_recoded_string_test()
   {
     cout << "make_recoded_string_test" << endl;
-    u16string ru16 = make_recoded_string<utf8, utf16>(boost::string_ref(u8str));
+    u16string ru16 = make_recoded_string<utf8, utf16>(boost::string_view(u8str));
     BOOST_TEST(ru16 == u16str);
     cout << "  make_recoded_string_test done" << endl;
   }
