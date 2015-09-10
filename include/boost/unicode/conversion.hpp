@@ -21,8 +21,6 @@
 //  TODO:
 //
 //  * string inserters and extractors.  See the old string_interop repo.
-//  * Unicode algorithms on utf-8, 16, and 32 strings and string iterators, such as
-//    utf_next(), utf_prior(), utf_advance(), utf_size()
 
 //--------------------------------------------------------------------------------------//
 

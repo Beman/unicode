@@ -12,11 +12,19 @@
 
 <p>&nbsp;</p>
 <h2>TODO</h2>
-<p>Add John Maddock-like iterators: utf-8/char32_t, utf-16/char32_t, 
+<ul>
+  <li>Add John Maddock-like iterators: utf-8/char32_t, utf-16/char32_t, 
 char32_t/utf-8,&nbsp; char32_t/utf-16 - rationale: allows use of standard 
 algorithms. One use case is algorithm taking OutputIterator can use 
 back_inserter to string (utf8 encoded) and u16string, but general composability 
-like utf-8-&gt;utf-16 is not needed.</p>
+like utf-8-&gt;utf-16 is not needed.<br>
+&nbsp;</li>
+  <li>To support error handlers that take the begin and end of the problem range 
+  of characters: Instead of using a function object template parameter for error 
+  handling, use a function object <u><b>template template</b></u> parameter. 
+  This will allow parameterization of the error handler on the character type. 
+  </li>
+</ul>
 <p>&nbsp;</p>
 
 </body>
