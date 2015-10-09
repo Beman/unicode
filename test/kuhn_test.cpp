@@ -8,7 +8,7 @@
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
 //  Markus Kuhn's "UTF-8 decoder capability and stress test" is arguably the most       //
-//  complete and best known set of TUF-8 test cases available. It is a work of art.     //
+//  complete and best known set of UTF-8 test cases available. It is a work of art.     //
 //                                                                                      //
 //  See http://www.cl.cam.ac.uk/~mgk25/ucs/examples/UTF-8-test.txt                      //
 //                                                                                      //
