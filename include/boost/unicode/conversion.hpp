@@ -233,7 +233,7 @@ namespace unicode
   //
   //  The Unicode standard, Conformance chapter, requires conversion functions detect
   //  ill-formed code points and treat them as errors. It defines what constitutes 
-  //  ill-formed encoding in excruciating detail. It further mandates reporting erros via
+  //  ill-formed encoding in excruciating detail. It further mandates reporting errors via
   //  a single code point replacement character and strongly recomments U+FFFD.
   //  It provides rationale for these requirements that boils down to any other approach
   //  as a default, including throwing exceptions, can be and has been used as a security
