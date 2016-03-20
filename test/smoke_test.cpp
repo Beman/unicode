@@ -81,7 +81,7 @@ void recode_test()
   {
     cout << "recode_test" << endl;
     u16string ru16;
-    recode<utf8, utf16>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
+    recode_utf<utf8, utf16>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
     BOOST_TEST(ru16 == u16str);
     cout << "  recode_test done" << endl;
   }
@@ -89,7 +89,7 @@ void recode_test()
   void make_recoded_string_test()
   {
     cout << "make_recoded_string_test" << endl;
-    u16string ru16 = make_recoded_string<utf8, utf16>(boost::string_view(u8str));
+    u16string ru16 = make_utf_string<utf8, utf16>(boost::string_view(u8str));
     BOOST_TEST(ru16 == u16str);
     cout << "  make_recoded_string_test done" << endl;
   }
