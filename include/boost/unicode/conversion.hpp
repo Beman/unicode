@@ -71,23 +71,23 @@ namespace unicode
   //  charT with a  value of U+FFFD, encoded via ToEncoding.
   template <class charT> struct err_hdlr;
 
-  //  recode_utf
+  //  convert_utf
   //    converts between UTF-8, UTF-16, UTF-32, and wchar_t encodings;
   //    wchar_t encoding must be UTF-8, UTF-16, or UTF-32
   template <class InputIterator, class OutputIterator,
     class Error = err_hdlr<utf_encoding<iterator_traits<OutputIterator>::value_type>>>
   inline OutputIterator
-    recode_utf(InputIterator first, InputIterator last, OutputIterator result,
+    convert_utf(InputIterator first, InputIterator last, OutputIterator result,
       Error eh = Error());
 
-  //  make_utf_string 
-  template <class ToCharT,class FromCharT,
+  //  to_utf_string 
+  template <class ToCharT, class FromCharT,
+    class Error = err_hdlr<ToCharT>,
     class ToTraits = std::char_traits<ToCharT>,
     class ToAlloc = std::allocator<ToCharT>,
-    class FromTraits = std::char_traits<FromCharT>,
-    class Error = err_hdlr<ToEncoding>>
+    class FromTraits = std::char_traits<FromCharT>>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    make_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
+    to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
       Error eh = Error(), const ToAlloc& a = ToAlloc());
 
   //  Unicode Transformation Format (UTF) convenience conversion functions
@@ -255,7 +255,7 @@ Encoding Form Conversion (D93) extract:
 
 */
 
-//  recode_utf helpers ---------------------------------------------------------------------//
+//  convert_utf helpers ---------------------------------------------------------------------//
 
   namespace detail
   {
@@ -481,56 +481,56 @@ Encoding Form Conversion (D93) extract:
     }
 
 //--------------------------------------------------------------------------------------//
-//                              recode_utf implementation                                   //
-//       specializations of detail::recode_utf perform actual encoding conversion           //
+//                              convert_utf implementation                                   //
+//       specializations of detail::convert_utf perform actual encoding conversion           //
 //--------------------------------------------------------------------------------------//
 
   template <class InputIterator, class OutputIterator,
     class Error = err_hdlr<utf_encoding<iterator_traits<OutputIterator>::value_type>>>
   inline OutputIterator
-      recode_utf(InputIterator first, InputIterator last, OutputIterator result,
+      convert_utf(InputIterator first, InputIterator last, OutputIterator result,
         Error eh = Error())
     {
-      return detail::recode_utf<utf_encoding<InputIterator>::type,
+      return detail::convert_utf<utf_encoding<InputIterator>::type,
         utf_encoding<OutputIterator>::type>(first, last, result, eh);
     }
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf8, utf8,
+    OutputIterator convert_utf(utf8, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf8_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf16, utf16, 
+    OutputIterator convert_utf(utf16, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf16_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf32, utf32, 
+    OutputIterator convert_utf(utf32, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return std::copy(first, last, result);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf8, utf32,
+    OutputIterator convert_utf(utf8, utf32,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf8_to_char32_t<utf32>(first, last, result, eh, eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf16, utf32, 
+    OutputIterator convert_utf(utf16, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf16_to_char32_t<utf32>(first, last, result, eh , eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf32, utf16, 
+    OutputIterator convert_utf(utf32, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       for (; first != last; ++first)
@@ -541,7 +541,7 @@ Encoding Form Conversion (D93) extract:
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf32, utf8, 
+    OutputIterator convert_utf(utf32, utf8, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       for (; first != last; ++first)
@@ -552,14 +552,14 @@ Encoding Form Conversion (D93) extract:
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf8, utf16,
+    OutputIterator convert_utf(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf8_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf(utf16, utf8,
+    OutputIterator convert_utf(utf16, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf16_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
@@ -681,16 +681,88 @@ Encoding Form Conversion (D93) extract:
 
   } // namespace detail
 
-  //  recode_utf  --------------------------------------------------------------------------//
+  //  convert_utf  --------------------------------------------------------------------------//
 
-  template <class FromEncoding, class ToEncoding, class InputIterator,
-    class OutputIterator, class Error>
+  template <class InputIterator, class OutputIterator, class Error>
   inline OutputIterator
-    recode_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    convert_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
   {
-    return detail::recode_utf(typename detail::actual<FromEncoding>::encoding(),
+    // tag dispatch to the specific conversion function
+    return detail::convert_utf(typename detail::actual<FromEncoding>::encoding(),
       typename detail::actual<ToEncoding>::encoding(), first, last, result, eh);
   }
+
+  //  to_utf_string  -------------------------------------------------------------------//
+
+  template <class ToCharT, class FromCharT,
+    class Error = err_hdlr<ToCharT>,
+    class ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>,
+    class FromTraits = std::char_traits<FromCharT>>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
+      Error eh = Error(), const ToAlloc& a = ToAlloc())
+  {
+    std::basic_string<ToCharT, ToTraits, ToAlloc>(a);
+    convert_utf(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    return tmp;
+  }
+
+  //------------------------------------------------------------------------------------//
+  //  Unicode Transformation Format (UTF) based convenience function implementations    // 
+  //------------------------------------------------------------------------------------//
+
+  template <class Error = err_hdlr<char>>
+  inline std::string  to_u8string(const boost::string_view& v, Error eh = Error())
+    { return to_utf_string<char, char, Error>(v, eh); }
+  template <class Error = err_hdlr<char>>
+  inline std::string  to_u8string(const boost::u16string_view& v, Error eh = Error())
+    { return to_utf_string<char, char16_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char>>
+  inline std::string  to_u8string(const boost::u32string_view& v, Error eh = Error())
+    { return to_utf_string<char, char32_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char>>
+  inline std::string  to_u8string(const boost::wstring_view& v, Error eh = Error())
+    { return to_utf_string<char, wchar_t, Error>(v, eh); }
+
+  template <class Error = err_hdlr<char16_t>>
+  inline std::u16string  to_u16string(const boost::string_view& v, Error eh = Error())
+    { return to_utf_string<char16_t, char, Error>(v, eh); }
+  template <class Error = err_hdlr<char16_t>>
+  inline std::u16string  to_u16string(const boost::u16string_view& v, Error eh = Error())
+    { return to_utf_string<char16_t, char16_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char16_t>>
+  inline std::u16string  to_u16string(const boost::u32string_view& v, Error eh = Error())
+    { return to_utf_string<char16_t, char32_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char16_t>>
+  inline std::u16string  to_u16string(const boost::wstring_view& v, Error eh = Error())
+    { return to_utf_string<char16_t, wchar_t, Error>(v, eh); }
+
+  template <class Error = err_hdlr<char32_t>>
+  inline std::u32string  to_u32string(const boost::string_view& v, Error eh = Error())
+    { return to_utf_string<char32_t, char, Error>(v, eh); }
+  template <class Error = err_hdlr<char32_t>>
+  inline std::u32string  to_u32string(const boost::u16string_view& v, Error eh = Error())
+    { return to_utf_string<char32_t, char16_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char32_t>>
+  inline std::u32string  to_u32string(const boost::u32string_view& v, Error eh = Error())
+    { return to_utf_string<char32_t, char32_t, Error>(v, eh); }
+  template <class Error = err_hdlr<char32_t>>
+  inline std::u32string  to_u32string(const boost::wstring_view& v, Error eh = Error())
+    { return to_utf_string<char32_t, wchar_t, Error>(v, eh); }
+
+  template <class Error = err_hdlr<wchar_t>>
+  inline std::wstring  to_wstring(const boost::string_view& v, Error eh = Error())
+    { return to_utf_string<wchar_t, char, Error>(v, eh); }
+  template <class Error = err_hdlr<wchar_t>>
+  inline std::wstring  to_wstring(const boost::u16string_view& v, Error eh = Error())
+    { return to_utf_string<wchar_t, char16_t, Error>(v, eh); }
+  template <class Error = err_hdlr<wchar_t>>
+  inline std::wstring  to_wstring(const boost::u32string_view& v, Error eh = Error())
+    { return to_utf_string<wchar_t, char32_t, Error>(v, eh); }
+  template <class Error = err_hdlr<wchar_t>>
+  inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh = Error())
+    { return to_utf_string<wchar_t, wchar_t, Error>(v, eh); }
 
   template <class FromEncoding, class ToEncoding, class InputIterator,
     class OutputIterator, class Error>
@@ -700,22 +772,6 @@ Encoding Form Conversion (D93) extract:
   {
     return detail::recode_codecvt(FromEncoding(), ToEncoding(), first, last, result,
       ccvt, eh);
-  }
-
-  //  make_utf_string  -------------------------------------------------------------//
-
-  template <class ToCharT,class FromCharT,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>,
-    class FromTraits = std::char_traits<FromCharT>,
-    class Error = err_hdlr<ToEncoding>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    make_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
-      Error eh = Error(), const ToAlloc& a = ToAlloc())
-  {
-    std::basic_string<ToCharT, ToTraits, ToAlloc>(a);
-    recode_utf(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
-    return tmp;
   }
 
   template <class FromEncoding, class ToEncoding, class FromTraits, class ToTraits,
@@ -752,63 +808,6 @@ Encoding Form Conversion (D93) extract:
   {
     return make_codecvted_string<wide, narrow>(v, ccvt, a);
   }
-
-  //------------------------------------------------------------------------------------//
-  //  Unicode Transformation Format (UTF) based convenience function implementations    // 
-  //------------------------------------------------------------------------------------//
-
-  template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::string_view& v, Error eh = Error())
-    { return make_utf_string<char,char>(v, eh); }
-  template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::u16string_view& v, Error eh = Error())
-    { return make_utf_string<char,char16_t>(v, eh); }
-  template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::u32string_view& v, Error eh = Error())
-    { return make_utf_string<char,char32_t>(v, eh); }
-  template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::wstring_view& v, Error eh = Error())
-    { return make_utf_string<char,wchar_t>(v, eh); }
-
-  template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::string_view& v, Error eh = Error())
-    { return make_utf_string<char16_t,char>(v, eh); }
-  template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::u16string_view& v, Error eh = Error())
-    { return make_utf_string<char16_t,char16_t>(v, eh); }
-  template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::u32string_view& v, Error eh = Error())
-    { return make_utf_string<char16_t,char32_t>(v, eh); }
-  template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::wstring_view& v, Error eh = Error())
-    { return make_utf_string<char16_t,wchar_t>(v, eh); }
-
-  template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::string_view& v, Error eh = Error())
-    { return make_utf_string<char32_t,char>(v, eh); }
-  template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::u16string_view& v, Error eh = Error())
-    { return make_utf_string<char32_t,char16_t>(v, eh); }
-  template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::u32string_view& v, Error eh = Error())
-    { return make_utf_string<char32_t,char32_t>(v, eh); }
-  template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::wstring_view& v, Error eh = Error())
-    { return make_utf_string<char32_t,wchar_t>(v, eh); }
-
-  template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::string_view& v, Error eh = Error())
-    { return make_utf_string<wchar_t,char>(v, eh); }
-  template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::u16string_view& v, Error eh = Error())
-    { return make_utf_string<wchar_t,char16_t>(v, eh); }
-  template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::u32string_view& v, Error eh = Error())
-    { return make_utf_string<wchar_t,char32_t>(v, eh); }
-  template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh = Error())
-    { return make_utf_string<wchar_t,wchar_t>(v, eh); }
-
 //--------------------------------------------------------------------------------------//
 //                                 Implementation                                       //
 //--------------------------------------------------------------------------------------//
