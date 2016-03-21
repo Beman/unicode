@@ -40,26 +40,28 @@ namespace unicode
   struct utf16 {};   // char16_t
   struct utf32 {};   // char32_t
 
-  //  encoding value_type type-trait
-  template <class Encoding> struct encoded;
-  template <> struct encoded<narrow> { typedef char type; };
-  template <> struct encoded<wide>   { typedef wchar_t type; };
-  template <> struct encoded<utf8>   { typedef char type; };
-  template <> struct encoded<utf16>  { typedef char16_t type; };
-  template <> struct encoded<utf32>  { typedef char32_t type; };
-
-  //  UTF encoding type-trait
+  //  utf_encoding type-trait
   template <class CharT> struct utf_encoding;
   template <> struct utf_encoding<char> { typedef utf8 type; };
   template <> struct utf_encoding<char16_t> { typedef utf16 type; };
   template <> struct utf_encoding<char32_t> { typedef utf32 type; };
+  // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
+  // encoding of wchar_t.
 # if WCHAR_MAX >= 0xFFFFFFFFu
   template <> struct utf_encoding<wchar_t> { typedef utf32 type; };
 # elif WCHAR_MAX >= 0xFFFFu
   template <> struct utf_encoding<wchar_t> { typedef utf16 type; };
 # else
-#   error "This implementation does not yet support UTF-8 encoded wchar_t"
+  template <> struct utf_encoding<wchar_t> { typedef char type; };
 # endif
+
+  ////  encoding value_type type-trait
+  //template <class Encoding> struct encoded;
+  //template <> struct encoded<narrow> { typedef char type; };
+  //template <> struct encoded<wide>   { typedef wchar_t type; };
+  //template <> struct encoded<utf8>   { typedef char type; };
+  //template <> struct encoded<utf16>  { typedef char16_t type; };
+  //template <> struct encoded<utf32>  { typedef char32_t type; };
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
@@ -73,6 +75,9 @@ namespace unicode
 
   //  convert_utf
   //    converts between UTF-8, UTF-16, UTF-32, and wchar_t encodings;
+  //    char encoding must be UTF-8
+  //    char16_t encoding must be UTF-16
+  //    char32_t encoding must be UTF-32
   //    wchar_t encoding must be UTF-8, UTF-16, or UTF-32
   template <class InputIterator, class OutputIterator,
     class Error = err_hdlr<utf_encoding<iterator_traits<OutputIterator>::value_type>>>
@@ -80,7 +85,8 @@ namespace unicode
     convert_utf(InputIterator first, InputIterator last, OutputIterator result,
       Error eh = Error());
 
-  //  to_utf_string 
+  //  to_utf_string generic conversion function
+  //    Remarks: Performs the conversion by calling convert_utf.
   template <class ToCharT, class FromCharT,
     class Error = err_hdlr<ToCharT>,
     class ToTraits = std::char_traits<ToCharT>,
@@ -90,7 +96,8 @@ namespace unicode
     to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
       Error eh = Error(), const ToAlloc& a = ToAlloc());
 
-  //  Unicode Transformation Format (UTF) convenience conversion functions
+  //  to_*string convenience conversion functions
+  //    Remarks: Performs the converstion by calling to_utf_string
 
   template <class Error = err_hdlr<char>>
   inline std::string  to_u8string(const boost::string_view& v, Error eh = Error());
@@ -259,21 +266,9 @@ Encoding Form Conversion (D93) extract:
 
   namespace detail
   {
-    //  This implementation assumes that wide (i.e. wchar_t) character encoding is always
-    //  UTF-16 or UTF-32. As a result, only conversions between the three UTF encodings
-    //  need to be supported. The type-trait actual<t>::encoding folds wide encoding into
-    //  utf16 or utf32 encoding depending upon the platform.
-  
-    template <class T> struct actual { typedef T encoding; };
-# if WCHAR_MAX >= 0xFFFFFFFFu
-    template<> struct actual<wide> { typedef narrow encoding; };
-# else
-    template<> struct actual<wide> { typedef utf16 encoding; };
-# endif
-
-    //  for the utf8<-->utf16 encoding conversion, which use utf32 as an intermediary,
+    //  for the utf8<-->utf16 encoding conversion, which uses utf32 as an intermediary,
     //  we need a value that can never appear in valid utf32 to pass the error through
-    //  to the final output type and will then be detected as an error and then processed
+    //  to the final output type and there be detected as an error and then processed
     //  by the appropriate error handler for the output type.
     struct err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
 
@@ -481,21 +476,12 @@ Encoding Form Conversion (D93) extract:
     }
 
 //--------------------------------------------------------------------------------------//
-//                              convert_utf implementation                                   //
-//       specializations of detail::convert_utf perform actual encoding conversion           //
+//                      detail::convert_utf implementation                              //
+//        overload resolution performed by tag dispatch on from_tag, to_tag             //
 //--------------------------------------------------------------------------------------//
 
-  template <class InputIterator, class OutputIterator,
-    class Error = err_hdlr<utf_encoding<iterator_traits<OutputIterator>::value_type>>>
-  inline OutputIterator
-      convert_utf(InputIterator first, InputIterator last, OutputIterator result,
-        Error eh = Error())
-    {
-      return detail::convert_utf<utf_encoding<InputIterator>::type,
-        utf_encoding<OutputIterator>::type>(first, last, result, eh);
-    }
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_utf(utf8, utf8,
+    OutputIterator convert_utf(utf8 /*from_tag*/, utf8 /*to_tag*/,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       return utf8_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
@@ -688,8 +674,10 @@ Encoding Form Conversion (D93) extract:
     convert_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
   {
     // tag dispatch to the specific conversion function
-    return detail::convert_utf(typename detail::actual<FromEncoding>::encoding(),
-      typename detail::actual<ToEncoding>::encoding(), first, last, result, eh);
+    return detail::convert_utf(
+      typename iterator_traits<InputIterator>::value_type(),
+      typename iterator_traits<OutputIterator>::value_type(),
+      first, last, result, eh);
   }
 
   //  to_utf_string  -------------------------------------------------------------------//
