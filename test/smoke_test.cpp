@@ -89,8 +89,25 @@ void convert_utf_test()
   void to_utf_string_test()
   {
     cout << "to_utf_string_test" << endl;
+
+    // one argument tests
     u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str));
-//    u16string ru16 = to_utf_string<char16_t, char>(u8str);
+    BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char>(u8str);
+    BOOST_TEST(ru16 == u16str);
+
+    // two argument tests
+    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), err_hdlr<char16_t>());
+    BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>());
+    BOOST_TEST(ru16 == u16str);
+
+    // three argument tests
+    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), err_hdlr<char16_t>(),
+      std::allocator<char16_t>());
+    BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>(),
+      std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
     cout << "  to_utf_string_test done" << endl;
   }

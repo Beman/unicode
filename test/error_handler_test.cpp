@@ -114,14 +114,10 @@ namespace
   {
     cout << "default_arguments test" << endl;
     BOOST_TEST(to_u16string(U"A\x110000Z") == u"A\uFFFDZ");
-    BOOST_TEST(to_u16string(U"A\x110000Z", err_hdlr<utf16>()) == u"A\uFFFDZ");
-    BOOST_TEST(to_u16string(U"A\x110000Z", err_hdlr<utf16>(), std::allocator<char16_t>())
-      == u"A\uFFFDZ");
+    BOOST_TEST(to_u16string(U"A\x110000Z", err_hdlr<char16_t>()) == u"A\uFFFDZ");
     BOOST_TEST(to_u16string<err16>(U"A\x110000Z")
       == u"A*ill*Z");
     BOOST_TEST(to_u16string<err16>(U"A\x110000Z", err16())
-      == u"A*ill*Z");
-    BOOST_TEST(to_u16string<err16>(U"A\x110000Z", err16(), std::allocator<char16_t>())
       == u"A*ill*Z");
     cout << "  default_arguments test done" << endl;
   }

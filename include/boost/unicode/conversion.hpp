@@ -101,11 +101,12 @@ namespace unicode
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh);
+
   template <class ToEncoding, class InputIterator, class OutputIterator>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result);
 
-  //  to_utf_string generic conversion function
+  //  to_utf_string generic conversion functions
   //    Remarks: Performs the conversion by calling convert_utf.
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
@@ -113,14 +114,41 @@ namespace unicode
   //    output encodings are the same. This implies that if the eh function object always
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
+
+ //  three argument form
  template <class ToCharT, class FromCharT,
     class Error = err_hdlr<ToCharT>,
     class ToTraits = std::char_traits<ToCharT>,
     class ToAlloc = std::allocator<ToCharT>,
     class FromTraits = std::char_traits<FromCharT>>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
-      Error eh = Error(), const ToAlloc& a = ToAlloc());
+    to_utf_string(const boost::basic_string_view<FromCharT,
+      std::char_traits<FromCharT>>& v,
+      Error eh, const ToAlloc& a);
+
+ //  two argument form
+ template <class ToCharT, class FromCharT,
+    class Error,
+    class ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    to_utf_string(const boost::basic_string_view<FromCharT,
+      std::char_traits<FromCharT>>& v, Error eh)
+    {
+      return to_utf_string<ToCharT, FromCharT>(v, eh, ToAlloc());
+    }
+
+ //  one argument form
+ template <class ToCharT, class FromCharT,
+    class Error = err_hdlr<ToCharT>,
+    class ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    to_utf_string(const boost::basic_string_view<FromCharT,
+      std::char_traits<FromCharT>>& v)
+    {
+      return to_utf_string<ToCharT, FromCharT>(v, Error(), ToAlloc());
+    }
 
   //  to_*string convenience conversion functions
   //    Remarks: Performs the converstion by calling to_utf_string
@@ -731,8 +759,8 @@ Encoding Form Conversion (D93) extract:
     class ToAlloc,
     class FromTraits>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
-      Error eh, const ToAlloc& a)
+    to_utf_string(const boost::basic_string_view<FromCharT,
+      std::char_traits<FromCharT>>& v, Error eh, const ToAlloc& a)
   {
     std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
     convert_utf<typename utf_encoding<ToCharT>::type>
