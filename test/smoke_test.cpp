@@ -81,17 +81,18 @@ void convert_utf_test()
   {
     cout << "convert_utf_test" << endl;
     u16string ru16;
-    convert_utf(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
+    convert_utf<utf16>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
     BOOST_TEST(ru16 == u16str);
     cout << "  convert_utf_test done" << endl;
   }
 
-  void make_recoded_string_test()
+  void to_utf_string_test()
   {
-    cout << "make_recoded_string_test" << endl;
-    u16string ru16 = to_utf_string<utf8, utf16>(boost::string_view(u8str));
+    cout << "to_utf_string_test" << endl;
+    u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str));
+//    u16string ru16 = to_utf_string<char16_t, char>(u8str);
     BOOST_TEST(ru16 == u16str);
-    cout << "  make_recoded_string_test done" << endl;
+    cout << "  to_utf_string_test done" << endl;
   }
  
   void to_u8string_test()
@@ -153,10 +154,10 @@ void convert_utf_test()
 
     BOOST_TEST(to_wstring(wstr) == wstr);
     BOOST_TEST(to_wstring(u8str) == wstr);
-    BOOST_TEST(to_wstring(u8str, err_hdlr<wide>(), std::allocator<wchar_t>()) == wstr);
+    BOOST_TEST(to_wstring(u8str, err_hdlr<wchar_t>()) == wstr);
     BOOST_TEST(to_wstring(u16str) == wstr);
     BOOST_TEST(to_wstring(u32str) == wstr);
-    BOOST_TEST(to_wstring(u32str, err_hdlr<wide>(), std::allocator<wchar_t>()) == wstr);
+    BOOST_TEST(to_wstring(u32str, err_hdlr<wchar_t>()) == wstr);
 
     BOOST_TEST(to_u8string(wstr) == u8str);
     BOOST_TEST(to_u8string(u8str) == u8str);
@@ -216,7 +217,7 @@ int main()
   cout << "u32str :" << hex_string(u32str) << endl;
 
   convert_utf_test();
-  make_recoded_string_test();
+  to_utf_string_test();
   to_u8string_test();
   to_u16string_test();
   to_u32string_test();

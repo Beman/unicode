@@ -33,9 +33,9 @@ namespace unicode
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
 
-  //     encodings
+  //   encodings
   struct narrow {};  // char
-  struct wide {};    // wchar_t
+  struct wide {};    // wchar_t; synonym for utf8/16/32 depending on platform
   struct utf8 {};    // char
   struct utf16 {};   // char16_t
   struct utf32 {};   // char32_t
@@ -55,13 +55,13 @@ namespace unicode
   template <> struct utf_encoding<wchar_t> { typedef char type; };
 # endif
 
-  ////  encoding value_type type-trait
-  //template <class Encoding> struct encoded;
-  //template <> struct encoded<narrow> { typedef char type; };
-  //template <> struct encoded<wide>   { typedef wchar_t type; };
-  //template <> struct encoded<utf8>   { typedef char type; };
-  //template <> struct encoded<utf16>  { typedef char16_t type; };
-  //template <> struct encoded<utf32>  { typedef char32_t type; };
+  //  encoding_traits type-trait
+  template <class Encoding> struct encoding_traits;
+  template <> struct encoding_traits<narrow> { typedef char value_type; };
+  template <> struct encoding_traits<wide>   { typedef wchar_t value_type; };
+  template <> struct encoding_traits<utf8>   { typedef char value_type; };
+  template <> struct encoding_traits<utf16>  { typedef char16_t value_type; };
+  template <> struct encoding_traits<utf32>  { typedef char32_t value_type; };
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
@@ -93,11 +93,15 @@ namespace unicode
   //    output encodings are the same. This implies that if the eh function object always
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
-  template <class InputIterator, class OutputIterator, class Error>
+  //    Note: ToEncoding cannot be inferred via
+  //    utf_encoding<typename std::iterator_traits<OutputIterator>::value_type>::type
+  //    because std::iterator_traits<OutputIterator>::value_type is void for some
+  //    OutputIterators such as back_inserter.
+  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh);
-  template <class InputIterator, class OutputIterator>
+  template <class ToEncoding, class InputIterator, class OutputIterator>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result);
 
@@ -215,7 +219,7 @@ namespace unicode
 
   //template <> class err_hdlr<narrow>
   //  { public: const char* operator()() const noexcept { return "?"; } };
-  //template <> class err_hdlr<wide>
+  //template <> class err_hdlr<wchar_t>
   //  { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
 
 /*
@@ -524,7 +528,7 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_utf(utf32, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      TODO: Validate output. Pass through UTF-16?
+      // TODO: Validate output. Pass through UTF-16?
       return std::copy(first, last, result);
     }
 
@@ -694,29 +698,29 @@ Encoding Form Conversion (D93) extract:
 
   } // namespace detail
 
-  //  convert_utf  --------------------------------------------------------------------------//
+  //  convert_utf  ---------------------------------------------------------------------//
 
-  template <class InputIterator, class OutputIterator, class Error>
+  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
   {
     // tag dispatch to the specific conversion function
     return detail::convert_utf(
-      typename utf_encoding<typename iterator_traits<InputIterator>::value_type>::type(),
-      typename utf_encoding<typename iterator_traits<OutputIterator>::value_type>::type(),
-      first, last, result, eh);
+      typename
+        utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
+      ToEncoding(), first, last, result, eh);
   }
 
-  template <class InputIterator, class OutputIterator>
+  template <class ToEncoding, class InputIterator, class OutputIterator>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result)
   {
     // tag dispatch to the specific conversion function
     return detail::convert_utf(
-      typename utf_encoding<typename iterator_traits<InputIterator>::value_type>::type(),
-      typename utf_encoding<typename iterator_traits<OutputIterator>::value_type>::type(),
-      first, last, result,
-      err_hdlr<typename iterator_traits<OutputIterator>::value_type>());
+      typename
+        utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
+      ToEncoding(), first, last, result,
+      err_hdlr<typename encoding_traits<ToEncoding>::value_type>());
   }
 
   //  to_utf_string  -------------------------------------------------------------------//
@@ -730,8 +734,9 @@ Encoding Form Conversion (D93) extract:
     to_utf_string(const boost::basic_string_view<FromCharT, FromTraits>& v,
       Error eh, const ToAlloc& a)
   {
-    std::basic_string<ToCharT, ToTraits, ToAlloc>(a);
-    convert_utf(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
+    convert_utf<typename utf_encoding<ToCharT>::type>
+      (v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
     return tmp;
   }
 
@@ -740,55 +745,55 @@ Encoding Form Conversion (D93) extract:
   //------------------------------------------------------------------------------------//
 
   template <class Error>
-  inline std::string  to_u8string(const boost::string_view& v)
+  inline std::string  to_u8string(const boost::string_view& v, Error eh)
     { return to_utf_string<char, char, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::u16string_view& v)
+  inline std::string  to_u8string(const boost::u16string_view& v, Error eh)
     { return to_utf_string<char, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::u32string_view& v)
+  inline std::string  to_u8string(const boost::u32string_view& v, Error eh)
     { return to_utf_string<char, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::wstring_view& v)
+  inline std::string  to_u8string(const boost::wstring_view& v, Error eh)
     { return to_utf_string<char, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::u16string  to_u16string(const boost::string_view& v)
+  inline std::u16string  to_u16string(const boost::string_view& v, Error eh)
     { return to_utf_string<char16_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::u16string_view& v)
+  inline std::u16string  to_u16string(const boost::u16string_view& v, Error eh)
     { return to_utf_string<char16_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::u32string_view& v)
+  inline std::u16string  to_u16string(const boost::u32string_view& v, Error eh)
     { return to_utf_string<char16_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::wstring_view& v)
+  inline std::u16string  to_u16string(const boost::wstring_view& v, Error eh)
     { return to_utf_string<char16_t, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::u32string  to_u32string(const boost::string_view& v)
+  inline std::u32string  to_u32string(const boost::string_view& v, Error eh)
     { return to_utf_string<char32_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::u16string_view& v)
+  inline std::u32string  to_u32string(const boost::u16string_view& v, Error eh)
     { return to_utf_string<char32_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::u32string_view& v)
+  inline std::u32string  to_u32string(const boost::u32string_view& v, Error eh)
     { return to_utf_string<char32_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::wstring_view& v)
+  inline std::u32string  to_u32string(const boost::wstring_view& v, Error eh)
     { return to_utf_string<char32_t, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::wstring  to_wstring(const boost::string_view& v)
+  inline std::wstring  to_wstring(const boost::string_view& v, Error eh)
     { return to_utf_string<wchar_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::u16string_view& v)
+  inline std::wstring  to_wstring(const boost::u16string_view& v, Error eh)
     { return to_utf_string<wchar_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::u32string_view& v)
+  inline std::wstring  to_wstring(const boost::u32string_view& v, Error eh)
     { return to_utf_string<wchar_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::wstring_view& v)
+  inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh)
     { return to_utf_string<wchar_t, wchar_t, Error>(v, eh); }
 
   //template <class FromEncoding, class ToEncoding, class InputIterator,
