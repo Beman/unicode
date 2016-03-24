@@ -233,6 +233,10 @@ int main()
   cout << "u16str :" << hex_string(u16str) << endl;
   cout << "u32str :" << hex_string(u32str) << endl;
 
+
+  // TODO: Add test to verify InputIterators do not have to be contiguous and do not
+  // have to meet any forward, bidirectional, or random access requirements.
+
   convert_utf_test();
   to_utf_string_test();
   to_u8string_test();

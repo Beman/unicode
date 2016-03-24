@@ -206,45 +206,45 @@ namespace unicode
   //                 codecvt based conversions between char and wchar_t                 // 
   //------------------------------------------------------------------------------------//
 
-  //  codecvt_convert  -----------------------------------------------------------------//
+  ////  codecvt_convert  -----------------------------------------------------------------//
 
-  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
-  inline OutputIterator
-    codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt, Error eh);
+  //template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
+  //inline OutputIterator
+  //  codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
+  //    const codecvt_type& ccvt, Error eh);
 
-  template <class ToEncoding, class InputIterator, class OutputIterator>
-  inline OutputIterator
-    codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
-      const codecvt_type& ccvt);
+  //template <class ToEncoding, class InputIterator, class OutputIterator>
+  //inline OutputIterator
+  //  codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
+  //    const codecvt_type& ccvt);
 
-  //  codecvt_to_generic_string  -------------------------------------------------------//
+  ////  codecvt_to_generic_string  -------------------------------------------------------//
 
-  template <class ToCharT, class FromTraits =
-    std::char_traits<typename encoded<FromEncoding>::type>,
-    class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
-    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
-    class Error>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    codecvt_to_generic_string(const boost::basic_string_view<FromCharT,
-       std::char_traits<FromCharT>>& v,
-       Error eh, const ToAlloc& a);
+  //template <class ToCharT, class FromTraits =
+  //  std::char_traits<typename encoded<FromEncoding>::type>,
+  //  class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
+  //  class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
+  //  class Error>
+  //inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //  codecvt_to_generic_string(const boost::basic_string_view<FromCharT,
+  //     std::char_traits<FromCharT>>& v,
+  //     Error eh, const ToAlloc& a);
 
-  //  codecvt based conversion convenience functions  ----------------------------------//
+  ////  codecvt based conversion convenience functions  ----------------------------------//
 
-  //  codecvt_to_wstring
-  template <class ToTraits = std::char_traits<wchar_t>,
-    class ToAlloc = std::allocator<wchar_t >>
-  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-    codecvt_to_wstring(const boost::string_view& v,
-      const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+  ////  codecvt_to_wstring
+  //template <class ToTraits = std::char_traits<wchar_t>,
+  //  class ToAlloc = std::allocator<wchar_t >>
+  //inline std::basic_string<wchar_t, ToTraits, ToAlloc>
+  //  codecvt_to_wstring(const boost::string_view& v,
+  //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
-  //   codecvt_to_string
-  template <class ToTraits = std::char_traits<char>,
-    class ToAlloc = std::allocator<char>>
-  inline std::basic_string<char, ToTraits, ToAlloc>
-    codecvt_to_string(const boost::wstring_view& v,
-      const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+  ////   codecvt_to_string
+  //template <class ToTraits = std::char_traits<char>,
+  //  class ToAlloc = std::allocator<char>>
+  //inline std::basic_string<char, ToTraits, ToAlloc>
+  //  codecvt_to_string(const boost::wstring_view& v,
+  //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
