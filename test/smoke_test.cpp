@@ -209,16 +209,16 @@ void convert_utf_test()
 
     cout << u8s.size() << endl;
     cout << hex_string(u8s) << endl;
-    wstring w = narrow_to_wstring(u8s, ccvt_utf8);
+    wstring w = codecvt_to_wstring(u8s, ccvt_utf8);
     cout << w.size() << endl;
     cout << hex_string(w) << endl;
     BOOST_TEST(w == ws);
 
-    BOOST_TEST(narrow_to_wstring(u8s, ccvt_utf8) == ws);
-    BOOST_TEST(narrow_to_wstring(u8s, ccvt_utf8, std::allocator<wchar_t>()) == ws);
+    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8) == ws);
+    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8, std::allocator<wchar_t>()) == ws);
 
-    BOOST_TEST(wide_to_narrow(ws, ccvt_utf8) == u8s);
-    BOOST_TEST(wide_to_narrow(ws, ccvt_utf8, std::allocator<char>()) == u8s);
+    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8) == u8s);
+    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8, std::allocator<char>()) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
 #endif

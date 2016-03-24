@@ -81,7 +81,12 @@ namespace unicode
   template <> class err_hdlr<wchar_t>
     { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
 
-  //  convert_utf
+  //------------------------------------------------------------------------------------//
+  //               Unicode Transformation Format (UTF) conversions                      // 
+  //------------------------------------------------------------------------------------//
+
+  //  convert_utf UTF conversion algorithms  -------------------------------------------//
+
   //    converts between UTF-8, UTF-16, UTF-32, and wchar_t encodings;
   //    char encoding must be UTF-8
   //    char16_t encoding must be UTF-16
@@ -106,7 +111,8 @@ namespace unicode
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result);
 
-  //  to_utf_string generic conversion functions
+  //  to_utf_string generic UTF string conversion functions  ---------------------------//
+
   //    Remarks: Performs the conversion by calling convert_utf.
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
@@ -115,42 +121,43 @@ namespace unicode
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
 
- //  three argument form
- template <class ToCharT, class FromCharT,
-    class Error = err_hdlr<ToCharT>,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>,
-    class FromTraits = std::char_traits<FromCharT>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT,
-      std::char_traits<FromCharT>>& v,
-      Error eh, const ToAlloc& a);
+  //  three argument form
+  template <class ToCharT, class FromCharT,
+     class Error = err_hdlr<ToCharT>,
+     class ToTraits = std::char_traits<ToCharT>,
+     class ToAlloc = std::allocator<ToCharT>,
+     class FromTraits = std::char_traits<FromCharT>>
+   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+     to_utf_string(const boost::basic_string_view<FromCharT,
+       std::char_traits<FromCharT>>& v,
+       Error eh, const ToAlloc& a);
+  
+  //  two argument form
+  template <class ToCharT, class FromCharT,
+     class Error,
+     class ToTraits = std::char_traits<ToCharT>,
+     class ToAlloc = std::allocator<ToCharT>>
+   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+     to_utf_string(const boost::basic_string_view<FromCharT,
+       std::char_traits<FromCharT>>& v, Error eh)
+     {
+       return to_utf_string<ToCharT, FromCharT>(v, eh, ToAlloc());
+     }
+  
+  //  one argument form
+  template <class ToCharT, class FromCharT,
+     class Error = err_hdlr<ToCharT>,
+     class ToTraits = std::char_traits<ToCharT>,
+     class ToAlloc = std::allocator<ToCharT>>
+   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+     to_utf_string(const boost::basic_string_view<FromCharT,
+       std::char_traits<FromCharT>>& v)
+     {
+       return to_utf_string<ToCharT, FromCharT>(v, Error(), ToAlloc());
+     }
+  
+  //  to_*string convenience functions for UTF string conversions  ---------------------//
 
- //  two argument form
- template <class ToCharT, class FromCharT,
-    class Error,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT,
-      std::char_traits<FromCharT>>& v, Error eh)
-    {
-      return to_utf_string<ToCharT, FromCharT>(v, eh, ToAlloc());
-    }
-
- //  one argument form
- template <class ToCharT, class FromCharT,
-    class Error = err_hdlr<ToCharT>,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT,
-      std::char_traits<FromCharT>>& v)
-    {
-      return to_utf_string<ToCharT, FromCharT>(v, Error(), ToAlloc());
-    }
-
-  //  to_*string convenience conversion functions
   //    Remarks: Performs the converstion by calling to_utf_string
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
@@ -195,39 +202,49 @@ namespace unicode
   template <class Error = err_hdlr<wchar_t>>
   inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh = Error());
 
-  ////  recode_codecvt
-  //template <class FromEncoding, class ToEncoding, class InputIterator,
-  //  class OutputIterator, class Error = err_hdlr<ToEncoding>>
-  //inline OutputIterator
-  //  recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
-  //    const codecvt_type& ccvt, Error eh = Error());
+  //------------------------------------------------------------------------------------//
+  //                 codecvt based conversions between char and wchar_t                 // 
+  //------------------------------------------------------------------------------------//
 
-  //  //  make_codecvted_string
-  //template <class FromEncoding, class ToEncoding, class FromTraits =
-  //  std::char_traits<typename encoded<FromEncoding>::type>,
-  //  class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
-  //  class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
-  //  class Error>
-  //inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
-  //  make_codecvted_string(
-  //    const boost::basic_string_view<typename encoded<FromEncoding>::type, FromTraits>& v,
-  //    const codecvt_type& ccvt, Error eh, const ToAlloc& a = ToAlloc());
+  //  codecvt_convert  -----------------------------------------------------------------//
 
-  ////  codecvt facet based conversion convenience functions 
+  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
+  inline OutputIterator
+    codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
+      const codecvt_type& ccvt, Error eh);
 
-  ////  narrow_to_wstring
-  //template <class ToTraits = std::char_traits<wchar_t>,
-  //  class ToAlloc = std::allocator<wchar_t >>
-  //inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-  //  narrow_to_wstring(const boost::string_view& v,
-  //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+  template <class ToEncoding, class InputIterator, class OutputIterator>
+  inline OutputIterator
+    codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
+      const codecvt_type& ccvt);
 
-  ////   wide_to_narrow
-  //template <class ToTraits = std::char_traits<char>,
-  //  class ToAlloc = std::allocator<char>>
-  //inline std::basic_string<char, ToTraits, ToAlloc>
-  //  wide_to_narrow(const boost::wstring_view& v,
-  //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+  //  codecvt_to_generic_string  -------------------------------------------------------//
+
+  template <class ToCharT, class FromTraits =
+    std::char_traits<typename encoded<FromEncoding>::type>,
+    class ToTraits = std::char_traits<typename encoded<ToEncoding>::type>,
+    class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
+    class Error>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    codecvt_to_generic_string(const boost::basic_string_view<FromCharT,
+       std::char_traits<FromCharT>>& v,
+       Error eh, const ToAlloc& a);
+
+  //  codecvt based conversion convenience functions  ----------------------------------//
+
+  //  codecvt_to_wstring
+  template <class ToTraits = std::char_traits<wchar_t>,
+    class ToAlloc = std::allocator<wchar_t >>
+  inline std::basic_string<wchar_t, ToTraits, ToAlloc>
+    codecvt_to_wstring(const boost::string_view& v,
+      const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
+
+  //   codecvt_to_string
+  template <class ToTraits = std::char_traits<char>,
+    class ToAlloc = std::allocator<char>>
+  inline std::basic_string<char, ToTraits, ToAlloc>
+    codecvt_to_string(const boost::wstring_view& v,
+      const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
@@ -610,10 +627,10 @@ Encoding Form Conversion (D93) extract:
       return utf16_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
     }
 
-    //  recode_codecvt
+    //  codecvt_convert
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_codecvt(narrow, wide,
+    OutputIterator codecvt_convert(narrow, wide,
       InputIterator first, InputIterator last, OutputIterator result,
       const codecvt_type& ccvt, Error eh)
     {
@@ -669,7 +686,7 @@ Encoding Form Conversion (D93) extract:
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_codecvt(wide, narrow,
+    OutputIterator codecvt_convert(wide, narrow,
       InputIterator first, InputIterator last, OutputIterator result,
       const codecvt_type& ccvt, Error eh)
     {
@@ -827,22 +844,22 @@ Encoding Form Conversion (D93) extract:
   //template <class FromEncoding, class ToEncoding, class InputIterator,
   //  class OutputIterator, class Error>
   //inline OutputIterator
-  //  recode_codecvt(InputIterator first, InputIterator last, OutputIterator result,
+  //  codecvt_convert(InputIterator first, InputIterator last, OutputIterator result,
   //    const codecvt_type& ccvt, Error eh)
   //{
-  //  return detail::recode_codecvt(FromEncoding(), ToEncoding(), first, last, result,
+  //  return detail::codecvt_convert(FromEncoding(), ToEncoding(), first, last, result,
   //    ccvt, eh);
   //}
 
   //template <class FromEncoding, class ToEncoding, class FromTraits, class ToTraits,
   //  class ToAlloc, class Error>
   //inline std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc>
-  //  make_codecvted_string(
+  //  codecvt_to_generic_string(
   //    const boost::basic_string_view<typename encoded<FromEncoding>::type, FromTraits>& v,
   //    const codecvt_type& ccvt, Error eh, const ToAlloc& a)
   //{
   //  std::basic_string<typename encoded<ToEncoding>::type, ToTraits, ToAlloc> tmp(a);
-  //  recode_codecvt<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+  //  codecvt_convert<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
   //    std::back_inserter(tmp), ccvt, eh);
   //  return tmp;
   //}
@@ -854,19 +871,19 @@ Encoding Form Conversion (D93) extract:
   ////  narrow to wide
   //template <class ToTraits, class ToAlloc>
   //inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-  //  narrow_to_wstring(const boost::string_view& v, const codecvt_type& ccvt,
+  //  codecvt_to_wstring(const boost::string_view& v, const codecvt_type& ccvt,
   //    const ToAlloc& a)
   //{
-  //  return make_codecvted_string<narrow, wide>(v, ccvt, a);
+  //  return codecvt_to_generic_string<narrow, wide>(v, ccvt, a);
   //}
 
   ////  wide to narrow
   //template <class ToTraits,  class ToAlloc>
   //inline std::basic_string<char, ToTraits, ToAlloc>
-  //  wide_to_narrow(const boost::wstring_view& v, const codecvt_type& ccvt,
+  //  codecvt_to_string(const boost::wstring_view& v, const codecvt_type& ccvt,
   //    const ToAlloc& a)
   //{
-  //  return make_codecvted_string<wide, narrow>(v, ccvt, a);
+  //  return codecvt_to_generic_string<wide, narrow>(v, ccvt, a);
   //}
 //--------------------------------------------------------------------------------------//
 //                                 Implementation                                       //
