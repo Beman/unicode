@@ -1,0 +1,146 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <style type="text/css">code{white-space: pre;}</style>
+  <link href="data:text/css;charset=utf-8,body%0A%7B%0Afont%2Dfamily%3A%20arial%2C%20sans%2Dserif%3B%0Amax%2Dwidth%3A%206%2E75in%3B%0Amargin%3A%200px%20auto%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ains%20%7Bbackground%2Dcolor%3A%20%23CCFFCC%3B%20text%2Ddecoration%3A%20none%3B%7D%0Adel%20%7Bbackground%2Dcolor%3A%20%23FFCACA%3B%20text%2Ddecoration%3A%20none%3B%7D%0Apre%20%7Bbackground%2Dcolor%3A%20%23D7EEFF%3B%20font%2Dsize%3A%2095%25%3B%20font%2Dfamily%3A%20%22courier%20new%22%2C%20courier%2C%20serif%3B%7D%0Acode%20%7Bfont%2Dsize%3A%20110%25%3B%20font%2Dfamily%3A%20%22courier%20new%22%2C%20courier%2C%20serif%3B%7D%0Atable%20%7Bfont%2Dsize%3A%2090%25%3B%7D%0A%0A" rel="stylesheet" type="text/css" />
+<title>UTF Encoding Conversion</title>
+</head>
+
+<body>
+<table>
+<tr>
+  <td align="left">Doc. no.:</td>
+  <td align="left"><span style="background-color:yellow">DxxxxR0</span></td>
+</tr>
+<tr>
+  <td align="left">Date:</td>
+  <td align="left">
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-03-25<!--webbot bot="Timestamp" endspan i-checksum="12210" --></td>
+</tr>
+<tr>
+  <td align="left">Reply to:</td>
+  <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;
+</tr>
+<tr>
+  <td align="left">Audience:</td>
+  <td align="left">Library Evolution</td>
+</tr>
+</table>
+
+
+
+<h2 >Requirements</h2>
+
+
+
+<h2 >Design decisions</h2>
+
+
+
+<p ><b>No changes to the core language</b></p>
+<blockquote>
+
+
+
+<p >Types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
+<code>wchar_t</code> remain unchanged, an there is no change to current 
+requirements on their encodings.</p>
+
+
+
+<p >No new core language character types are proposed.</p>
+</blockquote>
+
+
+
+<p ><b>Proposed changes to the standard library are pure additions</b></p>
+
+
+
+<p >&nbsp;</p>
+
+
+
+<p ><b>Its all about string encoding needs</b></p>
+
+
+
+<p ><b>Support multiple <code>char</code> string environments</b></p>
+<ul>
+  <li><b><code>char</code> based strings can be assumed to be UTF-8 encoded.</b></li>
+  <li><b><code>char</code> based strings can not be assumed to be UTF-8 encoded.</b></li>
+  <li><b>Some are, some are not, within the same scope.</b></li>
+</ul>
+
+
+
+<p ><b>Provide three levels of functionality</b></p>
+<blockquote>
+
+
+
+<p >Provide high-level easy-to-use encoding conversion functions that handle 
+everyday string interoperability needs. Keep the interfaces simple, but do 
+support error handling customization since user needs vary widely.</p>
+
+
+
+<p >Provide mid-level generic string encoding to support those requiring the 
+full range of string interoperability needs.</p>
+
+
+
+<p >Provide an encoding conversion algorithm patterned after existing standard 
+library algorithms for those who need to</p>
+</blockquote>
+
+
+
+<p ><b>Default error handling in favor of security.</b></p>
+
+
+
+<p ><b>Also provide throw-on-error error handlers.</b></p>
+
+
+
+<p ><b>Provide a coherent error detection policy so that users know when they do 
+and when they do not have to check for errors themselves</b></p>
+
+
+
+<p ><b>Provide error checking functions so that users can easily check strings 
+or sequences for valid UTF encoding.</b></p>
+<p ><b>Default encoding is Unicode Transformation Format (UTF)</b></p>
+<p >Unless otherwise specified, all functions in namespace <code>
+unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
+<code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
+<p ><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
+UTF-32, according on the <code>sizeof(wchar_t)</code>.</p>
+<p ><b>TODO: Follow Marshall&#39;s suggested return of pair&lt;&gt; from string 
+algorithms.</b></p>
+<p ><b>TODO: UTF first, last, iterators are InputIterators? 
+ForwardIterators? RandomAccess? Contiguous? What does basic_string_view require?
+</b>How does iterator category interact with error handler? If the actual 
+conversion is done by functions requiring const char* point to a contiguous 
+string, to lesser categories of iterators actually work?</p>
+<p ><b>TODO: Add test cases for other kinds of strings to regression 
+tests</b></p>
+<p >TODO: add static asserts on character types, other requirements.</p>
+<p ><b>TODO: Arguments for error handler?</b></p>
+<p >&nbsp;</p>
+<p >&nbsp;</p>
+<h2 >Bike shed</h2>
+<p >&nbsp;</p>
+<p >&nbsp;</p>
+<p >&nbsp;</p>
+
+
+
+</body>
+
+</html>
