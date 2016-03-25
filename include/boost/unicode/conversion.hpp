@@ -120,40 +120,63 @@ namespace unicode
   //    output encodings are the same. This implies that if the eh function object always
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
+  //    Note: See "Probe CharTraits template argument deduction" in test/smoke_test.cpp
+  //    for why two overloads are needed for each form rather than providing a default
+  //    template parameter for FromTraits. Short answer: With a default FromTraits
+  //    parameter, template argument deduction fails.
 
-  //  three argument form
-  template <class ToCharT, class FromCharT,
+  //  three argument forms
+  template <class ToCharT, class FromCharT, class FromTraits,  // explicit FromTraits
      class Error = err_hdlr<ToCharT>,
-     class ToTraits = std::char_traits<ToCharT>,
-     class ToAlloc = std::allocator<ToCharT>,
-     class FromTraits = std::char_traits<FromCharT>>
-   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-     to_utf_string(const boost::basic_string_view<FromCharT,
-       std::char_traits<FromCharT>>& v,
-       Error eh, const ToAlloc& a);
-  
-  //  two argument form
-  template <class ToCharT, class FromCharT,
-     class Error,
      class ToTraits = std::char_traits<ToCharT>,
      class ToAlloc = std::allocator<ToCharT>>
    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-     to_utf_string(const boost::basic_string_view<FromCharT,
-       std::char_traits<FromCharT>>& v, Error eh)
+     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v,
+       Error eh, const ToAlloc& a);
+
+  template <class ToCharT, class FromCharT,  // default FromTraits
+     class Error = err_hdlr<ToCharT>,
+     class ToTraits = std::char_traits<ToCharT>,
+     class ToAlloc = std::allocator<ToCharT>>
+   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+     to_utf_string(boost::basic_string_view<FromCharT> v,
+       Error eh, const ToAlloc& a)
      {
-       return to_utf_string<ToCharT, FromCharT>(v, eh, ToAlloc());
+       return to_utf_string<ToCharT, FromCharT, typename std::char_traits<FromCharT>,
+         Error, ToTraits, ToAlloc>(v, eh, a);
      }
   
-  //  one argument form
-  template <class ToCharT, class FromCharT,
-     class Error = err_hdlr<ToCharT>,
-     class ToTraits = std::char_traits<ToCharT>,
-     class ToAlloc = std::allocator<ToCharT>>
-   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-     to_utf_string(const boost::basic_string_view<FromCharT,
-       std::char_traits<FromCharT>>& v)
+  //  two argument forms
+  template <class ToCharT, class FromCharT, class FromTraits,  // explicit FromTraits
+     class Error>
+   inline std::basic_string<ToCharT>
+     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v, Error eh)
      {
-       return to_utf_string<ToCharT, FromCharT>(v, Error(), ToAlloc());
+       return to_utf_string<ToCharT, FromCharT, FromTraits>(
+         v, eh, std::allocator<ToCharT>());
+     }
+  template <class ToCharT, class FromCharT,  // default FromTraits
+     class Error>
+   inline std::basic_string<ToCharT>
+     to_utf_string(boost::basic_string_view<FromCharT> v, Error eh)
+     {
+       return to_utf_string<ToCharT, FromCharT>(v, eh, std::allocator<ToCharT>());
+     }
+  
+  //  one argument forms
+  template <class ToCharT, class FromCharT, class FromTraits>
+   inline std::basic_string<ToCharT>
+     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v)
+     {
+       return to_utf_string<ToCharT, FromCharT, FromTraits>(v,
+         err_hdlr<ToCharT>(), std::allocator<ToCharT>());
+     }
+  template <class ToCharT, class FromCharT>  // default FromTraits
+   inline std::basic_string<ToCharT>
+     to_utf_string(boost::basic_string_view<FromCharT> v)
+     {
+       return to_utf_string<ToCharT, FromCharT>(v,
+         err_hdlr<ToCharT>(), std::allocator<ToCharT>());
      }
   
   //  to_*string convenience functions for UTF string conversions  ---------------------//
@@ -167,40 +190,40 @@ namespace unicode
   //    a valid UTF sequence.
 
   template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::string_view& v, Error eh = Error());
+  inline std::string  to_u8string(boost::string_view v, Error eh = Error());
   template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::u16string_view& v, Error eh = Error());
+  inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
   template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::u32string_view& v, Error eh = Error());
+  inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
   template <class Error = err_hdlr<char>>
-  inline std::string  to_u8string(const boost::wstring_view& v, Error eh = Error());
+  inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::string_view& v, Error eh = Error());
+  inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
   template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::u16string_view& v, Error eh = Error());
+  inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
   template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::u32string_view& v, Error eh = Error());
+  inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
   template <class Error = err_hdlr<char16_t>>
-  inline std::u16string  to_u16string(const boost::wstring_view& v, Error eh = Error());
+  inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::string_view& v, Error eh = Error());
+  inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
   template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::u16string_view& v, Error eh = Error());
+  inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
   template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::u32string_view& v, Error eh = Error());
+  inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
   template <class Error = err_hdlr<char32_t>>
-  inline std::u32string  to_u32string(const boost::wstring_view& v, Error eh = Error());
+  inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::string_view& v, Error eh = Error());
+  inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
   template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::u16string_view& v, Error eh = Error());
+  inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
   template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::u32string_view& v, Error eh = Error());
+  inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
   template <class Error = err_hdlr<wchar_t>>
-  inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh = Error());
+  inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
   //------------------------------------------------------------------------------------//
   //                 codecvt based conversions between char and wchar_t                 // 
@@ -226,8 +249,8 @@ namespace unicode
   //  class ToAlloc = std::allocator<typename encoded<ToEncoding>::type>,
   //  class Error>
   //inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-  //  codecvt_to_generic_string(const boost::basic_string_view<FromCharT,
-  //     std::char_traits<FromCharT>>& v,
+  //  codecvt_to_generic_string(boost::basic_string_view<FromCharT,
+  //     std::char_traits<FromCharT>> v,
   //     Error eh, const ToAlloc& a);
 
   ////  codecvt based conversion convenience functions  ----------------------------------//
@@ -236,14 +259,14 @@ namespace unicode
   //template <class ToTraits = std::char_traits<wchar_t>,
   //  class ToAlloc = std::allocator<wchar_t >>
   //inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-  //  codecvt_to_wstring(const boost::string_view& v,
+  //  codecvt_to_wstring(boost::string_view v,
   //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
   ////   codecvt_to_string
   //template <class ToTraits = std::char_traits<char>,
   //  class ToAlloc = std::allocator<char>>
   //inline std::basic_string<char, ToTraits, ToAlloc>
-  //  codecvt_to_string(const boost::wstring_view& v,
+  //  codecvt_to_string(boost::wstring_view v,
   //    const codecvt_type& ccvt, const ToAlloc& a = ToAlloc());
 
 //---------------------------------  end synopsis  -------------------------------------// 
@@ -770,14 +793,11 @@ Encoding Form Conversion (D93) extract:
 
   //  to_utf_string  -------------------------------------------------------------------//
 
-  template <class ToCharT, class FromCharT,
-    class Error,
-    class ToTraits,
-    class ToAlloc,
-    class FromTraits>
+  template <class ToCharT, class FromCharT, class FromTraits, class Error,
+    class ToTraits,  class ToAlloc>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(const boost::basic_string_view<FromCharT,
-      std::char_traits<FromCharT>>& v, Error eh, const ToAlloc& a)
+    to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v,
+      Error eh, const ToAlloc& a)
   {
     std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
     convert_utf<typename utf_encoding<ToCharT>::type>
@@ -790,55 +810,55 @@ Encoding Form Conversion (D93) extract:
   //------------------------------------------------------------------------------------//
 
   template <class Error>
-  inline std::string  to_u8string(const boost::string_view& v, Error eh)
+  inline std::string  to_u8string(boost::string_view v, Error eh)
     { return to_utf_string<char, char, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::u16string_view& v, Error eh)
+  inline std::string  to_u8string(boost::u16string_view v, Error eh)
     { return to_utf_string<char, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::u32string_view& v, Error eh)
+  inline std::string  to_u8string(boost::u32string_view v, Error eh)
     { return to_utf_string<char, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::string  to_u8string(const boost::wstring_view& v, Error eh)
+  inline std::string  to_u8string(boost::wstring_view v, Error eh)
     { return to_utf_string<char, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::u16string  to_u16string(const boost::string_view& v, Error eh)
+  inline std::u16string  to_u16string(boost::string_view v, Error eh)
     { return to_utf_string<char16_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::u16string_view& v, Error eh)
+  inline std::u16string  to_u16string(boost::u16string_view v, Error eh)
     { return to_utf_string<char16_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::u32string_view& v, Error eh)
+  inline std::u16string  to_u16string(boost::u32string_view v, Error eh)
     { return to_utf_string<char16_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::u16string  to_u16string(const boost::wstring_view& v, Error eh)
+  inline std::u16string  to_u16string(boost::wstring_view v, Error eh)
     { return to_utf_string<char16_t, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::u32string  to_u32string(const boost::string_view& v, Error eh)
+  inline std::u32string  to_u32string(boost::string_view v, Error eh)
     { return to_utf_string<char32_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::u16string_view& v, Error eh)
+  inline std::u32string  to_u32string(boost::u16string_view v, Error eh)
     { return to_utf_string<char32_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::u32string_view& v, Error eh)
+  inline std::u32string  to_u32string(boost::u32string_view v, Error eh)
     { return to_utf_string<char32_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::u32string  to_u32string(const boost::wstring_view& v, Error eh)
+  inline std::u32string  to_u32string(boost::wstring_view v, Error eh)
     { return to_utf_string<char32_t, wchar_t, Error>(v, eh); }
 
   template <class Error>
-  inline std::wstring  to_wstring(const boost::string_view& v, Error eh)
+  inline std::wstring  to_wstring(boost::string_view v, Error eh)
     { return to_utf_string<wchar_t, char, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::u16string_view& v, Error eh)
+  inline std::wstring  to_wstring(boost::u16string_view v, Error eh)
     { return to_utf_string<wchar_t, char16_t, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::u32string_view& v, Error eh)
+  inline std::wstring  to_wstring(boost::u32string_view v, Error eh)
     { return to_utf_string<wchar_t, char32_t, Error>(v, eh); }
   template <class Error>
-  inline std::wstring  to_wstring(const boost::wstring_view& v, Error eh)
+  inline std::wstring  to_wstring(boost::wstring_view v, Error eh)
     { return to_utf_string<wchar_t, wchar_t, Error>(v, eh); }
 
   //template <class FromEncoding, class ToEncoding, class InputIterator,
@@ -871,7 +891,7 @@ Encoding Form Conversion (D93) extract:
   ////  narrow to wide
   //template <class ToTraits, class ToAlloc>
   //inline std::basic_string<wchar_t, ToTraits, ToAlloc>
-  //  codecvt_to_wstring(const boost::string_view& v, const codecvt_type& ccvt,
+  //  codecvt_to_wstring(boost::string_view v, const codecvt_type& ccvt,
   //    const ToAlloc& a)
   //{
   //  return codecvt_to_generic_string<narrow, wide>(v, ccvt, a);
@@ -880,7 +900,7 @@ Encoding Form Conversion (D93) extract:
   ////  wide to narrow
   //template <class ToTraits,  class ToAlloc>
   //inline std::basic_string<char, ToTraits, ToAlloc>
-  //  codecvt_to_string(const boost::wstring_view& v, const codecvt_type& ccvt,
+  //  codecvt_to_string(boost::wstring_view v, const codecvt_type& ccvt,
   //    const ToAlloc& a)
   //{
   //  return codecvt_to_generic_string<wide, narrow>(v, ccvt, a);

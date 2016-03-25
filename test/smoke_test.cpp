@@ -90,26 +90,41 @@ void convert_utf_test()
   {
     cout << "to_utf_string_test" << endl;
 
-    // one argument tests
-    u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str));
+    // three argument tests
+    u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str),
+      err_hdlr<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str);
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
+      boost::string_view(u8str), err_hdlr<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>(),
+      std::allocator<char16_t>());
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
+      u8str, err_hdlr<char16_t>(), std::allocator<char16_t>());
+    BOOST_TEST(ru16 == u16str);
+    cout << "  to_utf_string_test done" << endl;
 
     // two argument tests
     ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), err_hdlr<char16_t>());
     BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
+      boost::string_view(u8str), err_hdlr<char16_t>());
+    BOOST_TEST(ru16 == u16str);
     ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>());
     BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
+      u8str, err_hdlr<char16_t>());
+    BOOST_TEST(ru16 == u16str);
 
-    // three argument tests
-    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), err_hdlr<char16_t>(),
-      std::allocator<char16_t>());
+    // one argument tests
+    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str));
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>(),
-      std::allocator<char16_t>());
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(boost::string_view(u8str));
     BOOST_TEST(ru16 == u16str);
-    cout << "  to_utf_string_test done" << endl;
+    ru16 = to_utf_string<char16_t, char>(u8str);
+    BOOST_TEST(ru16 == u16str);
+    ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(u8str);
+    BOOST_TEST(ru16 == u16str);
   }
  
   void to_u8string_test()
@@ -224,10 +239,44 @@ void convert_utf_test()
 #endif
   }
 
+  //  Probe CharTraits template argument deduction
+
+  template <class CharT, class CharTraits>
+  void f(boost::basic_string_view<CharT, CharTraits> v)
+  {
+    std::cout << "overload 1:" << v << std::endl;
+  }
+
+  template <class CharT>
+  void f(boost::basic_string_view<CharT> v)
+  {
+    std::cout << "overload 2:" << v << std::endl;
+  }
+
+  template <class CharT, class CharTraits = typename std::char_traits<CharT>>
+  void g(boost::basic_string_view<CharT, CharTraits> v)
+  {
+    std::cout << "g():" << v << std::endl;
+  }
+
 }  // unnamed namespace
 
 int main()
 {
+  //  Probe CharTraits template argument deduction
+  f(boost::string_view("string_view"));                     // works
+  f<char>(string("std::string"));                           // works
+  f<char>("C-string");                                      // works
+  f<char, std::char_traits<char>>(string("std::string"));   // works
+  f<char, std::char_traits<char>>("C-string");              // works
+  g(boost::string_view("string_view"));                     // works
+  //g<char>(string("std::string"));             // CharTraits template arg deduction fails
+  //g<char>("C-string");                        // CharTraits template arg deduction fails
+  g<char, std::char_traits<char>>(string("std::string"));   // works
+  g<char, std::char_traits<char>>("C-string");              // works
+
+
+
   cout << "wstr   :" << hex_string(wstr) << endl;
   cout << "u8str  :" << hex_string(u8str) << endl;
   cout << "u16str :" << hex_string(u16str) << endl;
