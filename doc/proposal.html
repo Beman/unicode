@@ -37,6 +37,49 @@
 
 
 
+<p ><b>[1] No changes to the core language</b></p>
+
+
+
+<p ><b>[2] No changes to the existing standard library</b></p>
+
+
+
+<p ><b>[3] Support multiple <code>char</code> string environments</b></p>
+<ul>
+  <li>Code where <code>char</code> based strings are assumed by default to be 
+  UTF-8 encoded.<ul>
+  <li>Because that is the default encoding for the operating system, and there 
+  is no expectation of moving the code elsewhere.</li>
+  <li>Because within a given section of code&nbsp; <code>char</code> based 
+  strings are known to be UTF-8 encoded.</li>
+</ul>
+
+
+
+  </li>
+  <li>Code where <code>char</code> based strings are assumed by default to <b>
+  not</b> be UTF-8 encoded.<ul>
+  <li>Because the default encoding for the operating system is not UTF-8, and 
+  there is no expectation of moving the code elsewhere.</li>
+  <li>Because within a given section of code <code>char</code> based strings are 
+  known to be non-UTF-8 encoded.</li>
+</ul>
+
+
+
+  </li>
+  <li>Portable code that must not make assumptions about the default encoding of <code>
+  char</code> based strings</li>
+</ul>
+
+
+
+<p ><b>[4] Utilize existing codecvt facets for conversions to and from non-UTF 
+encoded <code>char</code> based strings </b></p>
+
+
+
 <h2 >Design decisions</h2>
 
 
@@ -47,7 +90,7 @@
 
 
 <p >Types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
-<code>wchar_t</code> remain unchanged, an there is no change to current 
+<code>wchar_t</code> remain unchanged, and there is no change to current 
 requirements on their encodings.</p>
 
 
@@ -69,15 +112,6 @@ requirements on their encodings.</p>
 
 
 
-<p ><b>Support multiple <code>char</code> string environments</b></p>
-<ul>
-  <li><b><code>char</code> based strings can be assumed to be UTF-8 encoded.</b></li>
-  <li><b><code>char</code> based strings can not be assumed to be UTF-8 encoded.</b></li>
-  <li><b>Some are, some are not, within the same scope.</b></li>
-</ul>
-
-
-
 <p ><b>Provide three levels of functionality</b></p>
 <blockquote>
 
@@ -94,8 +128,26 @@ full range of string interoperability needs.</p>
 
 
 
-<p >Provide an encoding conversion algorithm patterned after existing standard 
-library algorithms for those who need to</p>
+<p >Provide a low-level encoding conversion algorithm patterned after existing standard 
+library algorithms for those who need to perform encoding conversions on 
+sequences of characters.</p>
+</blockquote>
+
+
+
+<p ><b>Provide the three levels of functionality for both codecvt-based and UTF-based 
+conversions</b></p>
+
+
+
+<blockquote>
+
+
+
+<p ><b>Codecvt-based</b> </p>
+
+
+
 </blockquote>
 
 
@@ -134,7 +186,12 @@ tests</b></p>
 <p ><b>TODO: Arguments for error handler?</b></p>
 <p >&nbsp;</p>
 <p >&nbsp;</p>
-<h2 >Bike shed</h2>
+<h2 >Bikeshed</h2>
+<p >Namespace choice:</p>
+<blockquote>
+<p >utf<br>
+unicode</p>
+</blockquote>
 <p >&nbsp;</p>
 <p >&nbsp;</p>
 <p >&nbsp;</p>
