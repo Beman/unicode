@@ -102,14 +102,11 @@ namespace unicode
   //    utf_encoding<typename std::iterator_traits<OutputIterator>::value_type>::type
   //    because std::iterator_traits<OutputIterator>::value_type is void for some
   //    OutputIterators such as back_inserter.
-  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
+  template <class ToEncoding, class InputIterator, class OutputIterator,
+    class Error = typename err_hdlr<encoding_traits<ToEncoding>::value_type>>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
-      OutputIterator result, Error eh);
-
-  template <class ToEncoding, class InputIterator, class OutputIterator>
-  inline OutputIterator
-    convert_utf(InputIterator first, InputIterator last, OutputIterator result);
+      OutputIterator result, Error eh = Error());
 
   //  to_utf_string generic UTF string conversion functions  ---------------------------//
 
@@ -579,18 +576,6 @@ Encoding Form Conversion (D93) extract:
       typename
         utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
       ToEncoding(), first, last, result, eh);
-  }
-
-  template <class ToEncoding, class InputIterator, class OutputIterator>
-  inline OutputIterator
-    convert_utf(InputIterator first, InputIterator last, OutputIterator result)
-  {
-    // tag dispatch to the specific conversion function
-    return detail::convert_utf(
-      typename
-        utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
-      ToEncoding(), first, last, result,
-      err_hdlr<typename encoding_traits<ToEncoding>::value_type>());
   }
 
   //  to_utf_string  -------------------------------------------------------------------//
