@@ -8,7 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "../include/boost/unicode/conversion.hpp"
+#include "../include/boost/unicode/utf_conversion.hpp"
 #include <boost/detail/lightweight_main.hpp>
 
 using std::cout;

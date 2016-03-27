@@ -125,59 +125,14 @@ namespace unicode
   //    template parameter for FromTraits. Short answer: With a default FromTraits
   //    parameter, template argument deduction fails.
 
-  //  three argument forms
-  template <class ToCharT, class FromCharT, class FromTraits,  // explicit FromTraits
-     class Error = err_hdlr<ToCharT>,
-     class ToTraits = std::char_traits<ToCharT>,
-     class ToAlloc = std::allocator<ToCharT>>
-   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v,
-       Error eh, const ToAlloc& a);
-
-  template <class ToCharT, class FromCharT,  // default FromTraits
-     class Error = err_hdlr<ToCharT>,
-     class ToTraits = std::char_traits<ToCharT>,
-     class ToAlloc = std::allocator<ToCharT>>
-   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-     to_utf_string(boost::basic_string_view<FromCharT> v,
-       Error eh, const ToAlloc& a)
-     {
-       return to_utf_string<ToCharT, FromCharT, typename std::char_traits<FromCharT>,
-         Error, ToTraits, ToAlloc>(v, eh, a);
-     }
-  
-  //  two argument forms
-  template <class ToCharT, class FromCharT, class FromTraits,  // explicit FromTraits
-     class Error>
-   inline std::basic_string<ToCharT>
-     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v, Error eh)
-     {
-       return to_utf_string<ToCharT, FromCharT, FromTraits>(
-         v, eh, std::allocator<ToCharT>());
-     }
-  template <class ToCharT, class FromCharT,  // default FromTraits
-     class Error>
-   inline std::basic_string<ToCharT>
-     to_utf_string(boost::basic_string_view<FromCharT> v, Error eh)
-     {
-       return to_utf_string<ToCharT, FromCharT>(v, eh, std::allocator<ToCharT>());
-     }
-  
-  //  one argument forms
-  template <class ToCharT, class FromCharT, class FromTraits>
-   inline std::basic_string<ToCharT>
-     to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v)
-     {
-       return to_utf_string<ToCharT, FromCharT, FromTraits>(v,
-         err_hdlr<ToCharT>(), std::allocator<ToCharT>());
-     }
-  template <class ToCharT, class FromCharT>  // default FromTraits
-   inline std::basic_string<ToCharT>
-     to_utf_string(boost::basic_string_view<FromCharT> v)
-     {
-       return to_utf_string<ToCharT, FromCharT>(v,
-         err_hdlr<ToCharT>(), std::allocator<ToCharT>());
-     }
+  template <class ToCharT, class FromCharT,
+    class FromTraits = typename std::char_traits<FromCharT>,
+    class View = boost::basic_string_view<FromCharT, FromTraits>,
+    class Error = err_hdlr<ToCharT>,
+    class ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    to_utf_string(View v, Error eh = Error(), const ToAlloc& a = ToAlloc());
   
   //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions  --------//
 
@@ -640,11 +595,10 @@ Encoding Form Conversion (D93) extract:
 
   //  to_utf_string  -------------------------------------------------------------------//
 
-  template <class ToCharT, class FromCharT, class FromTraits, class Error,
-    class ToTraits,  class ToAlloc>
+  template <class ToCharT, class FromCharT, class FromTraits, class View,
+    class Error, class ToTraits, class ToAlloc>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    to_utf_string(boost::basic_string_view<FromCharT, FromTraits> v,
-      Error eh, const ToAlloc& a)
+    to_utf_string(View v, Error eh, const ToAlloc& a)
   {
     std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
     convert_utf<typename utf_encoding<ToCharT>::type>

@@ -24,7 +24,7 @@
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/unicode/conversion.hpp"
+#include "../include/boost/unicode/utf_conversion.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
