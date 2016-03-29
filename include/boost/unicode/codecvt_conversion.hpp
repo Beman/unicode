@@ -82,20 +82,58 @@ namespace unicode
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
 
-namespace detail
-{
-  //  codecvt_to_basic_string ()
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  class Error, class ToTraits, class ToAlloc, class View>
-    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-      std::true_type);
+  namespace detail
+  {
+    //  detail::codecvt_to_basic_string()
+    template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+    class Error, class ToTraits, class ToAlloc, class View>
+      inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+      codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+        std::true_type);
+
+    template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+    class Error, class ToTraits, class ToAlloc, class View>
+      inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+      codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+        std::false_type);
+  }
+  
+  //  codecvt_to_basic_string  ---------------------------------------------------------//
 
   template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  class Error, class ToTraits, class ToAlloc, class View>
-    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-      std::false_type);
+    class Error, class ToTraits, class ToAlloc, class View>
+  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a)
+  {
+    return detail::codecvt_to_basic_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
+      ToTraits, ToAlloc, View>(v, ccvt, eh, a,
+        std::is_same<ToCharT, typename Codecvt::intern_type>());  // tag dispatch
+  }
+
+  //  codecvt_to_{string|wstring}  -----------------------------------------------------//
+
+  template <class Error>
+  inline std::string  codecvt_to_string(boost::wstring_view v,
+    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return codecvt_to_basic_string<char, wchar_t,
+      std::codecvt<wchar_t, char, std::mbstate_t>>(v, ccvt, eh);
+  }
+
+  template <class Error>
+  inline std::wstring  codecvt_to_wstring(boost::string_view v,
+    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return codecvt_to_basic_string<wchar_t, char,
+      std::codecvt<wchar_t, char, std::mbstate_t>>(v, ccvt, eh);
+  }
+
+//--------------------------------------------------------------------------------------//
+//                              detail implementation                                   //
+//--------------------------------------------------------------------------------------//
+
+namespace detail
+{
 
   //  //  codecvt_convert
 
@@ -212,36 +250,6 @@ namespace detail
     //}
 
   } // namespace detail
-
-  //  codecvt_to_basic_string  ---------------------------------------------------------//
-
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-    class Error, class ToTraits, class ToAlloc, class View>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a)
-  {
-    return detail::codecvt_to_basic_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
-      ToTraits, ToAlloc, View>(v, ccvt, eh, a,
-        std::is_same<ToCharT, typename Codecvt::intern_type>());  // tag dispatch
-  }
-
-  //  codecvt_to_{string|wstring}  -----------------------------------------------------//
-
-  template <class Error>
-  inline std::string  codecvt_to_string(boost::wstring_view v,
-    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
-  {
-    return codecvt_to_basic_string<char, wchar_t,
-      std::codecvt<wchar_t, char, std::mbstate_t>>(v, ccvt, eh);
-  }
-
-  template <class Error>
-  inline std::wstring  codecvt_to_wstring(boost::string_view v,
-    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
-  {
-    return codecvt_to_basic_string<wchar_t, char,
-      std::codecvt<wchar_t, char, std::mbstate_t>>(v, ccvt, eh);
-  }
 
 
 //namespace detail
