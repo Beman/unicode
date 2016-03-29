@@ -11,6 +11,7 @@ using std::endl;
 #include <typeinfo>
 #include "../include/boost/unicode/utf_conversion.hpp"
 #include "../include/boost/unicode/codecvt_conversion.hpp"
+#include "../include/boost/unicode/detail/utf8_codecvt_facet.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
@@ -18,7 +19,6 @@ using std::endl;
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
-#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 #include <boost/config.hpp>
 #if !defined(BOOST_NO_CXX11_HDR_CODECVT)
@@ -82,7 +82,7 @@ namespace
 void codecvt_short_test()
   {
     cout << "codecvt_short_test" << endl;
-    boost::filesystem::detail::utf8_codecvt_facet ccvt;
+    boost::unicode::detail::utf8_codecvt_facet ccvt;
     wstring wstr_tmp = codecvt_to_wstring(u8str, ccvt);
     BOOST_TEST(wstr_tmp == wstr);
     BOOST_TEST_EQ(codecvt_to_string(wstr, ccvt), u8str);
