@@ -645,17 +645,13 @@ Encoding Form Conversion (D93) extract:
   inline std::wstring  to_wstring(boost::wstring_view v, Error eh)
     { return to_utf_string<wchar_t, wchar_t, Error>(v, eh); }
 
-//--------------------------------------------------------------------------------------//
-//                                 Implementation                                       //
-//--------------------------------------------------------------------------------------//
-
-namespace detail
-{
-  //  helper so static_assert can reference dependent type
-  template <class T>
-  constexpr bool fail() { return false; }
-
-}  // namespace detail
+//namespace detail
+//{
+//  //  helper so static_assert can reference dependent type
+//  template <class T>
+//  constexpr bool fail() { return false; }
+//
+//}  // namespace detail
 
 }  // namespace unicode
 }  // namespace boost

@@ -10,7 +10,7 @@ using std::cout;
 using std::endl;
 #include <typeinfo>
 #include "../include/boost/unicode/utf_conversion.hpp"
-//#include "../include/boost/unicode/codecvt_conversion.hpp"
+#include "../include/boost/unicode/codecvt_conversion.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
@@ -18,6 +18,7 @@ using std::endl;
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/endian/conversion.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 
 #include <boost/config.hpp>
 #if !defined(BOOST_NO_CXX11_HDR_CODECVT)
@@ -76,6 +77,16 @@ namespace
       tmp += to_hex(x);
     }
     return tmp;
+  }
+
+void codecvt_short_test()
+  {
+    cout << "codecvt_short_test" << endl;
+    boost::filesystem::detail::utf8_codecvt_facet ccvt;
+    wstring wstr_tmp = codecvt_to_wstring(u8str, ccvt);
+    BOOST_TEST(wstr_tmp == wstr);
+    BOOST_TEST_EQ(codecvt_to_string(wstr, ccvt), u8str);
+    cout << "  codecvt_short_test done" << endl;
   }
 
 void convert_utf_test()
@@ -287,6 +298,7 @@ int main()
   // TODO: Add test to verify InputIterators do not have to be contiguous and do not
   // have to meet any forward, bidirectional, or random access requirements.
 
+  codecvt_short_test();
   convert_utf_test();
   to_utf_string_test();
   to_u8string_test();
