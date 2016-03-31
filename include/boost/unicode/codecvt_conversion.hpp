@@ -10,6 +10,7 @@
 
 #include <iterator>
 #include <string>
+#include <cstring>  // for strcpy, strlen
 #include <locale>
 #include <boost/utility/string_view.hpp> 
 #include <boost/config.hpp>
@@ -107,7 +108,7 @@ namespace unicode
   {
     return detail::codecvt_to_basic_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
       ToTraits, ToAlloc, View>(v, ccvt, eh, a,
-        std::is_same<ToCharT, typename Codecvt::intern_type>());  // tag dispatch
+        std::is_same<FromCharT, typename Codecvt::intern_type>());  // tag dispatch
   }
 
   //  codecvt_to_{string|wstring}  -----------------------------------------------------//
@@ -134,6 +135,86 @@ namespace unicode
 
 namespace detail
 {
+  //  detail::codecvt_to_basic_string() with same<FromCharT, Codecvt::intern_type> so
+  //  implement with Codecvt::out
+  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+  class Error, class ToTraits, class ToAlloc, class View>
+    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+      std::true_type)
+  {
+    //  Overview:
+    //  * Create a temporary string large enough to hold the output string.
+    //  * Convert the input string to the temporary string.
+    //  * Shrink the temporary string to fit.
+    //  * Return the temporary string as the result.
+
+    //  This overload converts from Codecvt::internT (i.e. FromCharT, typically wchar_t)
+    //  to Codecvt::externT (ToCharT, typically char) via ccvt.out()
+
+    static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
+      "FromCharT and Codecvt::intern_type must be the same type");
+    static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
+      "ToCharT and Codecvt::extern_type must be the same type");
+
+    // TODO: Make a dummy call to ccvt.out to determine if the result will be
+    // std::codecvt_base::noconv, and thus we can simply return a copy of the from
+    // string, and avoid resizing temp only to immediately destroy it.
+
+    std::size_t in_size(v.size());
+    std::size_t max_out_size = in_size * ccvt.max_length();
+    std::basic_string<ToCharT, ToTraits, ToAlloc> temp;
+    temp.resize(max_out_size);
+
+    //  for clarity, use the same names for ccvt.out() arguments as the standard library
+    std::mbstate_t mbstate  = std::mbstate_t();
+    const FromCharT* from = v.cbegin();
+    const FromCharT* from_end = v.cend();
+    const FromCharT* from_next;
+    ToCharT* to = &*temp.begin();
+    ToCharT* to_end = to + temp.size();
+    ToCharT* to_next = to;   // in case from == from_end
+    std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
+
+    //  loop until the entire input buffer is processed by the codecvt facet; 
+    //  required because the codecvt facet will not process the entire input sequence
+    //  when an error occurs.
+
+    while (from != from_end)
+    {
+      ccvt_result
+        = ccvt.out(mbstate, from, from_end, from_next, to, to_end, to_next);
+
+      if (ccvt_result != std::codecvt_base::error)
+        break;
+
+      //  ccvt_result == std::codecvt_base::error
+      const ToCharT* err_cstr = eh();
+      memcpy(to_next, err_cstr, strlen(err_cstr));
+      to_next += strlen(err_cstr);
+
+      //  get ready for the next iteration
+      from = from_next;
+      to = to_next;
+    }
+
+    //  ccvt_result is either ok or partial; in either case resize temp
+    temp.resize(to_next - &*temp.begin());
+
+    if (ccvt_result == std::codecvt_base::partial)
+      temp.append(eh());
+    return temp;
+  }
+
+  //  detail::codecvt_to_basic_string() with !same<FromCharT, Codecvt::intern_type> so
+  //  implement with Codecvt::in
+  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+  class Error, class ToTraits, class ToAlloc, class View>
+    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+    codecvt_to_basic_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+      std::false_type)
+  {
+  }
 
   //  //  codecvt_convert
 

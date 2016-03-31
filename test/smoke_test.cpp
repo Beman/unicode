@@ -82,10 +82,32 @@ namespace
 void codecvt_short_test()
   {
     cout << "codecvt_short_test" << endl;
-    boost::unicode::detail::utf8_codecvt_facet ccvt;
-    wstring wstr_tmp = codecvt_to_wstring(u8str, ccvt);
-    BOOST_TEST(wstr_tmp == wstr);
-    BOOST_TEST_EQ(codecvt_to_string(wstr, ccvt), u8str);
+    boost::unicode::detail::utf8_codecvt_facet ccvt(0);
+    std::mbstate_t state = std::mbstate_t();
+    cout << "  u8str.size() is " <<  u8str.size() << endl;
+    cout << "  utf8_codecvt_facet length(): "
+         << ccvt.length(state, u8str.data(), u8str.data()+u8str.size(), 100) << endl;
+    cout << "  utf8_codecvt_facet max_length(): " << ccvt.max_length() << endl;
+
+
+
+    //cout <<  hex_string(codecvt_to_string(L"$", ccvt)) << endl;
+    //cout <<  hex_string(codecvt_to_string(L"€", ccvt)) << endl;
+    cout <<  hex_string(string(u8"𐐷")) << endl;
+    cout <<  hex_string(to_u8string((L"𐐷"))) << endl;
+    cout <<  hex_string(codecvt_to_string(L"𐐷", ccvt)) << endl << endl;
+    //cout <<  hex_string(u8"𤭢") << endl;
+    //cout <<  hex_string(codecvt_to_string(L"𤭢", ccvt)) << endl;
+
+    string str = codecvt_to_string(wstr, ccvt);
+    BOOST_TEST_EQ(str, u8str);
+    cout << "str:" << hex_string(str) << endl;
+    str = codecvt_to_string(L"abcd", ccvt);
+    cout << "str:" << hex_string(str) << endl;
+
+    //wstring wstr_tmp = codecvt_to_wstring(u8str, ccvt);
+    //BOOST_TEST(wstr_tmp == wstr);
+    //BOOST_TEST_EQ(codecvt_to_string(wstr, ccvt), u8str);
     cout << "  codecvt_short_test done" << endl;
   }
 

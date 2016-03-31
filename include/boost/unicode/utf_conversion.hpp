@@ -488,7 +488,7 @@ Encoding Form Conversion (D93) extract:
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
+      return utf8_to_char32_t<utf8>(first, last, result, err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -497,7 +497,7 @@ Encoding Form Conversion (D93) extract:
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
+      return utf16_to_char32_t<utf16>(first, last, result, err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -548,14 +548,14 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_utf(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf8_to_char32_t<utf16>(first, last, result, detail::err_pass_thru(), eh);
+      return utf8_to_char32_t<utf16>(first, last, result, err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_utf(utf16, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<utf8>(first, last, result, detail::err_pass_thru(), eh);
+      return utf16_to_char32_t<utf8>(first, last, result, err_pass_thru(), eh);
     }
 
   } // namespace detail
