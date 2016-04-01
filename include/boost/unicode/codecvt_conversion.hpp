@@ -12,6 +12,7 @@
 #include <string>
 #include <cstring>  // for strcpy, strlen
 #include <locale>
+#include <array>
 #include <boost/utility/string_view.hpp> 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
@@ -142,10 +143,12 @@ namespace detail
   //  detail::codecvt_to_basic_string()
   //
   //  Overview for both overloads:
-  //  * Create a temporary string large enough to hold the output string.
-  //  * Convert the input string to the temporary string.
-  //  * Shrink the temporary string to fit.
-  //  * Return the temporary string as the result.
+  //
+  //    Start with an empty output string.
+  //    Until all the input has been processed:
+  //      * Convert as many characters as will fit into an output buffer.
+  //      * Append the characters in the output buffer into the output string.
+  //    Return the output string.
 
   //  Overload for is_same<FromCharT, Codecvt::intern_type> == true_type
   //  This overload converts from Codecvt::internT (i.e. FromCharT, typically wchar_t)
@@ -161,60 +164,56 @@ namespace detail
       "FromCharT and Codecvt::intern_type must be the same type");
     static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
       "ToCharT and Codecvt::extern_type must be the same type");
+    static_assert(!std::is_same<FromCharT, ToCharT>::value,
+      "FromCharT and ToCharT must not be the same type");
 
     std::basic_string<ToCharT, ToTraits, ToAlloc> temp;
-    temp.resize(v.size());  // start small, although this may be sufficient for the
-                            // important cases of input strings that are 100% 7-bit ASCII
-                            // and output strings short enough for small string
-                            // optimization to come into play
+    std::array<ToCharT, 8> buf;  // TODO: increase size after preliminary testing
 
     //  for clarity, use the same names for ccvt.out() arguments as the standard library
     std::mbstate_t mbstate  = std::mbstate_t();
-    const FromCharT* from = v.cbegin();
-    const FromCharT* from_end = v.cend();
+    const FromCharT* from = v.data();
+    const FromCharT* from_end = from + v.size();
     const FromCharT* from_next;
-    std::size_t to_capacity = temp.capacity();
-    ToCharT* to = &temp[0];
-    ToCharT* to_end = to + temp.size();
-    ToCharT* to_next = to;   // in case from == from_end
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
 
-    //  loop until the entire input sequence is processed by the codecvt facet; 
-    //  required because the codecvt facet will not process the entire input sequence
-    //  when an error occurs or temp was not initially resized large enough.
+    //  loop until the entire input sequence is processed by the codecvt facet 
 
     while (from != from_end)
     {
-      if (to_capacity != temp.capacity())  // temp has been reallocated
-      {
-        // 
-      }
+      ToCharT* to = buf.data();
+      ToCharT* to_end = to + buf.size();
+      ToCharT* to_next = to;
 
       ccvt_result
         = ccvt.out(mbstate, from, from_end, from_next, to, to_end, to_next);
 
       if (ccvt_result == std::codecvt_base::ok)
-        break;
+      {
+        temp.append(to, to_next - to);
+        from = from_next;
+      }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        const ToCharT* err_cstr = eh();
-        memcpy(to_next, err_cstr, strlen(err_cstr));
-        to_next += strlen(err_cstr);
+        temp.append(to, to_next - to);
+        temp.append(eh());
+        from = from_next + 1;  // bypass error
       }
-      else if (ccvt_result == std::codecvt_base::partial)
+      else  // ccvt_result == std::codecvt_base::partial
       {
+        if (to_next == buf.data())
+        {
+          temp.append(eh());
+          from = from_end;
+        }
+        else
+        {
+          // eliminate the possibility that buf does not have enough room
+          temp.append(to, to_next - to);
+          from = from_next;
+        }
       }
-
-      //  get ready for the next iteration
-      from = from_next;
-      to = to_next;
     }
-
-    //  ccvt_result is either ok or partial; in either case resize temp
-    temp.resize(to_next - &*temp.begin());
-
-    if (ccvt_result == std::codecvt_base::partial)
-      temp.append(eh());
     return temp;
   }
 
@@ -232,49 +231,56 @@ namespace detail
       "FromCharT and Codecvt::extern_type must be the same type");
     static_assert(std::is_same<ToCharT, typename Codecvt::intern_type>::value,
       "ToCharT and Codecvt::intern_type must be the same type");
+    static_assert(!std::is_same<FromCharT, ToCharT>::value,
+      "FromCharT and ToCharT must not be the same type");
 
-    std::size_t in_size(v.size());
-    std::size_t max_out_size = in_size * ccvt.max_length();
     std::basic_string<ToCharT, ToTraits, ToAlloc> temp;
-    temp.resize(max_out_size);
+    std::array<ToCharT, 8> buf;  // TODO: increase size after preliminary testing
 
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
     std::mbstate_t mbstate  = std::mbstate_t();
-    const FromCharT* from = v.cbegin();
-    const FromCharT* from_end = v.cend();
+    const FromCharT* from = v.data();
+    const FromCharT* from_end = from + v.size();
     const FromCharT* from_next;
-    ToCharT* to = &*temp.begin();
-    ToCharT* to_end = to + temp.size();
-    ToCharT* to_next = to;   // in case from == from_end
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
 
-    //  loop until the entire input sequence is processed by the codecvt facet; 
-    //  required because the codecvt facet will not process the entire input sequence
-    //  when an error occurs.
+    //  loop until the entire input sequence is processed by the codecvt facet 
 
     while (from != from_end)
     {
+      ToCharT* to = buf.data();
+      ToCharT* to_end = to + buf.size();
+      ToCharT* to_next = to;
+
       ccvt_result
         = ccvt.in(mbstate, from, from_end, from_next, to, to_end, to_next);
 
-      if (ccvt_result != std::codecvt_base::error)
-        break;
-
-      //  ccvt_result == std::codecvt_base::error
-      const ToCharT* err_cstr = eh();
-      memcpy(to_next, err_cstr, strlen(err_cstr));
-      to_next += strlen(err_cstr);
-
-      //  get ready for the next iteration
-      from = from_next;
-      to = to_next;
+      if (ccvt_result == std::codecvt_base::ok)
+      {
+        temp.append(to, to_next - to);
+        from = from_next;
+      }
+      else if (ccvt_result == std::codecvt_base::error)
+      {
+        temp.append(to, to_next - to);
+        temp.append(eh());
+        from = from_next + 1;  // bypass error
+      }
+      else  // ccvt_result == std::codecvt_base::partial
+      {
+        if (to_next == buf.data())
+        {
+          temp.append(eh());
+          from = from_end;
+        }
+        else
+        {
+          // eliminate the possibility that buf does not have enough room
+          temp.append(to, to_next - to);
+          from = from_next;
+        }
+      }
     }
-
-    //  ccvt_result is either ok or partial; in either case resize temp
-    temp.resize(to_next - &*temp.begin());
-
-    if (ccvt_result == std::codecvt_base::partial)
-      temp.append(eh());
     return temp;
   }
 

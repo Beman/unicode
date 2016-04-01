@@ -89,25 +89,35 @@ void codecvt_short_test()
          << ccvt.length(state, u8str.data(), u8str.data()+u8str.size(), 100) << endl;
     cout << "  utf8_codecvt_facet max_length(): " << ccvt.max_length() << endl;
 
+    const string    str(u8"$€0123456789你好abcdefghijklmnopqrstyvwxyz");
+    const wstring   wstr(L"$€0123456789你好abcdefghijklmnopqrstyvwxyz");
 
+    string tmp = codecvt_to_string(wstr, ccvt);
+    BOOST_TEST(tmp == str);
+    //cout << hex_string(tmp) << endl;
+    cout << hex_string(str) << endl;
 
-    //cout <<  hex_string(codecvt_to_string(L"$", ccvt)) << endl;
-    //cout <<  hex_string(codecvt_to_string(L"€", ccvt)) << endl;
-    cout <<  hex_string(string(u8"𐐷")) << endl;
-    cout <<  hex_string(to_u8string((L"𐐷"))) << endl;
-    cout <<  hex_string(codecvt_to_string(L"𐐷", ccvt)) << endl << endl;
-    //cout <<  hex_string(u8"𤭢") << endl;
-    //cout <<  hex_string(codecvt_to_string(L"𤭢", ccvt)) << endl;
+    wstring wstr_tmp = codecvt_to_wstring(str, ccvt);
+    BOOST_TEST(wstr_tmp == wstr);
+    //cout << hex_string(wstr_tmp) << endl;
+    //cout << hex_string(wstr) << endl;
 
-    string str = codecvt_to_string(wstr, ccvt);
-    BOOST_TEST_EQ(str, u8str);
-    cout << "str:" << hex_string(str) << endl;
-    str = codecvt_to_string(L"abcd", ccvt);
-    cout << "str:" << hex_string(str) << endl;
+    string FFEE(u8"\uFFEE");  // U+FFEE HALFWIDTH WHITE CIRCLE
 
-    //wstring wstr_tmp = codecvt_to_wstring(u8str, ccvt);
-    //BOOST_TEST(wstr_tmp == wstr);
-    //BOOST_TEST_EQ(codecvt_to_string(wstr, ccvt), u8str);
+    cout << "utf8:" << hex_string(FFEE) << endl;
+    cout << "     " << hex_string(codecvt_to_wstring(FFEE, ccvt)) << endl;
+    cout << "     " << hex_string(codecvt_to_wstring(boost::string_view(FFEE.data(), 3),
+      ccvt)) << endl;
+    cout << "     " << hex_string(codecvt_to_wstring(boost::string_view(FFEE.data(), 2),
+      ccvt)) << endl;
+    cout << "     " << hex_string(codecvt_to_wstring(boost::string_view(FFEE.data(), 1),
+      ccvt)) << endl;
+    
+    string    asian(u8"$€你好");
+    cout << "asian:" << hex_string(asian) << " | " << hex_string(codecvt_to_wstring(asian, ccvt)) << endl;
+    asian.erase(1, 1);
+    cout << "asian:" << hex_string(asian) << " | " << hex_string(codecvt_to_wstring(asian, ccvt)) << endl;
+
     cout << "  codecvt_short_test done" << endl;
   }
 
