@@ -10,13 +10,17 @@
 
 #include <iterator>
 #include <string>
-#include <cstring>  // for strcpy, strlen
+#include <cstring>  // for strlen
 #include <locale>
 #include <array>
 #include <boost/utility/string_view.hpp> 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
+
+#if !defined(BOOST_UNICODE_ERROR_HPP)
+# include <boost/unicode/error.hpp>
+#endif
 
 //--------------------------------------------------------------------------------------//
 //  This interface is tailored to std::codecvt, particularly that codecvt::in and 

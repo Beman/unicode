@@ -14,15 +14,11 @@
 #include <boost/utility/string_view.hpp> 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
-#include <boost/cstdint.hpp>
+#include <boost/cstdint.hpp>     // todo: remove me
 
-//--------------------------------------------------------------------------------------//
-
-//  TODO:
-//
-//  * string inserters and extractors.  See the old string_interop repo.
-
-//--------------------------------------------------------------------------------------//
+#if !defined(BOOST_UNICODE_ERROR_HPP)
+# include <boost/unicode/error.hpp>
+#endif
 
 namespace boost
 {
@@ -64,22 +60,6 @@ namespace unicode
   template <> struct encoding_traits<utf32>  { typedef char32_t value_type; };
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
-
-  //  Error handler function object operator()() is called with no arguments and either
-  //  throws an exception or returns a const pointer to a possibly empty C-style string.
-  //  The returned string is UTF encode.
-
-  //  default error handler:  function object returns a UTF encoded C-string of type
-  //  charT with a  value of U+FFFD, encoded via ToEncoding.
-  template <class charT> struct err_hdlr;
-  template <> class err_hdlr<char>
-    { public: const char* operator()() const noexcept { return u8"\uFFFD"; } };
-  template <> class err_hdlr<char16_t>
-    { public: const char16_t* operator()() const noexcept { return u"\uFFFD"; } };
-  template <> class err_hdlr<char32_t>
-    { public: const char32_t* operator()() const noexcept { return U"\uFFFD"; } };
-  template <> class err_hdlr<wchar_t>
-    { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
 
   //------------------------------------------------------------------------------------//
   //               Unicode Transformation Format (UTF) conversions                      // 

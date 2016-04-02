@@ -19,29 +19,42 @@ namespace unicode
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
 
-  //  Error handler function object operator()() is called with no arguments and either
-  //  throws an exception or returns a const pointer to a possibly empty C-style string.
-  //  The returned string is UTF encode.
+  //  Error function objects are called with no arguments and either throw an
+  //  exception or return a const pointer to a possibly empty C-style string.
 
-  //  default error handler:  function object returns a UTF encoded C-string of type
-  //  charT with a  value of U+FFFD, encoded via ToEncoding.
-  template <class charT> struct err_hdlr;
-  template <> class err_hdlr<char>
-    { public: const char* operator()() const noexcept { return u8"\uFFFD"; } };
-  template <> class err_hdlr<char16_t>
-    { public: const char16_t* operator()() const noexcept { return u"\uFFFD"; } };
-  template <> class err_hdlr<char32_t>
-    { public: const char32_t* operator()() const noexcept { return U"\uFFFD"; } };
-  template <> class err_hdlr<wchar_t>
-    { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
+  //  default error handler: function object returns a C-string of type
+  //  ToCharT with a UTF encoded value of U+FFFD.
+  template <class CharT> struct err_hdlr;
+  template <> struct err_hdlr<char>;
+  template <> struct err_hdlr<char16_t>;
+  template <> struct err_hdlr<char32_t>;
+  template <> struct err_hdlr<wchar_t>;
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
 //--------------------------------------------------------------------------------------//
-//                                  implementation                                      //
+//                                  Implementation                                      //
 //--------------------------------------------------------------------------------------//
 
+  template <> struct err_hdlr<char>
+  {
+    constexpr char* operator()() const noexcept { return u8"\uFFFD"; }
+  };
 
+  template <> struct err_hdlr<char16_t>
+  { 
+    constexpr char16_t* operator()() const noexcept { return u"\uFFFD"; }
+  };
+
+  template <> struct err_hdlr<char32_t>
+  { 
+    constexpr char32_t* operator()() const noexcept { return U"\uFFFD"; }
+  };
+
+  template <> struct err_hdlr<wchar_t>
+  { 
+    constexpr wchar_t* operator()() const noexcept { return L"\uFFFD"; }
+  };
 }  // namespace unicode
 }  // namespace boost
 
