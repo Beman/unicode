@@ -170,6 +170,15 @@ unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
 <p ><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
 UTF-32, according on the <code>sizeof(wchar_t)</code>.</p>
 <h2 dir="ltr" >TODO</h2>
+<p >TODO: The only use of the encodings tags is as the <code>ToEncoding</code> 
+template parameter for <code>convert_utf</code>. Try eliminating all the 
+encoding machinery, and replacing <code>ToEncoding</code> template parameter 
+with <code>ToCharT</code>.</p>
+<p >TODO: String inserters and extractors. See the old string_interop repo.</p>
+<p >TODO: Also provide throwing error handler. Design for exception type to be 
+thrown.</p>
+<p >TODO: Add function that scans a sequence / string for errors, reports 
+results.</p>
 <p >TODO: Follow Marshall&#39;s suggested return of pair&lt;&gt; from string algorithms?</p>
 <p >TODO: UTF first, last, iterators are InputIterators? 
 ForwardIterators? RandomAccess? Contiguous? What does basic_string_view require? How does iterator category interact with error handler? If the actual 
@@ -179,11 +188,7 @@ string, to lesser categories of iterators actually work?</p>
 tests</p>
 <p >TODO: add static asserts on character types, other requirements.</p>
 <p >TODO: Arguments for error handler?</p>
-<p >TODO: Also provide throwing error handler. Design for exception type to be 
-thrown.</p>
-<p >TODO: Add function that scans a sequence / string for errors, reports 
-results.</p>
-<p >TODO: String inserters and extractors. See the old string_interop repo.</p>
+<p >&nbsp;</p>
 <h2 >Bikeshed</h2>
 <p >Namespace choice:</p>
 <blockquote>

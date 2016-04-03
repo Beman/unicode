@@ -20,6 +20,10 @@
 # include <boost/unicode/error.hpp>
 #endif
 
+//--------------------------------------------------------------------------------------//
+//                  Unicode Transformation Format (UTF) conversions                     // 
+//--------------------------------------------------------------------------------------//
+
 namespace boost
 {
 namespace unicode
@@ -29,41 +33,6 @@ namespace unicode
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
 
-  //   encodings
-  struct narrow {};  // char
-  struct wide {};    // wchar_t; synonym for utf8/16/32 depending on platform
-  struct utf8 {};    // char
-  struct utf16 {};   // char16_t
-  struct utf32 {};   // char32_t
-
-  //  utf_encoding type-trait
-  template <class CharT> struct utf_encoding;
-  template <> struct utf_encoding<char> { typedef utf8 type; };
-  template <> struct utf_encoding<char16_t> { typedef utf16 type; };
-  template <> struct utf_encoding<char32_t> { typedef utf32 type; };
-  // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
-  // encoding of wchar_t.
-# if WCHAR_MAX >= 0xFFFFFFFFu
-  template <> struct utf_encoding<wchar_t> { typedef utf32 type; };
-# elif WCHAR_MAX >= 0xFFFFu
-  template <> struct utf_encoding<wchar_t> { typedef utf16 type; };
-# else
-  template <> struct utf_encoding<wchar_t> { typedef char type; };
-# endif
-
-  //  encoding_traits type-trait
-  template <class Encoding> struct encoding_traits;
-  template <> struct encoding_traits<narrow> { typedef char value_type; };
-  template <> struct encoding_traits<wide>   { typedef wchar_t value_type; };
-  template <> struct encoding_traits<utf8>   { typedef char value_type; };
-  template <> struct encoding_traits<utf16>  { typedef char16_t value_type; };
-  template <> struct encoding_traits<utf32>  { typedef char32_t value_type; };
-
-  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
-
-  //------------------------------------------------------------------------------------//
-  //               Unicode Transformation Format (UTF) conversions                      // 
-  //------------------------------------------------------------------------------------//
 
   //  convert_utf UTF conversion algorithms  -------------------------------------------//
 
@@ -78,12 +47,12 @@ namespace unicode
   //    output encodings are the same. This implies that if the eh function object always
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
-  //    Note: ToEncoding cannot be inferred via
-  //    utf_encoding<typename std::iterator_traits<OutputIterator>::value_type>::type
-  //    because std::iterator_traits<OutputIterator>::value_type is void for some
+  //    Note: ToCharT cannot be inferred via
+  //    std::iterator_traits<OutputIterator>::value_type
+  //    because std::iterator_traits<OutputIterator>::value_type is void for
   //    OutputIterators such as back_inserter.
-  template <class ToEncoding, class InputIterator, class OutputIterator,
-    class Error = typename err_hdlr<encoding_traits<ToEncoding>::value_type>>
+  template <class ToCharT, class InputIterator, class OutputIterator,
+    class Error = typename err_hdlr<ToCharT>>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh = Error());
@@ -248,6 +217,26 @@ Encoding Form Conversion (D93) extract:
 
   namespace detail
   {
+    //  encodings (used to tag dispatch character types to their encodings)
+    struct utf8 {};      
+    struct utf16 {};
+    struct utf32 {};
+
+    //  encoding type-trait
+    template <class CharT> struct encoding;
+    template <> struct encoding<char>     { typedef utf8 type; };
+    template <> struct encoding<char16_t> { typedef utf16 type; };
+    template <> struct encoding<char32_t> { typedef utf32 type; };
+    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
+    // encoding of wchar_t.
+# if WCHAR_MAX >= 0xFFFFFFFFu
+    template <> struct encoding<wchar_t>  { typedef utf32 type; };
+# elif WCHAR_MAX >= 0xFFFFu
+    template <> struct encoding<wchar_t>  { typedef utf16 type; };
+# else
+    template <> struct encoding<wchar_t>  { typedef utf8 type; };
+# endif
+
     //  For the utf8<-->utf16 encoding conversion, which uses utf32 as an intermediary,
     //  we need a value that can never appear in valid utf32 to pass the error through
     //  to the final output type and there be detected as an error and then processed
@@ -547,15 +536,17 @@ Encoding Form Conversion (D93) extract:
 
   //  convert_utf algorithm  -----------------------------------------------------------//
 
-  template <class ToEncoding, class InputIterator, class OutputIterator, class Error>
+  template <class ToCharT, class InputIterator, class OutputIterator, class Error>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
   {
     // tag dispatch to the specific conversion function
     return detail::convert_utf(
-      typename
-        utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
-      ToEncoding(), first, last, result, eh);
+      typename  // from encoding
+       detail::encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
+      typename  // to encoding
+       detail::encoding<ToCharT>::type(),
+      first, last, result, eh);
   }
 
   //  to_utf_string  -------------------------------------------------------------------//
@@ -566,8 +557,7 @@ Encoding Form Conversion (D93) extract:
     to_utf_string(View v, Error eh, const ToAlloc& a)
   {
     std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
-    convert_utf<typename utf_encoding<ToCharT>::type>
-      (v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    convert_utf<ToCharT>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
     return tmp;
   }
 

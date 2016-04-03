@@ -125,7 +125,7 @@ void convert_utf_test()
   {
     cout << "convert_utf_test" << endl;
     u16string ru16;
-    convert_utf<utf16>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
+    convert_utf<char16_t>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
     BOOST_TEST(ru16 == u16str);
     cout << "  convert_utf_test done" << endl;
   }
