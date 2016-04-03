@@ -24,11 +24,11 @@ namespace unicode
 
   //  default error handler: function object returns a C-string of type
   //  ToCharT with a UTF encoded value of U+FFFD.
-  template <class CharT> struct err_hdlr;
-  template <> struct err_hdlr<char>;
-  template <> struct err_hdlr<char16_t>;
-  template <> struct err_hdlr<char32_t>;
-  template <> struct err_hdlr<wchar_t>;
+  template <class CharT> struct ufffd;
+  template <> struct ufffd<char>;
+  template <> struct ufffd<char16_t>;
+  template <> struct ufffd<char32_t>;
+  template <> struct ufffd<wchar_t>;
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
@@ -36,22 +36,22 @@ namespace unicode
 //                                  Implementation                                      //
 //--------------------------------------------------------------------------------------//
 
-  template <> struct err_hdlr<char>
+  template <> struct ufffd<char>
   {
     constexpr char* operator()() const noexcept { return u8"\uFFFD"; }
   };
 
-  template <> struct err_hdlr<char16_t>
+  template <> struct ufffd<char16_t>
   { 
     constexpr char16_t* operator()() const noexcept { return u"\uFFFD"; }
   };
 
-  template <> struct err_hdlr<char32_t>
+  template <> struct ufffd<char32_t>
   { 
     constexpr char32_t* operator()() const noexcept { return U"\uFFFD"; }
   };
 
-  template <> struct err_hdlr<wchar_t>
+  template <> struct ufffd<wchar_t>
   { 
     constexpr wchar_t* operator()() const noexcept { return L"\uFFFD"; }
   };

@@ -52,7 +52,7 @@ namespace unicode
   //    because std::iterator_traits<OutputIterator>::value_type is void for
   //    OutputIterators such as back_inserter.
   template <class ToCharT, class InputIterator, class OutputIterator,
-    class Error = typename err_hdlr<ToCharT>>
+    class Error = typename ufffd<ToCharT>>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh = Error());
@@ -74,7 +74,7 @@ namespace unicode
   template <class ToCharT, class FromCharT,
     class FromTraits = typename std::char_traits<FromCharT>,
     class View = boost::basic_string_view<FromCharT, FromTraits>,
-    class Error = err_hdlr<ToCharT>,
+    class Error = ufffd<ToCharT>,
     class ToTraits = std::char_traits<ToCharT>,
     class ToAlloc = std::allocator<ToCharT>>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
@@ -90,40 +90,40 @@ namespace unicode
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
 
-  template <class Error = err_hdlr<char>>
+  template <class Error = ufffd<char>>
   inline std::string  to_u8string(boost::string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char>>
+  template <class Error = ufffd<char>>
   inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char>>
+  template <class Error = ufffd<char>>
   inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char>>
+  template <class Error = ufffd<char>>
   inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
 
-  template <class Error = err_hdlr<char16_t>>
+  template <class Error = ufffd<char16_t>>
   inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char16_t>>
+  template <class Error = ufffd<char16_t>>
   inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char16_t>>
+  template <class Error = ufffd<char16_t>>
   inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char16_t>>
+  template <class Error = ufffd<char16_t>>
   inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
 
-  template <class Error = err_hdlr<char32_t>>
+  template <class Error = ufffd<char32_t>>
   inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char32_t>>
+  template <class Error = ufffd<char32_t>>
   inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char32_t>>
+  template <class Error = ufffd<char32_t>>
   inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
-  template <class Error = err_hdlr<char32_t>>
+  template <class Error = ufffd<char32_t>>
   inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
 
-  template <class Error = err_hdlr<wchar_t>>
+  template <class Error = ufffd<wchar_t>>
   inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
-  template <class Error = err_hdlr<wchar_t>>
+  template <class Error = ufffd<wchar_t>>
   inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
-  template <class Error = err_hdlr<wchar_t>>
+  template <class Error = ufffd<wchar_t>>
   inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
-  template <class Error = err_hdlr<wchar_t>>
+  template <class Error = ufffd<wchar_t>>
   inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
 //---------------------------------  end synopsis  -------------------------------------// 
@@ -142,9 +142,9 @@ namespace unicode
   //  as a default, including throwing exceptions, can be and has been used as a security
   //  attack vector.
 
-  //template <> class err_hdlr<narrow>
+  //template <> class ufffd<narrow>
   //  { public: const char* operator()() const noexcept { return "?"; } };
-  //template <> class err_hdlr<wchar_t>
+  //template <> class ufffd<wchar_t>
   //  { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
 
 /*

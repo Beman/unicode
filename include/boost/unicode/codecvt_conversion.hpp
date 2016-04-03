@@ -66,7 +66,7 @@ namespace unicode
 
   template <class ToCharT, class FromCharT, class Codecvt,
      class FromTraits = std::char_traits<FromCharT>,
-     class Error = err_hdlr<ToCharT>,
+     class Error = ufffd<ToCharT>,
      class ToTraits = std::char_traits<ToCharT>,
      class ToAlloc = std::allocator<ToCharT>,
      class View = boost::basic_string_view<FromCharT, FromTraits>>
@@ -76,12 +76,12 @@ namespace unicode
 
   //  codecvt_to_{string|wstring}  -----------------------------------------------------//
 
-  template <class Error = err_hdlr<char>>
+  template <class Error = ufffd<char>>
   inline std::string  codecvt_to_string(boost::wstring_view v,
     const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, 
     const Error eh = Error());
 
-  template <class Error = err_hdlr<wchar_t>>
+  template <class Error = ufffd<wchar_t>>
   inline std::wstring  codecvt_to_wstring(boost::string_view v,
     const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, 
     const Error eh = Error());

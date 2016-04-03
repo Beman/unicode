@@ -136,28 +136,28 @@ void convert_utf_test()
 
     // three argument tests
     u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str),
-      err_hdlr<char16_t>(), std::allocator<char16_t>());
+      ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
     ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
-      boost::string_view(u8str), err_hdlr<char16_t>(), std::allocator<char16_t>());
+      boost::string_view(u8str), ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>(),
+    ru16 = to_utf_string<char16_t, char>(u8str, ufffd<char16_t>(),
       std::allocator<char16_t>());
     ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
-      u8str, err_hdlr<char16_t>(), std::allocator<char16_t>());
+      u8str, ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
     cout << "  to_utf_string_test done" << endl;
 
     // two argument tests
-    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), err_hdlr<char16_t>());
+    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
     ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
-      boost::string_view(u8str), err_hdlr<char16_t>());
+      boost::string_view(u8str), ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str, err_hdlr<char16_t>());
+    ru16 = to_utf_string<char16_t, char>(u8str, ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
     ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(
-      u8str, err_hdlr<char16_t>());
+      u8str, ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
 
     // one argument tests
@@ -230,10 +230,10 @@ void convert_utf_test()
 
     BOOST_TEST(to_wstring(wstr) == wstr);
     BOOST_TEST(to_wstring(u8str) == wstr);
-    BOOST_TEST(to_wstring(u8str, err_hdlr<wchar_t>()) == wstr);
+    BOOST_TEST(to_wstring(u8str, ufffd<wchar_t>()) == wstr);
     BOOST_TEST(to_wstring(u16str) == wstr);
     BOOST_TEST(to_wstring(u32str) == wstr);
-    BOOST_TEST(to_wstring(u32str, err_hdlr<wchar_t>()) == wstr);
+    BOOST_TEST(to_wstring(u32str, ufffd<wchar_t>()) == wstr);
 
     BOOST_TEST(to_u8string(wstr) == u8str);
     BOOST_TEST(to_u8string(u8str) == u8str);
