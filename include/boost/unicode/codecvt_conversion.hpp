@@ -53,38 +53,42 @@ that the attempt to support other specializations will be abandoned.
 //  where ToCharT and FromCharT are the same type so no conversion is needed. To be
 //  decided: Should such an overload detect errors (and call the error handler)?
 
-
+//--------------------------------------------------------------------------------------//
+//                                     Synopsis                                         //
+//--------------------------------------------------------------------------------------//
+// <!-- snippet=codecvt -->
 namespace boost
 {
 namespace unicode
 {
-//--------------------------------------------------------------------------------------//
-//                                     Synopsis                                         //
-//--------------------------------------------------------------------------------------//
-
-  //  codecvt_to_basic_string  ---------------------------------------------------------//
-
+  //  codecvt_to_basic_string
   template <class ToCharT, class FromCharT, class Codecvt,
-     class FromTraits = std::char_traits<FromCharT>,
-     class Error = ufffd<ToCharT>,
-     class ToTraits = std::char_traits<ToCharT>,
-     class ToAlloc = std::allocator<ToCharT>,
-     class View = boost::basic_string_view<FromCharT, FromTraits>>
+    class FromTraits = std::char_traits<FromCharT>,
+    class Error = ufffd<ToCharT>,
+    class ToTraits = std::char_traits<ToCharT>,
+    class ToAlloc = std::allocator<ToCharT>,
+    class View = boost::basic_string_view<FromCharT, FromTraits>>
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
     codecvt_to_basic_string(View v, const Codecvt& ccvt,
-      Error eh = Error(), const ToAlloc& a = ToAlloc());
+                            Error eh=Error(), const ToAlloc& a=ToAlloc());
 
-  //  codecvt_to_{string|wstring}  -----------------------------------------------------//
-
+  //  codecvt_to_string
   template <class Error = ufffd<char>>
-  inline std::string  codecvt_to_string(boost::wstring_view v,
-    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, 
-    const Error eh = Error());
+  inline std::string
+    codecvt_to_string(boost::wstring_view v,
+                      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt,
+                      const Error eh=Error());
 
+  //  codecvt_to_wstring
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring  codecvt_to_wstring(boost::string_view v,
-    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, 
-    const Error eh = Error());
+  inline std::wstring
+    codecvt_to_wstring(boost::string_view v,
+                       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt,
+                       const Error eh=Error());
+
+}  // namespace unicode
+}  // namespace boost
+// <!-- end snippet -->
 
 //---------------------------------  end synopsis  -------------------------------------// 
 
@@ -92,6 +96,10 @@ namespace unicode
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
 
+namespace boost
+{
+namespace unicode
+{
   namespace detail
   {
     //  detail::codecvt_to_basic_string()

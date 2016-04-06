@@ -24,17 +24,17 @@
 //                  Unicode Transformation Format (UTF) conversions                     // 
 //--------------------------------------------------------------------------------------//
 
+
+//--------------------------------------------------------------------------------------//
+//                                     Synopsis                                         //
+//--------------------------------------------------------------------------------------//
+// <!-- snippet=utfcvt -->
 namespace boost
 {
 namespace unicode
 {
 
-//--------------------------------------------------------------------------------------//
-//                                     Synopsis                                         //
-//--------------------------------------------------------------------------------------//
-
-
-  //  convert_utf UTF conversion algorithms  -------------------------------------------//
+  //  convert_utf UTF conversion algorithms
 
   //    converts between UTF-8, UTF-16, UTF-32, and wchar_t encodings;
   //    char encoding must be UTF-8
@@ -57,7 +57,7 @@ namespace unicode
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh = Error());
 
-  //  to_utf_string generic UTF string conversion functions  ---------------------------//
+  //  to_utf_string generic UTF string conversion functions
 
   //    Remarks: Performs the conversion by calling convert_utf.
   //    Note: This implies that errors in input encoding are detected, even when the input
@@ -80,7 +80,7 @@ namespace unicode
   inline std::basic_string<ToCharT, ToTraits, ToAlloc>
     to_utf_string(View v, Error eh = Error(), const ToAlloc& a = ToAlloc());
   
-  //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions  --------//
+  //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions
 
   //    Remarks: Performs the converstion by calling to_utf_string
   //    Note: This implies that errors in input encoding are detected, even when the input
@@ -126,12 +126,20 @@ namespace unicode
   template <class Error = ufffd<wchar_t>>
   inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
+}  // namespace unicode
+}  // namespace boost
+// <!-- end snippet -->
+
 //---------------------------------  end synopsis  -------------------------------------// 
 
 //--------------------------------------------------------------------------------------//
 //                                  implementation                                      //
 //--------------------------------------------------------------------------------------//
 
+namespace boost
+{
+namespace unicode
+{
   //  default error handlers
   //
   //  The Unicode standard, Conformance chapter, requires conversion functions detect
