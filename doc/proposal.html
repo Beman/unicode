@@ -217,20 +217,28 @@ unicode</p>
 
 <h2 >Proposed wording</h2>
 
-<h3 dir="ltr" >Unicode standard</h3>
+<h3 >Unicode standard</h3>
 
-<p dir="ltr" >The <i>Unicode Standard</i>,
+<p >The <i>Unicode Standard</i>,
 <a href="http://www.unicode.org/versions/latest/">
 www.unicode.org/versions/latest/</a>, is referenced below. For example, (Unicode 
 3.4 D10) refers to the Unicode Standard, Core Specification, chapter 3, section 
 4, sub-section D10.</p>
 
-<p dir="ltr" >For convenience, portions of the Unicode Standard are quoted 
+<p >For convenience, portions of the Unicode Standard are quoted 
 below. Any conflicts between those quotes and the Unicode Standard is 
 unintentional, should be resolved by reference to the actual Unicode Standard 
 document.</p>
 
-<h3 dir="ltr" >Definitions</h3>
+<blockquote>
+
+<p >[Note: For general questions related to Unicode transformations 
+format (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
+<a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
+
+</blockquote>
+
+<h3 >Definitions</h3>
 
 <h4>Code point (Unicode 3.4 D10)</h4>
 <p>&quot;Any value in the Unicode codespace. Informally, a code point can be thought 
@@ -252,7 +260,7 @@ processing or interchange. Code units are particular units of computer storage.
 16-bit code units in the UTF-16 encoding form, and 32-bit code units in the 
 UTF-32 encoding form.&quot;</p>
 <blockquote>
-  <p dir="ltr">[Note: In C++ one <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, or 
+  <p>[<i>Note:</i> In C++ one <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, or 
   <code>char32_t</code> character holds one 
   code unit.
   One to four code units (type <code>char</code>) are required to hold a UTF-8 
@@ -266,7 +274,27 @@ UTF-32 encoding form.&quot;</p>
   require 4, 2, or 1 code units to hold a code point.&mdash;<i>end note</i>]</p>
 </blockquote>
 
+  <h4>UTF-8, UTF-16, UTF-32</h4>
+  <p>For the formal definitions see
+  <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
+  3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>.</p>
+
 <h3>Error handling</h3>
+
+<p>The header &lt;boost/unicode/error.hpp&gt; provides the default error handling 
+function object used by the other headers in this library.</p>
+
+<p>In accordance with the Unicode Standard&#39;s recommendations, the default error 
+handling function object <code>ufffd</code> returns 
+U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
+
+<blockquote>
+  <p>[<i>Note:</i> The Unicode Standard provides detailed rationale for that 
+  recommendation, but essentially it is that any other approach, including 
+  throwing exceptions, can be and has been used as a security attack vector.—<i>end note</i>]</p>
+</blockquote>
+
+<p>&nbsp;</p>
 
 <pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
 {
@@ -287,7 +315,7 @@ namespace unicode
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
 
-<p>xxx</p>
+<p>&nbsp;</p>
 
 <pre>#include &lt;boost/unicode/error.hpp&gt;
 
