@@ -5,8 +5,20 @@
 <meta name="GENERATOR" content="Microsoft FrontPage 5.0">
 <meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <style type="text/css">code{white-space: pre;}</style>
-  <link href="data:text/css;charset=utf-8,body%0A%7B%0Afont%2Dfamily%3A%20arial%2C%20sans%2Dserif%3B%0Amax%2Dwidth%3A%206%2E75in%3B%0Amargin%3A%200px%20auto%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ains%20%7Bbackground%2Dcolor%3A%20%23CCFFCC%3B%20text%2Ddecoration%3A%20none%3B%7D%0Adel%20%7Bbackground%2Dcolor%3A%20%23FFCACA%3B%20text%2Ddecoration%3A%20none%3B%7D%0Apre%20%7Bbackground%2Dcolor%3A%20%23D7EEFF%3B%20font%2Dsize%3A%2095%25%3B%20font%2Dfamily%3A%20%22courier%20new%22%2C%20courier%2C%20serif%3B%7D%0Acode%20%7Bfont%2Dsize%3A%20110%25%3B%20font%2Dfamily%3A%20%22courier%20new%22%2C%20courier%2C%20serif%3B%7D%0Atable%20%7Bfont%2Dsize%3A%2090%25%3B%7D%0A%0A" rel="stylesheet" type="text/css" />
+<style>
+  body
+  {
+    font-family: arial, sans-serif;
+    max-width: 6.75in;
+    margin: 0px auto;
+    font-size: 85%;
+  }
+   ins  {background-color: #CCFFCC; text-decoration: none;}
+   del  {background-color: #FFCACA; text-decoration: none;}
+   pre  {background-color: #D7EEFF; font-size: 95%; font-family: "courier new", courier, serif;}
+   code {font-size: 110%; font-family: "courier new", courier, serif;}
+   table {font-size: 90%;}
+</style>
 <title>UTF Encoding Conversion</title>
 </head>
 
@@ -19,7 +31,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-04-02<!--webbot bot="Timestamp" endspan i-checksum="12266" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-04-05<!--webbot bot="Timestamp" endspan i-checksum="12272" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -37,6 +49,10 @@
 
 
 
+<p ><b>[0] Break no existing code</b></p>
+
+
+
 <p ><b>[1] No changes to the core language</b></p>
 
 
@@ -45,38 +61,39 @@
 
 
 
-<p ><b>[3] Support multiple <code>char</code> string environments</b></p>
+<p ><b>[3] Support several use scenarios for <code>char</code>-based strings </b></p>
 <ul>
-  <li>Code where <code>char</code> based strings are assumed by default to be 
+  <li>User code where <code>char</code>-based strings can be assumed to be 
   UTF-8 encoded.<ul>
-  <li>Because that is the default encoding for the operating system, and there 
-  is no expectation of moving the code elsewhere.</li>
-  <li>Because within a given section of code&nbsp; <code>char</code> based 
+  <li>Applies when UTF-8 is the default encoding for the operating system, and there 
+  is no expectation of moving the code elsewhere, or</li>
+  <li>Applies within a given section of code&nbsp;where <code>char</code>-based 
   strings are known to be UTF-8 encoded.</li>
 </ul>
 
 
 
   </li>
-  <li>Code where <code>char</code> based strings are assumed by default to <b>
-  not</b> be UTF-8 encoded.<ul>
-  <li>Because the default encoding for the operating system is not UTF-8, and 
+  <li>User code where <code>char</code>-based strings can be assumed to be 
+  non-UTF-8 encoded..<ul>
+  <li>Applies when the default encoding for the operating system is not UTF-8, and 
   there is no expectation of moving the code elsewhere.</li>
-  <li>Because within a given section of code <code>char</code> based strings are 
+  <li>Applies within a given section of code where <code>char</code>-based strings are 
   known to be non-UTF-8 encoded.</li>
 </ul>
 
 
 
   </li>
-  <li>Portable code that must not make assumptions about the default encoding of <code>
+  <li>Portable code that must make no assumptions about the default encoding of <code>
   char</code> based strings</li>
 </ul>
 
 
 
-<p ><b>[4] Utilize existing codecvt facets for conversions to and from non-UTF 
-encoded <code>char</code> based strings </b></p>
+<p ><b>[4] Utilize existing codecvt facets for conversions to and from <code>char</code> based strings 
+that are not UTF 
+encoded </b></p>
 
 
 
@@ -168,13 +185,16 @@ or sequences for valid UTF encoding.</b></p>
 unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
 <code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
 <p ><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
-UTF-32, according on the <code>sizeof(wchar_t)</code>.</p>
-<h2 dir="ltr" >TODO</h2>
-<p >TODO: The only use of the encodings tags is as the <code>ToEncoding</code> 
-template parameter for <code>convert_utf</code>. Try eliminating all the 
-encoding machinery, and replacing <code>ToEncoding</code> template parameter 
-with <code>ToCharT</code>.</p>
-<p >TODO: String inserters and extractors. See the old string_interop repo.</p>
+UTF-32, depending on the encoding of <code>wchar_t</code>.</p>
+<p ><b>Do not provide basic_string&lt;&gt; to/from ostream/istream converting 
+operator&lt;&lt;/operator&gt;&gt;</b></p>
+<p >Users can use to_u8|u16|u32|w_string UTF conversion functions. Implicit 
+conversions lull users into ignoring the costs.</p>
+<h2 >Open questions</h2>
+<p >If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
+is accepted, then the Proposed wording needs to be reviewed to verify that no 
+changes are required.</p>
+<h2>TODO</h2>
 <p >TODO: Also provide throwing error handler. Design for exception type to be 
 thrown.</p>
 <p >TODO: Add function that scans a sequence / string for errors, reports 
@@ -188,18 +208,15 @@ string, to lesser categories of iterators actually work?</p>
 tests</p>
 <p >TODO: add static asserts on character types, other requirements.</p>
 <p >TODO: Arguments for error handler?</p>
-<p >&nbsp;</p>
 <h2 >Bikeshed</h2>
 <p >Namespace choice:</p>
 <blockquote>
 <p >utf<br>
 unicode</p>
 </blockquote>
+<h2 >Proposed wording</h2>
 <p >&nbsp;</p>
-<p >&nbsp;</p>
-<p >&nbsp;</p>
-
-
+<hr>
 
 </body>
 
