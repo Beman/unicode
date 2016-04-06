@@ -8,16 +8,15 @@
 #if !defined(BOOST_UNICODE_ERROR_HPP)
 #define BOOST_UNICODE_ERROR_HPP
 
-//--------------------------------------------------------------------------------------//
-
-namespace boost
-{
-namespace unicode
-{
 
 //--------------------------------------------------------------------------------------//
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
+// <!-- snippet=error -->
+namespace boost
+{
+namespace unicode
+{
 
   //  Error function objects are called with no arguments and either throw an
   //  exception or return a const pointer to a possibly empty C-style string.
@@ -29,6 +28,10 @@ namespace unicode
   template <> struct ufffd<char16_t>;
   template <> struct ufffd<char32_t>;
   template <> struct ufffd<wchar_t>;
+
+}  // namespace unicode
+}  // namespace boost
+// <!-- end snippet -->
 
 //---------------------------------  end synopsis  -------------------------------------// 
 

@@ -216,7 +216,33 @@ unicode</p>
 </blockquote>
 
 <h2 >Proposed wording</h2>
-<pre><!-- include "../include/boost/unicode/codecvt_conversion.hpp" formatted snippet=codecvt -->namespace boost
+
+<p>xxx</p>
+
+<pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
+{
+namespace unicode
+{
+
+  //  Error function objects are called with no arguments and either throw an
+  //  exception or return a const pointer to a possibly empty C-style string.
+
+  //  default error handler: function object returns a C-string of type
+  //  ToCharT with a UTF encoded value of U+FFFD.
+  template &lt;class CharT&gt; struct ufffd;
+  template &lt;&gt; struct ufffd&lt;char&gt;;
+  template &lt;&gt; struct ufffd&lt;char16_t&gt;;
+  template &lt;&gt; struct ufffd&lt;char32_t&gt;;
+  template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
+
+}  // namespace unicode
+}  // namespace boost<!-- end include --></pre>
+
+<p>xxx</p>
+
+<pre>#include &lt;boost/unicode/error.hpp&gt;
+
+<!-- include "../include/boost/unicode/codecvt_conversion.hpp" formatted snippet=codecvt -->namespace boost
 {
 namespace unicode
 {
@@ -250,7 +276,9 @@ namespace unicode
 
 <p>xxx</p>
 
-<pre><!-- include "../include/boost/unicode/utf_conversion.hpp" formatted snippet=utfcvt -->namespace boost
+<pre>#include &lt;boost/unicode/error.hpp&gt;
+
+<!-- include "../include/boost/unicode/utf_conversion.hpp" formatted snippet=utfcvt -->namespace boost
 {
 namespace unicode
 {
