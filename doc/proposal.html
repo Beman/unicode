@@ -217,7 +217,56 @@ unicode</p>
 
 <h2 >Proposed wording</h2>
 
-<p>xxx</p>
+<h3 dir="ltr" >Unicode standard</h3>
+
+<p dir="ltr" >The <i>Unicode Standard</i>,
+<a href="http://www.unicode.org/versions/latest/">
+www.unicode.org/versions/latest/</a>, is referenced below. For example, (Unicode 
+3.4 D10) refers to the Unicode Standard, Core Specification, chapter 3, section 
+4, sub-section D10.</p>
+
+<p dir="ltr" >For convenience, portions of the Unicode Standard are quoted 
+below. Any conflicts between those quotes and the Unicode Standard is 
+unintentional, should be resolved by reference to the actual Unicode Standard 
+document.</p>
+
+<h3 dir="ltr" >Definitions</h3>
+
+<h4>Code point (Unicode 3.4 D10)</h4>
+<p>&quot;Any value in the Unicode codespace. Informally, a code point can be thought 
+of as a Unicode character.&quot; </p>
+<blockquote>
+  <p>(Unicode Appendix A - Notational Conventions): </p>
+  <p>&quot;In running text, an individual Unicode code point is expressed as U+n, 
+  where n is four to six hexadecimal digits, using the digits 0–9 and uppercase 
+  letters A–F (for 10 through 15, respectively). Leading zeros are omitted, 
+  unless the code point would have fewer than four hexadecimal digits—for 
+  example, U+0001, U+0012, U+0123, U+1234, U+12345, U+102345. </p>
+  <p>[e.g] U+0416 is the Unicode code point for the character named CYRILLIC 
+  CAPITAL LETTER ZHE.&quot; </p>
+</blockquote>
+<h4>Code unit (Unicode 3.9 D77)</h4>
+<p>&quot;The minimal bit combination that can represent a unit of encoded text for 
+processing or interchange. Code units are particular units of computer storage. 
+... The Unicode Standard uses 8-bit code units in the UTF-8 encoding form, 
+16-bit code units in the UTF-16 encoding form, and 32-bit code units in the 
+UTF-32 encoding form.&quot;</p>
+<blockquote>
+  <p dir="ltr">[Note: In C++ one <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, or 
+  <code>char32_t</code> character holds one 
+  code unit.
+  One to four code units (type <code>char</code>) are required to hold a UTF-8 
+  encoded code 
+  point.
+  One or two code units (type <code>char16_t</code>) are required to hold a UTF-16 encoded 
+  code point.
+  One code unit (type <code>char32_t</code>) is required to hold a UTF-32 code point. 
+  Type <code>wchar_t</code> may use 8, 16, or 32-bit code units, encoded as 
+  UTF-8, UTF-16, or UTF-32, respectively, so depending on the encoding will 
+  require 4, 2, or 1 code units to hold a code point.&mdash;<i>end note</i>]</p>
+</blockquote>
+
+<h3>Error handling</h3>
 
 <pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
 {
