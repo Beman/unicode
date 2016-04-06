@@ -84,14 +84,14 @@ namespace
   template <class T>
   void check_inserter(T x, const string& expected)
   {
-    cout << "      test...\n";
+    //cout << "      test...\n";
     std::stringstream ss;
     std::string result;
     ss << x;
     ss << '\n';
     ss >> result;
-    cout << "result:" << hex_string(result) << endl;
-    cout << "expect:" << hex_string(expected) << endl;
+    //cout << "result:" << hex_string(result) << endl;
+    //cout << "expect:" << hex_string(expected) << endl;
 
     BOOST_TEST_EQ(result, expected);
   }
@@ -100,7 +100,18 @@ namespace
   {
     cout << "inserter_test" << endl;
 
-    check_inserter(L"a", string("a"));
+    check_inserter(u8"$€𐐷𤭢", u8str);
+    check_inserter(boost::string_view(u8str), u8str);
+    check_inserter(u8str, u8str);
+
+    check_inserter(u"$€𐐷𤭢", u8str);
+    check_inserter(boost::u16string_view(u16str), u8str);
+    check_inserter(u16str, u8str);
+
+    check_inserter(U"$€𐐷𤭢", u8str);
+    check_inserter(boost::u32string_view(u32str), u8str);
+    check_inserter(u32str, u8str);
+
     check_inserter(L"$€𐐷𤭢", u8str);
     check_inserter(boost::wstring_view(wstr), u8str);
     check_inserter(wstr, u8str);
