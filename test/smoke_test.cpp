@@ -11,9 +11,11 @@ using std::endl;
 #include <typeinfo>
 #include "../include/boost/unicode/utf_conversion.hpp"
 #include "../include/boost/unicode/codecvt_conversion.hpp"
+#include "../include/boost/unicode/stream.hpp"
 #include "../include/boost/unicode/detail/utf8_codecvt_facet.hpp"
 #include <cassert>
 #include <string>
+#include <sstream>
 #include <iterator>
 #include <cwchar>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
@@ -79,7 +81,34 @@ namespace
     return tmp;
   }
 
-void codecvt_short_test()
+  template <class T>
+  void check_inserter(T x, const string& expected)
+  {
+    cout << "      test...\n";
+    std::stringstream ss;
+    std::string result;
+    ss << x;
+    ss << '\n';
+    ss >> result;
+    cout << "result:" << hex_string(result) << endl;
+    cout << "expect:" << hex_string(expected) << endl;
+
+    BOOST_TEST_EQ(result, expected);
+  }
+
+  void inserter_test()
+  {
+    cout << "inserter_test" << endl;
+
+    check_inserter(L"a", string("a"));
+    check_inserter(L"$€𐐷𤭢", u8str);
+    check_inserter(boost::wstring_view(wstr), u8str);
+    check_inserter(wstr, u8str);
+
+    cout << "  inserter_test done" << endl;
+  }
+
+  void codecvt_short_test()
   {
     cout << "codecvt_short_test" << endl;
     boost::unicode::detail::utf8_codecvt_facet ccvt(0);
@@ -121,7 +150,7 @@ void codecvt_short_test()
     cout << "  codecvt_short_test done" << endl;
   }
 
-void convert_utf_test()
+  void convert_utf_test()
   {
     cout << "convert_utf_test" << endl;
     u16string ru16;
@@ -330,6 +359,7 @@ int main()
   // TODO: Add test to verify InputIterators do not have to be contiguous and do not
   // have to meet any forward, bidirectional, or random access requirements.
 
+  inserter_test();
   codecvt_short_test();
   convert_utf_test();
   to_utf_string_test();

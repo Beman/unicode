@@ -156,38 +156,6 @@ namespace unicode
   //  { public: const wchar_t* operator()() const noexcept { return L"\uFFFD"; } };
 
 /*
-Unicode Standard Conformance (as of version 7.0)
-
-References: For example, (3.4 D10) refers to the Unicode Standard, Core Specification,
-chapter 3, section 4, sub-section D10. See http://www.unicode.org/versions/latest/
-
-Definitions:
-
-* Code point (3.4 D10): "Code point: Any value in the Unicode codespace."
-
-  Informally, a code point can be thought of as a Unicode character.
-
-  (Appendix A - Notational Conventions):
-  "In running text, an individual Unicode code point is expressed as U+n, where n is four
-   to six hexadecimal digits, using the digits 0–9 and uppercase letters A–F (for 10
-   through 15, respectively). Leading zeros are omitted, unless the code point would have
-   fewer than four hexadecimal digits—for example, U+0001, U+0012, U+0123, U+1234,
-   U+12345, U+102345.
-
-   [e.g] U+0416 is the Unicode code point for the character named CYRILLIC CAPITAL
-   LETTER ZHE."
-
-* Code unit (3.9 D77): "The minimal bit combination that can represent a unit of encoded text
-  for processing or interchange. Code units are particular units of computer storage. ...
-  The Unicode Standard uses 8-bit code units in the UTF-8 encoding form, 16-bit
-  code units in the UTF-16 encoding form, and 32-bit code units in the UTF-32
-  encoding form."
-
-  In C++: one char, wchar_t, char16_t, or char32_t character holds one code unit.
-  One to four code units (type char) are required to hold a UTF-8 encodee code point.
-  One or two code units (type char16_t) are required to hold a UTF-16 encoded code point.
-  One code unit (type char32_t) is required to hold a UTF-32 code point.
-
 UTF-32 (D90) extract:
 
 * "Because surrogate code points are not included in the set of Unicode scalar values,

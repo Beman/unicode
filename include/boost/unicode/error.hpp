@@ -39,6 +39,10 @@ namespace unicode
 //                                  Implementation                                      //
 //--------------------------------------------------------------------------------------//
 
+namespace boost
+{
+namespace unicode
+{
   template <> struct ufffd<char>
   {
     constexpr char* operator()() const noexcept { return u8"\uFFFD"; }

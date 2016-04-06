@@ -1,17 +1,13 @@
-//  boost/string_interop/stream.hpp  ----------------------------------------------------------//
+//  boost/unicode/stream.hpp  ----------------------------------------------------------//
 
-//  Copyright Beman Dawes 2011
+//  © Copyright Beman Dawes 2011, 2016
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
-#if !defined(BOOST_STRING_INTEROP_STREAM_HPP)
-# define BOOST_STRING_INTEROP_STREAM_HPP
+#if !defined(BOOST_UNICODE_STREAM_HPP)
+# define BOOST_UNICODE_STREAM_HPP
 
-#include <boost/string_interop/cxx11_char_types.hpp>
-#include <boost/string_interop/string_interop.hpp>
-#include <boost/string_interop/detail/is_iterator.hpp>
-#include <boost/string_interop/detail/iterator_value.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/mpl/logical.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -19,32 +15,27 @@
 #include <ostream>
 #include <iterator>
 
-#include <boost/config/abi_prefix.hpp> // must be the last #include
+#if !defined(BOOST_UNICODE_ERROR_HPP)
+# include <boost/unicode/error.hpp>
+#endif
 
 namespace boost
 {
-namespace string_interop
+namespace unicode
 {
 namespace detail
 {
 
-template <class Ostream, class InputIterator>
-Ostream& inserter(Ostream& os, InputIterator begin)
+template <class ToCharT, class ToTraits, class FromCharT, class FromTraits>
+  std::basic_ostream<ToCharT, ToTraits>&
+    inserter(std::basic_ostream<ToCharT, ToTraits>& os,
+             boost::basic_string_view<FromCharT, FromTraits> v)
 {
-  typedef boost::string_interop::conversion_iterator<
-    typename boost::string_interop::select_codec<typename Ostream::char_type>::type,
-    typename boost::string_interop::select_codec<
-      typename std::iterator_traits<InputIterator>::value_type>::type,
-    InputIterator>
-      iter_type;
-
-  for (iter_type itr(begin); itr != iter_type(); ++itr)
-    os << *itr;
-  return os;
+  return os << to_utf_string<ToCharT, FromCharT>(v, ufffd<ToCharT>());
 }
 
 } // namespace detail
-} // namespace string_interop
+} // namespace unicode
 } // namespace boost
 
 
@@ -59,25 +50,27 @@ Ostream& inserter(Ostream& os, InputIterator begin)
 namespace std
 {
 
+//  basic_string_view overload
+
+template <class ToCharT, class ToTraits, class FromCharT, class FromTraits>
+inline typename boost::enable_if_c<!boost::is_same<ToCharT, FromCharT>::value,
+  basic_ostream<ToCharT, ToTraits>&>::type
+    operator<<(basic_ostream<ToCharT, ToTraits>& os,
+               boost::basic_string_view<FromCharT, FromTraits> v)
+{
+  return boost::unicode::detail::inserter(os, v);
+}
+
 //  basic_string overload
 
-template <class Ostream, class charT, class Traits, class Allocator>
-typename boost::enable_if_c<!boost::is_same<charT, typename Ostream::char_type>::value,
-  Ostream&>::type
-operator<<(Ostream& os, const basic_string<charT, Traits, Allocator>& str)
+template <class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc>
+inline typename boost::enable_if_c<!boost::is_same<ToCharT, FromCharT>::value,
+  basic_ostream<ToCharT, ToTraits>&>::type
+    operator<<(basic_ostream<ToCharT, ToTraits>& os,
+               const basic_string<FromCharT, FromTraits, Alloc>& s)
 {
-  typedef const basic_string<charT, Traits, Allocator> string_type;
-
-  typedef boost::string_interop::conversion_iterator<
-    typename boost::string_interop::select_codec<typename Ostream::char_type>::type,
-    typename boost::string_interop::select_codec<charT>::type,
-    typename string_type::const_iterator>
-      iter_type;
-
-  iter_type itr(str.begin(), str.end());
-  for (; itr != iter_type(); ++itr)
-    os << *itr;
-  return os;
+  return boost::unicode::detail::inserter(os,
+    boost::basic_string_view<FromCharT, FromTraits>(s));
 }
 
 //  Character pointer overloads
@@ -91,25 +84,22 @@ operator<<(Ostream& os, const basic_string<charT, Traits, Allocator>& str)
 //
 //  As a fix, supply individual overloads for the ostreams and pointers we care about
 
-basic_ostream<char>& operator<<(basic_ostream<char>& os, const wchar_t* p)
+inline basic_ostream<char>& operator<<(basic_ostream<char>& os, const wchar_t* p)
 {
-  return boost::string_interop::detail::inserter(os, p);
+  boost::wstring_view v(p);
+  return boost::unicode::detail::inserter(os, v);
 }
-
-basic_ostream<char>& operator<<(basic_ostream<char>& os, const char16_t* p)
-{
-  return boost::string_interop::detail::inserter(os, p);
-}
-
-basic_ostream<char>& operator<<(basic_ostream<char>& os, const char32_t* p)
-{
-  return boost::string_interop::detail::inserter(os, p);
-}
+//
+//basic_ostream<char>& operator<<(basic_ostream<char>& os, const char16_t* p)
+//{
+//  return boost::unicode::detail::inserter(os, p);
+//}
+//
+//basic_ostream<char>& operator<<(basic_ostream<char>& os, const char32_t* p)
+//{
+//  return boost::unicode::detail::inserter(os, p);
+//}
 
 }  // namespace std
 
-//----------------------------------------------------------------------------//
-
-#include <boost/config/abi_suffix.hpp> // pops abi_prefix.hpp pragmas
-
-#endif  // BOOST_STRING_INTEROP_STREAM_HPP
+#endif  // BOOST_UNICODE_STREAM_HPP
