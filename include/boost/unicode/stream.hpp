@@ -38,14 +38,15 @@ namespace std
                  boost::basic_string_view<FromCharT, FromTraits> v);
 
   //  basic_string overload
-  template <class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc>
+  template <class ToCharT, class ToTraits, class FromCharT, class FromTraits,
+            class Alloc>
   inline typename boost::enable_if_c<!boost::is_same<ToCharT, FromCharT>::value,
     basic_ostream<ToCharT, ToTraits>&>::type
       operator<<(basic_ostream<ToCharT, ToTraits>& os,
                  const basic_string<FromCharT, FromTraits, Alloc>& s);
 
   //  pointer overload
-  //    works despite std basic_ostream<charT,traits>& operator<<(const void* p) overload
+  //    works despite the standard library's operator<<(const void* p) overload
   template <class ToCharT, class ToTraits, class FromCharT>
   inline typename boost::enable_if_c<!boost::is_same<ToCharT, FromCharT>::value,
     basic_ostream<ToCharT, ToTraits>&>::type

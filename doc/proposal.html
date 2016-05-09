@@ -31,7 +31,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-04-06<!--webbot bot="Timestamp" endspan i-checksum="12274" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-04-08<!--webbot bot="Timestamp" endspan i-checksum="12278" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -42,6 +42,42 @@
   <td align="left">Library Evolution</td>
 </tr>
 </table>
+
+
+
+<h1 align="center" >String Encoding Conversion Library<br>
+<font size="5">Easing interoperation and I/O between different string types and 
+encodings in a mostly Unicode world while enhancing the value of existing 
+codecvt facets.</font></h1>
+
+
+
+<p align="center" ><span style="font-weight: 700; background-color: #FFFF00">
+Abstract Here</span></p>
+
+
+
+<h2 align="left" >Table of contents</h2>
+
+
+
+<h2 align="left" >Introduction</h2>
+
+
+
+<h2 align="left" >Motivation</h2>
+
+
+
+<h2 align="left" >History</h2>
+
+
+
+<h2 align="left" >Implementation and use</h2>
+
+
+
+<h2 align="left" >Acknowledgements</h2>
 
 
 
@@ -186,14 +222,10 @@ unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
 <code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
 <p ><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
 UTF-32, depending on the encoding of <code>wchar_t</code>.</p>
-<p ><b>Do not provide basic_string&lt;&gt; to/from ostream/istream converting 
-operator&lt;&lt;/operator&gt;&gt;</b></p>
-<p >Users can use to_u8|u16|u32|w_string UTF conversion functions. Implicit 
-conversions lull users into ignoring the costs.</p>
 <h2 >Open questions</h2>
 <p >If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
-is accepted, then the Proposed wording needs to be reviewed to verify that no 
-changes are required.</p>
+is accepted, then the proposed wording needs to be reviewed to accommodate 
+changes that may accrue. Such changes, if any, are expected to be minor.</p>
 <h2>TODO</h2>
 <p >TODO: Also provide throwing error handler. Design for exception type to be 
 thrown.</p>
@@ -294,8 +326,6 @@ U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
   throwing exceptions, can be and has been used as a security attack vector.—<i>end note</i>]</p>
 </blockquote>
 
-<p>&nbsp;</p>
-
 <pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
 {
 namespace unicode
@@ -315,7 +345,7 @@ namespace unicode
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
 
-<p>&nbsp;</p>
+<h3><code>codecvt</code> based conversion</h3>
 
 <pre>#include &lt;boost/unicode/error.hpp&gt;
 
@@ -351,7 +381,7 @@ namespace unicode
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
 
-<p>xxx</p>
+<h3>UTF based conversion</h3>
 
 <pre>#include &lt;boost/unicode/error.hpp&gt;
 
@@ -454,6 +484,34 @@ namespace unicode
 
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
+
+<h3>UTF based converting stream inserters and extractors</h3>
+
+<pre><!-- include "../include/boost/unicode/stream.hpp" formatted snippet=synopsis -->namespace std
+{
+
+  //  basic_string_view overload
+  template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits&gt;
+  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
+                 boost::basic_string_view&lt;FromCharT, FromTraits&gt; v);
+
+  //  basic_string overload
+  template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc&gt;
+  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
+                 const basic_string&lt;FromCharT, FromTraits, Alloc&gt;&amp; s);
+
+  //  pointer overload
+  //    works despite std basic_ostream&lt;charT,traits&gt;&amp; operator&lt;&lt;(const void* p) overload
+  template &lt;class ToCharT, class ToTraits, class FromCharT&gt;
+  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
+
+}  // namespace std<!-- end include --></pre>
 
 <hr>
 
