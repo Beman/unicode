@@ -2,8 +2,6 @@
 
 <head>
 <meta http-equiv="Content-Language" content="en-us">
-<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
-<meta name="ProgId" content="FrontPage.Editor.Document">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
   body
@@ -19,7 +17,7 @@
    code {font-size: 110%; font-family: "courier new", courier, serif;}
    table {font-size: 90%;}
 </style>
-<title>UTF Conversion</title>
+<title>Unicode Encoding conversions</title>
 </head>
 
 <body>
@@ -31,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-04-08<!--webbot bot="Timestamp" endspan i-checksum="12278" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-03<!--webbot bot="Timestamp" endspan i-checksum="12274" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -45,7 +43,7 @@
 
 
 
-<h1 align="center" >String Encoding Conversion Library<br>
+<h1 align="center" >Unicode Encoding Conversions<br>
 <font size="5">Easing interoperation and I/O between different string types and 
 encodings in a mostly Unicode world while enhancing the value of existing 
 codecvt facets.</font></h1>
@@ -77,27 +75,27 @@ Abstract Here</span></p>
 
 
 
-<h2 align="left" >Acknowledgements</h2>
+<h2>Acknowledgements</h2>
 
 
 
-<h2 >Requirements</h2>
+<h2>Requirements</h2>
 
 
 
-<p ><b>[0] Break no existing code</b></p>
+<p><b>[0] Break no existing code</b></p>
 
 
 
-<p ><b>[1] No changes to the core language</b></p>
+<p><b>[1] No changes to the core language</b></p>
 
 
 
-<p ><b>[2] No changes to the existing standard library</b></p>
+<p><b>[2] No changes to the existing standard library</b></p>
 
 
 
-<p ><b>[3] Support several use scenarios for <code>char</code>-based strings </b></p>
+<p><b>[3] Support several use scenarios for <code>char</code>-based strings </b></p>
 <ul>
   <li>User code where <code>char</code>-based strings can be assumed to be 
   UTF-8 encoded.<ul>
@@ -127,68 +125,68 @@ Abstract Here</span></p>
 
 
 
-<p ><b>[4] Utilize existing codecvt facets for conversions to and from <code>char</code> based strings 
+<p><b>[4] Utilize existing codecvt facets for conversions to and from <code>char</code> based strings 
 that are not UTF 
 encoded </b></p>
 
 
 
-<h2 >Design decisions</h2>
+<h2>Design decisions</h2>
 
 
 
-<p ><b>No changes to the core language</b></p>
+<p><b>No changes to the core language</b></p>
 <blockquote>
 
 
 
-<p >Types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
+<p>Types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
 <code>wchar_t</code> remain unchanged, and there is no change to current 
 requirements on their encodings.</p>
 
 
 
-<p >No new core language character types are proposed.</p>
+<p>No new core language character types are proposed.</p>
 </blockquote>
 
 
 
-<p ><b>Proposed changes to the standard library are pure additions</b></p>
+<p><b>Proposed changes to the standard library are pure additions</b></p>
 
 
 
-<p >&nbsp;</p>
+<p>&nbsp;</p>
 
 
 
-<p ><b>Its all about string encoding needs</b></p>
+<p><b>Its all about string encoding needs</b></p>
 
 
 
-<p ><b>Provide three levels of functionality</b></p>
+<p><b>Provide three levels of functionality</b></p>
 <blockquote>
 
 
 
-<p >Provide high-level easy-to-use encoding conversion functions that handle 
+<p>Provide high-level easy-to-use encoding conversion functions that handle 
 everyday string interoperability needs. Keep the interfaces simple, but do 
 support error handling customization since user needs vary widely.</p>
 
 
 
-<p >Provide mid-level generic string encoding to support those requiring the 
+<p>Provide mid-level generic string encoding to support those requiring the 
 full range of string interoperability needs.</p>
 
 
 
-<p >Provide a low-level encoding conversion algorithm patterned after existing standard 
+<p>Provide a low-level encoding conversion algorithm patterned after existing standard 
 library algorithms for those who need to perform encoding conversions on 
 sequences of characters.</p>
 </blockquote>
 
 
 
-<p ><b>Provide the three levels of functionality for both codecvt-based and UTF-based 
+<p><b>Provide the three levels of functionality for both codecvt-based and UTF-based 
 conversions</b></p>
 
 
@@ -197,7 +195,7 @@ conversions</b></p>
 
 
 
-<p ><b>Codecvt-based</b> </p>
+<p><b>Codecvt-based</b> </p>
 
 
 
@@ -205,72 +203,76 @@ conversions</b></p>
 
 
 
-<p ><b>Default error handling in favor of security.</b></p>
+<p><b>Default error handling in favor of security.</b></p>
 
 
 
-<p ><b>Provide a coherent error detection policy so that users know when they do 
+<p><b>Provide a coherent error detection policy so that users know when they do 
 and when they do not have to check for errors themselves</b></p>
 
 
 
-<p ><b>Provide error checking functions so that users can easily check strings 
+<p><b>Provide error checking functions so that users can easily check strings 
 or sequences for valid UTF encoding.</b></p>
-<p ><b>Default encoding is Unicode Transformation Format (UTF)</b></p>
-<p >Unless otherwise specified, all functions in namespace <code>
+<p><b>Default encoding is Unicode Transformation Format (UTF)</b></p>
+<p>Unless otherwise specified, all functions in namespace <code>
 unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
 <code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
-<p ><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
+<p><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
 UTF-32, depending on the encoding of <code>wchar_t</code>.</p>
-<h2 >Open questions</h2>
-<p >If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
+<p><b>Do not provide basic_string&lt;&gt; to/from ostream/istream converting 
+operator&lt;&lt;/operator&gt;&gt;</b></p>
+<p>Users can use to_u8|u16|u32|w_string UTF conversion functions. Implicit 
+conversions lull users into ignoring the costs.</p>
+<h2>Open questions</h2>
+<p>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
 is accepted, then the proposed wording needs to be reviewed to accommodate 
 changes that may accrue. Such changes, if any, are expected to be minor.</p>
 <h2>TODO</h2>
-<p >TODO: Also provide throwing error handler. Design for exception type to be 
+<p>TODO: Also provide throwing error handler. Design for exception type to be 
 thrown.</p>
-<p >TODO: Add function that scans a sequence / string for errors, reports 
+<p>TODO: Add function that scans a sequence / string for errors, reports 
 results.</p>
-<p >TODO: Follow Marshall&#39;s suggested return of pair&lt;&gt; from string algorithms?</p>
-<p >TODO: UTF first, last, iterators are InputIterators? 
+<p>TODO: Follow Marshall&#39;s suggested return of pair&lt;&gt; from string algorithms?</p>
+<p>TODO: UTF first, last, iterators are InputIterators? 
 ForwardIterators? RandomAccess? Contiguous? What does basic_string_view require? How does iterator category interact with error handler? If the actual 
 conversion is done by functions requiring const char* point to a contiguous 
 string, to lesser categories of iterators actually work?</p>
-<p >TODO: Add test cases for other kinds of strings to regression 
+<p>TODO: Add test cases for other kinds of strings to regression 
 tests</p>
-<p >TODO: add static asserts on character types, other requirements.</p>
-<p >TODO: Arguments for error handler?</p>
-<h2 >Bikeshed</h2>
-<p >Namespace choice:</p>
+<p>TODO: add static asserts on character types, other requirements.</p>
+<p>TODO: Arguments for error handler?</p>
+<h2>Bikeshed</h2>
+<p>Namespace choice:</p>
 <blockquote>
-<p >utf<br>
+<p>utf<br>
 unicode</p>
 </blockquote>
 
-<h2 >Proposed wording</h2>
+<h2>Proposed wording</h2>
 
-<h3 >Unicode standard</h3>
+<h3>Unicode standard</h3>
 
-<p >The <i>Unicode Standard</i>,
+<p>The <i>Unicode Standard</i>,
 <a href="http://www.unicode.org/versions/latest/">
-www.unicode.org/versions/latest/</a>, is referenced below. For example, (Unicode 
-3.4 D10) refers to the Unicode Standard, Core Specification, chapter 3, section 
-4, sub-section D10.</p>
+www.unicode.org/versions/latest/</a>, is referenced below. [<i>Example:</i> "(Unicode 
+3.4 D10)" refers to the Unicode Standard, Core Specification, chapter 3, section 
+4, sub-section D10.&mdash;<i>End example</i>]</p>
 
-<p >For convenience, portions of the Unicode Standard are quoted 
+<p>For convenience, portions of the Unicode Standard are quoted 
 below. Any conflicts between those quotes and the Unicode Standard is 
-unintentional, should be resolved by reference to the actual Unicode Standard 
+unintentional and should be resolved by reference to the actual Unicode Standard 
 document.</p>
 
 <blockquote>
 
-<p >[Note: For general questions related to Unicode transformations 
+<p>[Note: For general questions related to Unicode transformations 
 format (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
 <a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
 
 </blockquote>
 
-<h3 >Definitions</h3>
+<h3>Definitions</h3>
 
 <h4>Code point (Unicode 3.4 D10)</h4>
 <p>&quot;Any value in the Unicode codespace. Informally, a code point can be thought 
@@ -285,6 +287,7 @@ of as a Unicode character.&quot; </p>
   <p>[e.g] U+0416 is the Unicode code point for the character named CYRILLIC 
   CAPITAL LETTER ZHE.&quot; </p>
 </blockquote>
+
 <h4>Code unit (Unicode 3.9 D77)</h4>
 <p>&quot;The minimal bit combination that can represent a unit of encoded text for 
 processing or interchange. Code units are particular units of computer storage. 
@@ -302,11 +305,11 @@ UTF-32 encoding form.&quot;</p>
   code point.
   One code unit (type <code>char32_t</code>) is required to hold a UTF-32 code point. 
   Type <code>wchar_t</code> may use 8, 16, or 32-bit code units, encoded as 
-  UTF-8, UTF-16, or UTF-32, respectively, so depending on the encoding will 
-  require 4, 2, or 1 code units to hold a code point.&mdash;<i>end note</i>]</p>
+  UTF-8, UTF-16, or UTF-32, respectively, so will  require 4, 2, or 1 code units
+  to hold a code point depending on the encoding.&mdash;<i>end note</i>]</p>
 </blockquote>
 
-  <h4>UTF-8, UTF-16, UTF-32</h4>
+  <h4>UTF-8, UTF-16, and UTF-32 Unicode encoding forms</h4>
   <p>For the formal definitions see
   <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
   3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>.</p>
@@ -322,9 +325,12 @@ U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
 
 <blockquote>
   <p>[<i>Note:</i> The Unicode Standard provides detailed rationale for that 
-  recommendation, but essentially it is that any other approach, including 
-  throwing exceptions, can be and has been used as a security attack vector.—<i>end note</i>]</p>
+  recommendation; essentially it is that other commonly used approaches, including 
+  throwing exceptions, can be and has been used as a security attack vector.
+  &mdash;<i>end note</i>]</p>
 </blockquote>
+
+<p>&nbsp;</p>
 
 <pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
 {
@@ -438,7 +444,7 @@ namespace unicode
   
   //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions
 
-  //    Remarks: Performs the converstion by calling to_utf_string
+  //    Remarks: Performs the conversion by calling to_utf_string
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
   //    any replaces the invalid input encoding in the output, even when the input and
