@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-11<!--webbot bot="Timestamp" endspan i-checksum="12329" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-13<!--webbot bot="Timestamp" endspan i-checksum="12333" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -336,12 +336,12 @@ U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
   &mdash;<i>end note</i>]</p>
 </blockquote>
 
-<p>&nbsp;</p>
+<h3>Header &lt;experimental/unicode&gt; synopsis</h3>
 
-<pre><!-- include "../include/boost/unicode/error.hpp" formatted snippet=error -->namespace boost
-{
-namespace unicode
-{
+<pre>namespace std {
+namespace experimental {
+inline namespace fundamentals_v2 {
+namespace unicode {
 
   //  Error function objects are called with no arguments and either throw an
   //  exception or return a const pointer to a possibly empty C-style string.
@@ -353,54 +353,6 @@ namespace unicode
   template &lt;&gt; struct ufffd&lt;char16_t&gt;;
   template &lt;&gt; struct ufffd&lt;char32_t&gt;;
   template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
-
-}  // namespace unicode
-}  // namespace boost<!-- end include --></pre>
-
-<h3><code>codecvt</code> based conversion</h3>
-
-<pre>#include &lt;boost/unicode/error.hpp&gt;
-
-<!-- include "../include/boost/unicode/codecvt_conversion.hpp" formatted snippet=codecvt -->namespace boost
-{
-namespace unicode
-{
-  //  codecvt_to_basic_string
-  template &lt;class ToCharT, class FromCharT, class Codecvt,
-    class FromTraits = std::char_traits&lt;FromCharT&gt;,
-    class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = std::char_traits&lt;ToCharT&gt;,
-    class ToAlloc = std::allocator&lt;ToCharT&gt;,
-    class View = boost::basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
-  inline std::basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
-                            Error eh=Error(), const ToAlloc&amp; a=ToAlloc());
-
-  //  codecvt_to_string
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string
-    codecvt_to_string(boost::wstring_view v,
-                      const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());
-
-  //  codecvt_to_wstring
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring
-    codecvt_to_wstring(boost::string_view v,
-                       const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
-                       const Error eh=Error());
-
-}  // namespace unicode
-}  // namespace boost<!-- end include --></pre>
-
-<h3>UTF conversion functions</h3>
-
-<pre>#include &lt;boost/unicode/error.hpp&gt;
-
-<!-- include "../include/boost/unicode/utf_conversion.hpp" formatted snippet=utfcvt -->namespace boost
-{
-namespace unicode
-{
 
   //  convert_utf UTF conversion algorithms
 
@@ -489,11 +441,44 @@ namespace unicode
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
   inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
+  //  codecvt_to_basic_string
+  template &lt;class ToCharT, class FromCharT, class Codecvt,
+    class FromTraits = std::char_traits&lt;FromCharT&gt;,
+    class Error = ufffd&lt;ToCharT&gt;,
+    class ToTraits = std::char_traits&lt;ToCharT&gt;,
+    class ToAlloc = std::allocator&lt;ToCharT&gt;,
+    class View = boost::basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
+  inline std::basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
+    codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
+                            Error eh=Error(), const ToAlloc&amp; a=ToAlloc());
+
+  //  codecvt_to_string
+  template &lt;class Error = ufffd&lt;char&gt;&gt;
+  inline std::string
+    codecvt_to_string(boost::wstring_view v,
+                      const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
+                      const Error eh=Error());
+
+  //  codecvt_to_wstring
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+  inline std::wstring
+    codecvt_to_wstring(boost::string_view v,
+                       const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
+                       const Error eh=Error());
+
+}  // namespace unicode
+}  // namespace fundamentals_v2
+}  // namespace experimental
+}  // namespace std
+
+<h3>UTF conversion functions</h3>
+
+<h3><code>codecvt</code> based conversion</h3>
+
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
 
-<p>These functions convert between sequences of the character types indicated in 
-<i>UFT Conversions</i> table.</p>
+<p>These functions convert between sequences of the character types indicated in <i>UFT Conversions</i> table.</p>
 
 <p>Errors in input encoding are detected, even when the input and output 
 encodings are the same. The eh function object&#39;s returned sequence if any 
@@ -539,7 +524,13 @@ sequence is a valid UTF sequence.<br>
 
 <h3>UTF based converting stream inserters and extractors</h3>
 
-<pre><!-- include "../include/boost/unicode/stream.hpp" formatted snippet=synopsis -->namespace std
+<p>&nbsp;</p>
+
+<p><i><span style="background-color: #FFFF00">What do we do about </span>
+<span style="background-color: #FFFF00">ADL</span><span style="background-color: #FFFF00"> 
+if this goes in </span><span style="background-color: #FFFF00">std::experimental</span><span style="background-color: #FFFF00">::fundamentals_v2?</span></i></p>
+
+<pre>namespace std
 {
 
   //  basic_string_view overload
@@ -563,7 +554,7 @@ sequence is a valid UTF sequence.<br>
     basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
       operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
 
-}  // namespace std<!-- end include --></pre>
+}  // namespace std</pre>
 
 <hr>
 
