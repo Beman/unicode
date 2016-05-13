@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-03<!--webbot bot="Timestamp" endspan i-checksum="12274" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-11<!--webbot bot="Timestamp" endspan i-checksum="12329" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -43,35 +43,37 @@
 
 
 
-<h1 align="center" >Unicode Encoding Conversions<br>
-<font size="5">Easing interoperation and I/O between different string types and 
-encodings in a mostly Unicode world while enhancing the value of existing 
-codecvt facets.</font></h1>
+<h1 align="center">Unicode Encoding Conversions for the Standard Library</h1>
+
+<p  style="margin-left:20%; margin-right:20%;">Proposes library conversion functions to ease interoperation between 
+existing standard and use-defined string types or streams. Provides conversion functions 
+for Unicode Transformation Format (UTF) 
+encodings, designed for Unicode-centric applications. Provides conversion 
+functions for legacy 
+encodings with existing <code>codecvt</code> facets, designed for conversion to 
+and from UTF encodings. Pure addition to the standard library. No changes to the 
+core language or existing standard library components. Breaks no existing code. User customizable 
+error handling with secure default. Implementation available. Suitable for 
+either a Library TS or the standard itself.</p>
+
+
+<h2>Table of contents</h2>
 
 
 
-<p align="center" ><span style="font-weight: 700; background-color: #FFFF00">
-Abstract Here</span></p>
+<h2>Introduction</h2>
 
 
 
-<h2 align="left" >Table of contents</h2>
+<h2>Motivation</h2>
 
 
 
-<h2 align="left" >Introduction</h2>
+<h2>History</h2>
 
 
 
-<h2 align="left" >Motivation</h2>
-
-
-
-<h2 align="left" >History</h2>
-
-
-
-<h2 align="left" >Implementation and use</h2>
+<h2>Implementation and use</h2>
 
 
 
@@ -155,11 +157,15 @@ requirements on their encodings.</p>
 
 
 
-<p>&nbsp;</p>
+<p><b>Avoids unexpected hidden conversions</b></p>
 
 
 
 <p><b>Its all about string encoding needs</b></p>
+
+
+
+<p><b>Agnostic about which character type or UTF encoding is &quot;best&quot;.</b></p>
 
 
 
@@ -326,7 +332,7 @@ U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
 <blockquote>
   <p>[<i>Note:</i> The Unicode Standard provides detailed rationale for that 
   recommendation; essentially it is that other commonly used approaches, including 
-  throwing exceptions, can be and has been used as a security attack vector.
+  throwing exceptions, can be and have been used as a security attack vector.
   &mdash;<i>end note</i>]</p>
 </blockquote>
 
@@ -387,7 +393,7 @@ namespace unicode
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
 
-<h3>UTF based conversion</h3>
+<h3>UTF conversion functions</h3>
 
 <pre>#include &lt;boost/unicode/error.hpp&gt;
 
@@ -398,11 +404,6 @@ namespace unicode
 
   //  convert_utf UTF conversion algorithms
 
-  //    converts between UTF-8, UTF-16, UTF-32, and wchar_t encodings;
-  //    char encoding must be UTF-8
-  //    char16_t encoding must be UTF-16
-  //    char32_t encoding must be UTF-32
-  //    wchar_t encoding must be UTF-8, UTF-16, or UTF-32
   //    Remarks: Errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
   //    any replaces the invalid input encoding in the output, even when the input and
@@ -421,7 +422,7 @@ namespace unicode
 
   //  to_utf_string generic UTF string conversion functions
 
-  //    Remarks: Performs the conversion by calling convert_utf.
+  //    Remarks: Performs the conversion as if by calling convert_utf.
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
   //    any replaces the invalid input encoding in the output, even when the input and
@@ -444,7 +445,7 @@ namespace unicode
   
   //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions
 
-  //    Remarks: Performs the conversion by calling to_utf_string
+  //    Remarks: Performs the conversion as if by calling to_utf_string
   //    Note: This implies that errors in input encoding are detected, even when the input
   //    and output encodings are the same. The eh function object's returned sequence if
   //    any replaces the invalid input encoding in the output, even when the input and
@@ -490,6 +491,51 @@ namespace unicode
 
 }  // namespace unicode
 }  // namespace boost<!-- end include --></pre>
+
+<p>These functions convert between sequences of the character types indicated in 
+<i>UFT Conversions</i> table.</p>
+
+<p>Errors in input encoding are detected, even when the input and output 
+encodings are the same. The eh function object&#39;s returned sequence if any 
+replaces the invalid input encoding in the output, even when the input and 
+output encodings are the same. This implies that if the eh function object 
+always returns a valid UTF character sequence, the overall function output 
+sequence is a valid UTF sequence.<br>
+&nbsp;</p>
+
+<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+    <td colspan="3">
+    <p align="center"><b><i>UTF Conversions</i></b></td>
+      </tr>
+  <tr>
+    <td><b>Value type</b></td>
+    <td><b>Encoding</b></td>
+    <td><b>Errors detected</b></td>
+  </tr>
+  <tr>
+    <td><code>char</code></td>
+    <td>UTF-8</td>
+    <td><span style="background-color: #FFFF00">TBS</span></td>
+  </tr>
+  <tr>
+    <td><code>char16_t</code></td>
+    <td>UTF-16</td>
+    <td><span style="background-color: #FFFF00">TBS</span></td>
+  </tr>
+  <tr>
+    <td><code>char32_t</code></td>
+    <td>UFT-32</td>
+    <td><span style="background-color: #FFFF00">TBS</span></td>
+  </tr>
+  <tr>
+    <td><code>wchar_t</code></td>
+    <td>UTF-8, 16, or 32</td>
+    <td><span style="background-color: #FFFF00">TBS</span></td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
 
 <h3>UTF based converting stream inserters and extractors</h3>
 
