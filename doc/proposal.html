@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-13<!--webbot bot="Timestamp" endspan i-checksum="12333" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-14<!--webbot bot="Timestamp" endspan i-checksum="12335" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -47,7 +47,7 @@
 
 <p  style="margin-left:20%; margin-right:20%;">Proposes library conversion functions to ease interoperation between 
 existing standard and use-defined string types or streams. Provides conversion functions 
-for Unicode Transformation Format (UTF) 
+for Unicode Transformation Form (UTF) 
 encodings, designed for Unicode-centric applications. Provides conversion 
 functions for legacy 
 encodings with existing <code>codecvt</code> facets, designed for conversion to 
@@ -220,7 +220,7 @@ and when they do not have to check for errors themselves</b></p>
 
 <p><b>Provide error checking functions so that users can easily check strings 
 or sequences for valid UTF encoding.</b></p>
-<p><b>Default encoding is Unicode Transformation Format (UTF)</b></p>
+<p><b>Default encoding is Unicode Transformation Form (UTF)</b></p>
 <p>Unless otherwise specified, all functions in namespace <code>
 unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
 <code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
@@ -257,26 +257,26 @@ unicode</p>
 
 <h2>Proposed wording</h2>
 
-<h3>Unicode standard</h3>
+<h2>Unicode library</h2>
+
+<h3>Normative references</h3>
 
 <p>The <i>Unicode Standard</i>,
 <a href="http://www.unicode.org/versions/latest/">
-www.unicode.org/versions/latest/</a>, is referenced below. [<i>Example:</i> "(Unicode 
-3.4 D10)" refers to the Unicode Standard, Core Specification, chapter 3, section 
-4, sub-section D10.&mdash;<i>End example</i>]</p>
+www.unicode.org/versions/latest/</a>, is indispensable for the application of 
+this document.<sup><font face="Arial">[footnote]</font></sup> The latest edition
+(including any amendments) applies. A reference to the Unicode Standard is 
+written in the form &quot;(Unicode 3.4 D10)&quot; to refer to the Unicode Standard, Core 
+Specification, chapter 3, section 4, sub-section D10.</p>
 
 <p>For convenience, portions of the Unicode Standard are quoted 
-below. Any conflicts between those quotes and the Unicode Standard is 
+herein. Any conflicts between those quotes and the Unicode Standard is 
 unintentional and should be resolved by reference to the actual Unicode Standard 
 document.</p>
 
-<blockquote>
-
-<p>[Note: For general questions related to Unicode transformations 
-format (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
-<a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
-
-</blockquote>
+<p>[<i>Footnote:</i> Unicode® is a registered trademark of Unicode, Inc. This information is given for the 
+convenience of users of this document and does
+not constitute an endorsement by ISO or IEC of this product. &mdash; <i>end footnote</i>] </p>
 
 <h3>Definitions</h3>
 
@@ -318,7 +318,11 @@ UTF-32 encoding form.&quot;</p>
   <h4>UTF-8, UTF-16, and UTF-32 Unicode encoding forms</h4>
   <p>For the formal definitions see
   <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
-  3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>.</p>
+  3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>. </p>
+
+<p>[Note: For general questions related to Unicode transformations 
+form (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
+<a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
 
 <h3>Error handling</h3>
 
@@ -348,6 +352,8 @@ namespace unicode {
 
   //  default error handler: function object returns a C-string of type
   //  ToCharT with a UTF encoded value of U+FFFD.
+
+  // Default error handling
   template &lt;class CharT&gt; struct ufffd;
   template &lt;&gt; struct ufffd&lt;char&gt;;
   template &lt;&gt; struct ufffd&lt;char16_t&gt;;
@@ -366,6 +372,8 @@ namespace unicode {
   //    std::iterator_traits&lt;OutputIterator&gt;::value_type
   //    because std::iterator_traits&lt;OutputIterator&gt;::value_type is void for
   //    OutputIterators such as back_inserter.
+
+  //  UTF conversion algorithm
   template &lt;class ToCharT, class InputIterator, class OutputIterator,
     class Error = typename ufffd&lt;ToCharT&gt;&gt;
   inline OutputIterator
@@ -387,12 +395,12 @@ namespace unicode {
   //    parameter, template argument deduction fails.
 
   template &lt;class ToCharT, class FromCharT,
-    class FromTraits = typename std::char_traits&lt;FromCharT&gt;,
-    class View = boost::basic_string_view&lt;FromCharT, FromTraits&gt;,
+    class FromTraits = typename char_traits&lt;FromCharT&gt;,
+    class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
     class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = std::char_traits&lt;ToCharT&gt;,
-    class ToAlloc = std::allocator&lt;ToCharT&gt;&gt;
-  inline std::basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
+    class ToTraits = char_traits&lt;ToCharT&gt;,
+    class ToAlloc = allocator&lt;ToCharT&gt;&gt;
+  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
     to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());
   
   //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions
@@ -406,64 +414,64 @@ namespace unicode {
   //    a valid UTF sequence.
 
   template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string  to_u8string(boost::string_view v, Error eh = Error());
+  string  to_u8string(boost::string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
+  string  to_u8string(boost::u16string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
+  string  to_u8string(boost::u32string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
+  string  to_u8string(boost::wstring_view v, Error eh = Error());
 
   template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-  inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
+  u16string  to_u16string(boost::string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-  inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
+  u16string  to_u16string(boost::u16string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-  inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
+  u16string  to_u16string(boost::u32string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-  inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
+  u16string  to_u16string(boost::wstring_view v, Error eh = Error());
 
   template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-  inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
+  u32string  to_u32string(boost::string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-  inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
+  u32string  to_u32string(boost::u16string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-  inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
+  u32string  to_u32string(boost::u32string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-  inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
+  u32string  to_u32string(boost::wstring_view v, Error eh = Error());
 
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
+  wstring  to_wstring(boost::string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
+  wstring  to_wstring(boost::u16string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
+  wstring  to_wstring(boost::u32string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
+  wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
   //  codecvt_to_basic_string
   template &lt;class ToCharT, class FromCharT, class Codecvt,
-    class FromTraits = std::char_traits&lt;FromCharT&gt;,
+    class FromTraits = char_traits&lt;FromCharT&gt;,
     class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = std::char_traits&lt;ToCharT&gt;,
-    class ToAlloc = std::allocator&lt;ToCharT&gt;,
+    class ToTraits = char_traits&lt;ToCharT&gt;,
+    class ToAlloc = allocator&lt;ToCharT&gt;,
     class View = boost::basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
-  inline std::basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
+  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
     codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
                             Error eh=Error(), const ToAlloc&amp; a=ToAlloc());
 
   //  codecvt_to_string
   template &lt;class Error = ufffd&lt;char&gt;&gt;
-  inline std::string
+  string
     codecvt_to_string(boost::wstring_view v,
-                      const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
+                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
                       const Error eh=Error());
 
   //  codecvt_to_wstring
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-  inline std::wstring
+  wstring
     codecvt_to_wstring(boost::string_view v,
-                       const std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&amp; ccvt,
+                       const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
                        const Error eh=Error());
 
 }  // namespace unicode
@@ -535,14 +543,14 @@ if this goes in </span><span style="background-color: #FFFF00">std::experimental
 
   //  basic_string_view overload
   template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits&gt;
-  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+  typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
     basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
       operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
                  boost::basic_string_view&lt;FromCharT, FromTraits&gt; v);
 
   //  basic_string overload
   template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc&gt;
-  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+  typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
     basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
       operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
                  const basic_string&lt;FromCharT, FromTraits, Alloc&gt;&amp; s);
@@ -550,7 +558,7 @@ if this goes in </span><span style="background-color: #FFFF00">std::experimental
   //  pointer overload
   //    works despite std basic_ostream&lt;charT,traits&gt;&amp; operator&lt;&lt;(const void* p) overload
   template &lt;class ToCharT, class ToTraits, class FromCharT&gt;
-  inline typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
+  typename boost::enable_if_c&lt;!boost::is_same&lt;ToCharT, FromCharT&gt;::value,
     basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
       operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
 
