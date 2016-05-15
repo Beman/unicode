@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-14<!--webbot bot="Timestamp" endspan i-checksum="12335" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-15<!--webbot bot="Timestamp" endspan i-checksum="12337" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -324,22 +324,6 @@ UTF-32 encoding form.&quot;</p>
 form (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
 <a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
 
-<h3>Error handling</h3>
-
-<p>The header &lt;boost/unicode/error.hpp&gt; provides the default error handling 
-function object used by the other headers in this library.</p>
-
-<p>In accordance with the Unicode Standard&#39;s recommendations, the default error 
-handling function object <code>ufffd</code> returns 
-U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
-
-<blockquote>
-  <p>[<i>Note:</i> The Unicode Standard provides detailed rationale for that 
-  recommendation; essentially it is that other commonly used approaches, including 
-  throwing exceptions, can be and have been used as a security attack vector.
-  &mdash;<i>end note</i>]</p>
-</blockquote>
-
 <h3>Header &lt;experimental/unicode&gt; synopsis</h3>
 
 <pre>namespace std {
@@ -353,7 +337,7 @@ namespace unicode {
   //  default error handler: function object returns a C-string of type
   //  ToCharT with a UTF encoded value of U+FFFD.
 
-  // Default error handling
+  // [uni.err], error handling
   template &lt;class CharT&gt; struct ufffd;
   template &lt;&gt; struct ufffd&lt;char&gt;;
   template &lt;&gt; struct ufffd&lt;char16_t&gt;;
@@ -371,7 +355,7 @@ namespace unicode {
   //    because std::iterator_traits&lt;OutputIterator&gt;::value_type is void for
   //    OutputIterators such as back_inserter.
 
-  //  non-modifying sequence algorithms
+  //  [uni.enc_cvt_alg], string encoding conversion algorithm
   template &lt;class ToCharT, class InputIterator, class OutputIterator,
     class Error = typename ufffd&lt;ToCharT&gt;&gt;
   OutputIterator convert_utf(InputIterator first, InputIterator last, 
@@ -390,7 +374,7 @@ namespace unicode {
   //    template parameter for FromTraits. Short answer: With a default FromTraits
   //    parameter, template argument deduction fails.
 
-  //  generic string conversions
+  //  [uni.enc_gen_cvt], string encoding generic conversions
   template &lt;class ToCharT, class FromCharT,
     class FromTraits = typename char_traits&lt;FromCharT&gt;,
     class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
@@ -420,7 +404,7 @@ namespace unicode {
   //    returns a valid UTF character sequence, the overall function output sequence is
   //    a valid UTF sequence.
 
-  //  convenience string conversions
+  //  [uni.enc_conv_cvt], string encoding convenience conversions
   template &lt;class Error = ufffd&lt;char&gt;&gt;
     string to_u8string(string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char&gt;&gt;
@@ -470,16 +454,64 @@ namespace unicode {
 }  // namespace unicode
 }  // namespace fundamentals_v2
 }  // namespace experimental
-}  // namespace std
+}  // namespace std</pre>
 
-<h3>UTF conversion functions</h3>
 
-<h3><code>codecvt</code> based conversion</h3>
 
-}  // namespace unicode
-}  // namespace boost<!-- end include --></pre>
+<h3>String encoding conversion functions [uni.enc_cvt]</h3>
 
-<p>These functions convert between sequences of the character types indicated in <i>UFT Conversions</i> table.</p>
+<p>Two forms of string encoding conversion functions are provided:</p>
+
+<ul>
+  <li>Functions that determine encoding based on value type.</li>
+  <li>Functions that invoke a codecvt facet (C++ [locale.codecvt]) which 
+  determines encodings.</li>
+</ul>
+
+<p>Functions that determine encoding based on value type operate only on UTF 
+encodings. The relationship between value type and encoding is as specified by 
+the <i>UFT Conversions</i> table.</p>
+
+<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+  <tr>
+    <td colspan="2">
+    <p align="center"><b><i>UTF Conversions</i></b></td>
+      </tr>
+  <tr>
+    <td><b>Value type</b></td>
+    <td><b>Encoding</b></td>
+  </tr>
+  <tr>
+    <td><code>char</code></td>
+    <td>UTF-8</td>
+  </tr>
+  <tr>
+    <td><code>char16_t</code></td>
+    <td>UTF-16</td>
+  </tr>
+  <tr>
+    <td><code>char32_t</code></td>
+    <td>UFT-32</td>
+  </tr>
+  <tr>
+    <td><code>wchar_t</code></td>
+    <td>UTF-8, 16, or 32</td>
+  </tr>
+</table>
+
+
+
+<p>Functions that invoke a codecvt facet can convert between any narrow encoding 
+and the encoding of execution wide-character set (C++ [lex.charset]). [<i>Note:</i> 
+These functions are useful for converting between non-UTF narrow character 
+encodings and a UTF encoding as long as the execution wide-character set uses a 
+UTF encoding. &mdash; <i>end note</i>]</p>
+
+
+
+<h4>Error handling [uni.err]</h4>
+
+<p>&nbsp;</p>
 
 <p>Errors in input encoding are detected, even when the input and output 
 encodings are the same. The eh function object&#39;s returned sequence if any 
@@ -489,39 +521,136 @@ always returns a valid UTF character sequence, the overall function output
 sequence is a valid UTF sequence.<br>
 &nbsp;</p>
 
-<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
-  <tr>
-    <td colspan="3">
-    <p align="center"><b><i>UTF Conversions</i></b></td>
-      </tr>
-  <tr>
-    <td><b>Value type</b></td>
-    <td><b>Encoding</b></td>
-    <td><b>Errors detected</b></td>
-  </tr>
-  <tr>
-    <td><code>char</code></td>
-    <td>UTF-8</td>
-    <td><span style="background-color: #FFFF00">TBS</span></td>
-  </tr>
-  <tr>
-    <td><code>char16_t</code></td>
-    <td>UTF-16</td>
-    <td><span style="background-color: #FFFF00">TBS</span></td>
-  </tr>
-  <tr>
-    <td><code>char32_t</code></td>
-    <td>UFT-32</td>
-    <td><span style="background-color: #FFFF00">TBS</span></td>
-  </tr>
-  <tr>
-    <td><code>wchar_t</code></td>
-    <td>UTF-8, 16, or 32</td>
-    <td><span style="background-color: #FFFF00">TBS</span></td>
-  </tr>
-</table>
+
 
 <p>&nbsp;</p>
+
+<pre>template &lt;class CharT&gt; struct ufffd;
+template &lt;&gt; struct ufffd&lt;char&gt;;
+template &lt;&gt; struct ufffd&lt;char16_t&gt;;
+template &lt;&gt; struct ufffd&lt;char32_t&gt;;
+template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
+
+
+<p><code>struct ufffd</code> provides the default error handling function object for the conversion functions. Each specialization shall provide a member function with the signature:</p>
+
+<blockquote>
+
+
+<p> <code>constexpr CharT* operator()() const noexcept;</code></p>
+
+</blockquote>
+
+
+<p>that returns the value indicated in the Specializations table: </p>
+
+<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+<tr><td colspan="2"><p align="center"><i><b>Specializations</b></i></td></tr>
+<tr><td><i><b><code>CharT</code></b></i></td><td><i><b>Returns</b></i></td></tr>
+<tr><td><code>char</code></td><td><code>u8&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>char16_t</code></td><td><code>u&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>char32_t</code></td><td><code>U&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>wchar_t</code></td><td><code>L&quot;\uFFFD&quot;</code></td></tr>
+</table>
+
+<p>In accordance with the Unicode Standard&#39;s recommendations (<span style="background-color: #FFFF00">need 
+reference</span>), the default error 
+handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
+
+<blockquote>
+  <p>[<i>Note:</i> U+FFFD REPLACEMENT CHARACTER is returned as the default 
+  single code point error marker in accordance with the recommendations of the Unicode Standard. 
+  The rationale given is essentially that other commonly used approaches, including 
+  throwing exceptions, can be and have been used as security attack vectors.
+  &mdash;<i>end note</i>]</p>
+</blockquote>
+
+<h4>String encoding conversion algorithm [uni.enc_cvt_alg]</h4>
+
+<pre>template &lt;class ToCharT, class InputIterator, class OutputIterator,
+          class Error = typename ufffd&lt;ToCharT&gt;&gt;
+  OutputIterator convert_utf(InputIterator first, InputIterator last, 
+                             OutputIterator result, Error eh = Error());</pre>
+  <blockquote>
+     <p>Returns:</p>
+  </blockquote>                           
+
+<h4>String encoding generic conversions [uni.enc_gen_cvt]</h4>
+
+<pre> template &lt;class ToCharT, class FromCharT,
+    class FromTraits = typename char_traits&lt;FromCharT&gt;,
+    class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
+    class Error = ufffd&lt;ToCharT&gt;,
+    class ToTraits = char_traits&lt;ToCharT&gt;,
+    class ToAlloc = allocator&lt;ToCharT&gt;&gt;
+  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
+    to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());
+
+  template &lt;class ToCharT, class FromCharT, class Codecvt,
+    class FromTraits = char_traits&lt;FromCharT&gt;,
+    class Error = ufffd&lt;ToCharT&gt;,
+    class ToTraits = char_traits&lt;ToCharT&gt;,
+    class ToAlloc = allocator&lt;ToCharT&gt;,
+    class View = basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
+  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
+    codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
+                            Error eh=Error(), const ToAlloc&amp; a=ToAlloc());</pre>
+
+  <blockquote>
+     <p>Returns:</p>
+  </blockquote>                           
+
+<h4>String encoding convenience conversions [uni.enc_conv_cvt]</h4>
+
+<pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
+    string to_u8string(string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char&gt;&gt;
+    string to_u8string(u16string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char&gt;&gt;
+    string to_u8string(u32string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char&gt;&gt;
+    string to_u8string(wstring_view v, Error eh = Error());
+
+  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
+    u16string to_u16string(string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
+    u16string to_u16string(u16string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
+    u16string to_u16string(u32string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
+    u16string to_u16string(wstring_view v, Error eh = Error());
+
+  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
+    u32string to_u32string(string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
+    u32string to_u32string(u16string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
+    u32string to_u32string(u32string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
+    u32string to_u32string(wstring_view v, Error eh = Error());
+
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring to_wstring(string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring to_wstring(u16string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring to_wstring(u32string_view v, Error eh = Error());
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring to_wstring(wstring_view v, Error eh = Error());
+
+  template &lt;class Error = ufffd&lt;char&gt;&gt;
+    string codecvt_to_string(wstring_view v,
+                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
+                      const Error eh=Error());
+
+  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring codecvt_to_wstring(string_view v,
+                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
+                      const Error eh=Error());</pre>
+
+  <blockquote>
+     <p>Returns:</p>
+  </blockquote>                           
 
 <h3>UTF based converting stream inserters and extractors</h3>
 
@@ -534,28 +663,28 @@ if this goes in </span><span style="background-color: #FFFF00">std::experimental
 <pre>namespace std
 {
 
-  //  basic_string_view overload
-  template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits&gt;
-  typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
-    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
-      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
-                 basic_string_view&lt;FromCharT, FromTraits&gt; v);
+&nbsp; //&nbsp; basic_string_view overload
+&nbsp; template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits&gt;
+&nbsp; typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
+&nbsp;&nbsp;&nbsp; basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; basic_string_view&lt;FromCharT, FromTraits&gt; v);
 
-  //  basic_string overload
-  template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc&gt;
-  typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
-    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
-      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
-                 const basic_string&lt;FromCharT, FromTraits, Alloc&gt;&amp; s);
+&nbsp; //&nbsp; basic_string overload
+&nbsp; template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits, class Alloc&gt;
+&nbsp; typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
+&nbsp;&nbsp;&nbsp; basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; const basic_string&lt;FromCharT, FromTraits, Alloc&gt;&amp; s);
 
-  //  pointer overload
-  //    works despite std basic_ostream&lt;charT,traits&gt;&amp; operator&lt;&lt;(const void* p) overload
-  template &lt;class ToCharT, class ToTraits, class FromCharT&gt;
-  typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
-    basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
-      operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
+&nbsp; //&nbsp; pointer overload
+&nbsp; //&nbsp;&nbsp;&nbsp; works despite std basic_ostream&lt;charT,traits&gt;&amp; operator&lt;&lt;(const void* p) overload
+&nbsp; template &lt;class ToCharT, class ToTraits, class FromCharT&gt;
+&nbsp; typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
+&nbsp;&nbsp;&nbsp; basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
 
-}  // namespace std</pre>
+}&nbsp; // namespace std</pre>
 
 <hr>
 
