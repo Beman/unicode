@@ -13,8 +13,8 @@
   }
    ins  {background-color: #CCFFCC; text-decoration: none;}
    del  {background-color: #FFCACA; text-decoration: none;}
-   pre  {background-color: #D7EEFF; font-size: 95%; font-family: "courier new", courier, serif;}
-   code {font-size: 110%; font-family: "courier new", courier, serif;}
+   pre  {background-color: #D7EEFF; font-family: "courier new", courier, serif;}
+   code {font-family: "courier new", courier, serif;}
    table {font-size: 90%;}
 </style>
 <title>Unicode Encoding conversions</title>
@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-15<!--webbot bot="Timestamp" endspan i-checksum="12337" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-17<!--webbot bot="Timestamp" endspan i-checksum="12341" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -274,9 +274,10 @@ herein. Any conflicts between those quotes and the Unicode Standard is
 unintentional and should be resolved by reference to the actual Unicode Standard 
 document.</p>
 
-<p>[<i>Footnote:</i> Unicode® is a registered trademark of Unicode, Inc. This information is given for the 
-convenience of users of this document and does
-not constitute an endorsement by ISO or IEC of this product. &mdash; <i>end footnote</i>] </p>
+<p><sup><font face="Arial">[Footnote]</font></sup> Unicode® is a registered 
+trademark of Unicode, Inc. This information is given for the convenience of 
+users of this document and does not constitute an endorsement by ISO or IEC of 
+this product.</p>
 
 <h3>Definitions</h3>
 
@@ -315,14 +316,40 @@ UTF-32 encoding form.&quot;</p>
   to hold a code point depending on the encoding.&mdash;<i>end note</i>]</p>
 </blockquote>
 
-  <h4>UTF-8, UTF-16, and UTF-32 Unicode encoding forms</h4>
+  <h4>Unicode encoding forms (Unicode 3.9)</h4>
+
+  <p>&quot;The Unicode Standard supports three character encoding forms: UTF-32, 
+  UTF-16, and UTF-8. Each encoding form maps the Unicode code points 
+  U+0000..U+D7FF and U+E000..U+10FFFF to unique code unit sequences. The size of 
+  the code unit is specified for each encoding form. This section (Unicode 3.9) 
+  presents the formal definition of each of these encoding forms.&quot;</p>
   <p>For the formal definitions see
   <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
   3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>. </p>
 
-<p>[Note: For general questions related to Unicode transformations 
+<p>[Note: For general questions related to Unicode transformation 
 form (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
 <a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
+
+<h4>Well-formed (Unicode 3.9 D85)</h4>
+
+<p>&quot;A Unicode code unit sequence that purports to be in a Unicode encoding form 
+is called well-formed if and only if it does follow the specification of that 
+Unicode encoding form.&quot;</p>
+
+<h4>Minimal well-formed code unit subsequence (Unicode 3.9 D85a)</h4>
+
+<p>&quot;A well-formed Unicode code unit sequence that maps to a single Unicode 
+scalar value.</p>
+
+
+<blockquote>
+  <ul>
+    <li>For UTF-8, see the specification in Unicode 3.9 D92 and Table 3-7.</li>
+    <li>For UTF-16, see the specification in Unicode 3.9 D91.</li>
+    <li>For UTF-32, see the specification in Unicode 3.9 D90.&quot;</li>
+  </ul>
+</blockquote>
 
 <h3>Header &lt;experimental/unicode&gt; synopsis</h3>
 
@@ -361,19 +388,6 @@ namespace unicode {
   OutputIterator convert_utf(InputIterator first, InputIterator last, 
                              OutputIterator result, Error eh = Error());
 
-
-  //    Remarks: Performs the conversion as if by calling convert_utf.
-  //    Note: This implies that errors in input encoding are detected, even when the input
-  //    and output encodings are the same. The eh function object's returned sequence if
-  //    any replaces the invalid input encoding in the output, even when the input and
-  //    output encodings are the same. This implies that if the eh function object always
-  //    returns a valid UTF character sequence, the overall function output sequence is
-  //    a valid UTF sequence.
-  //    Note: See &quot;Probe CharTraits template argument deduction&quot; in test/smoke_test.cpp
-  //    for why two overloads are needed for each form rather than providing a default
-  //    template parameter for FromTraits. Short answer: With a default FromTraits
-  //    parameter, template argument deduction fails.
-
   //  [uni.enc_gen_cvt], string encoding generic conversions
   template &lt;class ToCharT, class FromCharT,
     class FromTraits = typename char_traits&lt;FromCharT&gt;,
@@ -394,16 +408,6 @@ namespace unicode {
     codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
                             Error eh=Error(), const ToAlloc&amp; a=ToAlloc());
   
-  //  to_{u8|u16|u32|w}string convenience functions for UTF string conversions
-
-  //    Remarks: Performs the conversion as if by calling to_utf_string
-  //    Note: This implies that errors in input encoding are detected, even when the input
-  //    and output encodings are the same. The eh function object's returned sequence if
-  //    any replaces the invalid input encoding in the output, even when the input and
-  //    output encodings are the same. This implies that if the eh function object always
-  //    returns a valid UTF character sequence, the overall function output sequence is
-  //    a valid UTF sequence.
-
   //  [uni.enc_conv_cvt], string encoding convenience conversions
   template &lt;class Error = ufffd&lt;char&gt;&gt;
     string to_u8string(string_view v, Error eh = Error());
@@ -463,16 +467,17 @@ namespace unicode {
 <p>Two forms of string encoding conversion functions are provided:</p>
 
 <ul>
-  <li>Functions that determine encoding based on value type.</li>
-  <li>Functions that invoke a codecvt facet (C++ [locale.codecvt]) which 
-  determines encodings.</li>
+  <li> <i>UTF conversion functions</i> convert only between UTF encodings.</li>
+  <li><i>Codecvt conversion functions</i> convert between encodings determined 
+  by a codecvt facet (C++ [locale.codecvt]) of type <code>codecvt&lt;wchar_t,char,mbstate_t&gt;</code>.</li>
 </ul>
 
-<p>Functions that determine encoding based on value type operate only on UTF 
-encodings. The relationship between value type and encoding is as specified by 
-the <i>UFT Conversions</i> table.</p>
+<p>UTF conversion functions determine encoding based on value type. The 
+relationship between value type and encoding is as specified by the following 
+table:</p>
 
-<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+<blockquote>
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
   <tr>
     <td colspan="2">
     <p align="center"><b><i>UTF Conversions</i></b></td>
@@ -498,14 +503,16 @@ the <i>UFT Conversions</i> table.</p>
     <td>UTF-8, 16, or 32</td>
   </tr>
 </table>
+</blockquote>
 
-
-
-<p>Functions that invoke a codecvt facet can convert between any narrow encoding 
+<p>Codecvt conversion functions convert between any narrow encoding 
 and the encoding of execution wide-character set (C++ [lex.charset]). [<i>Note:</i> 
-These functions are useful for converting between non-UTF narrow character 
-encodings and a UTF encoding as long as the execution wide-character set uses a 
-UTF encoding. &mdash; <i>end note</i>]</p>
+Codecvt conversion functions are useful for converting between non-UTF narrow character 
+encodings and a UTF encoded execution wide-character set. &mdash; <i>end note</i>]</p>
+
+
+
+<p>&nbsp;</p>
 
 
 
@@ -544,7 +551,8 @@ template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
 
 <p>that returns the value indicated in the Specializations table: </p>
 
-<table align="center" border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+<blockquote>
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
 <tr><td colspan="2"><p align="center"><i><b>Specializations</b></i></td></tr>
 <tr><td><i><b><code>CharT</code></b></i></td><td><i><b>Returns</b></i></td></tr>
 <tr><td><code>char</code></td><td><code>u8&quot;\uFFFD&quot;</code></td></tr>
@@ -552,6 +560,7 @@ template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
 <tr><td><code>char32_t</code></td><td><code>U&quot;\uFFFD&quot;</code></td></tr>
 <tr><td><code>wchar_t</code></td><td><code>L&quot;\uFFFD&quot;</code></td></tr>
 </table>
+</blockquote>
 
 <p>In accordance with the Unicode Standard&#39;s recommendations (<span style="background-color: #FFFF00">need 
 reference</span>), the default error 
@@ -572,7 +581,25 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
   OutputIterator convert_utf(InputIterator first, InputIterator last, 
                              OutputIterator result, Error eh = Error());</pre>
   <blockquote>
-     <p>Returns:</p>
+     <p><i>Effects:</i> For each minimal well-formed or ill-formed code unit 
+     subsequence in the range [<code>first, last</code>):</p>
+     <ul>
+       <li>
+       <p dir="ltr">If the code unit subsequence is well-formed, copies the 
+       subsequence&#39;s Unicode scalar value by performing <code>*result++ = *u++</code> 
+       where u is a <code>ToCharT*</code> pointing to the code units required to represent the 
+       subsequence&#39;s Unicode 
+       scalar value in the encoding form of <code>result</code>.</li>
+       <li dir="ltr">
+       <p dir="ltr">Otherwise, copies the null-terminated string returned by the <code>eh</code> function 
+       object by performing <code>*result++ = *p++</code> for each successive 
+       value of a pointer <code>p</code> to the returned string.</li>
+     </ul>
+     <p><i>Returns: </i><code>result</code>.</p>
+     <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
+     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]). The 
+     Unicode encoding form for <code>result</code> is determined by <code>
+     ToCharT</code> ([uni.enc_cvt]).</p>
   </blockquote>                           
 
 <h4>String encoding generic conversions [uni.enc_gen_cvt]</h4>
@@ -584,9 +611,19 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
     class ToTraits = char_traits&lt;ToCharT&gt;,
     class ToAlloc = allocator&lt;ToCharT&gt;&gt;
   basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());
+    to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());</pre>
 
-  template &lt;class ToCharT, class FromCharT, class Codecvt,
+  <blockquote>
+     <p><i>Returns:</i> Equivalent to:</p>
+     <blockquote>
+     <p><code>basic_string&lt;ToCharT, ToTraits, ToAlloc&gt; tmp(a);<br>
+     convert_utf&lt;ToCharT&gt;(v.cbegin(), v.cend(), back_inserter(tmp), eh);<br>
+     return tmp;</code></p>
+     </blockquote>
+  </blockquote>                           
+
+  <pre>template &lt;class ToCharT, class FromCharT, class Codecvt,
+<span style="background-color: #FFFF00">Why is class Codecvt needed? Isn&#39;t it always </span><code><span style="background-color: #FFFF00">codecvt&lt;wchar_t, char, std::mbstate_t&gt;?</span></code>
     class FromTraits = char_traits&lt;FromCharT&gt;,
     class Error = ufffd&lt;ToCharT&gt;,
     class ToTraits = char_traits&lt;ToCharT&gt;,
@@ -597,7 +634,19 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
                             Error eh=Error(), const ToAlloc&amp; a=ToAlloc());</pre>
 
   <blockquote>
-     <p>Returns:</p>
+     <p><i>Effects:</i></p>
+     <blockquote>
+     <p>Converts the string described by <code>v</code> to a temporary 
+     string of type <code>basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;</code> 
+     by as many invocations of <code>ccvt.in</code> or
+     <code>ccvt.out</code> as necessary to process all characters in
+     <code>v</code>. If an invocation of <code>ccvt.in</code>
+     or <code>ccvt.out</code> returns a result value of <code>error</code>, 
+     invoke the <code>eh</code> function object and append the string it returns 
+     to the temporary string before processing additional characters in
+     <code>v</code>.</p>
+     </blockquote>
+     <p><i>Returns</i>: The temporary string created by <i>Effects</i>.</p>
   </blockquote>                           
 
 <h4>String encoding convenience conversions [uni.enc_conv_cvt]</h4>
@@ -636,20 +685,42 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
     wstring to_wstring(u32string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(wstring_view v, Error eh = Error());
+    wstring to_wstring(wstring_view v, Error eh = Error());</pre>
 
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
+  <blockquote>
+     <p><i>Returns:</i> Equivalent to: </p>
+     <blockquote>
+     <p> <code>to_utf_string&lt;<i>r_value_type</i>,
+     <i>v_value_type</i>, Error&gt;(v, eh)</code> where <i><code>r_value_type</code></i> 
+     is <code>value_type</code> of the returned <code>basic_string</code> and <i>
+     <code>v_value_type</code></i> is <code>value_type</code> of <code>v</code>.</p>
+     </blockquote>
+  </blockquote>                           
+
+  <pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
     string codecvt_to_string(wstring_view v,
-                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());
-
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring codecvt_to_wstring(string_view v,
                       const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
                       const Error eh=Error());</pre>
 
   <blockquote>
-     <p>Returns:</p>
+     <p><i>Returns:</i> Equivalent to: </p>
+     <blockquote>
+     <p> <code>codecvt_to_basic_string&lt;char, 
+     wchar_t, std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&gt;(v, ccvt, eh)</code>.</p>
+     </blockquote>
+  </blockquote>                           
+
+   <pre>template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
+    wstring codecvt_to_wstring(string_view v,
+                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
+                      const Error eh=Error());</pre>
+
+   <blockquote>
+     <i>Returns:</i> Equivalent to: 
+     <blockquote>
+       <p><code>codecvt_to_basic_string&lt;wchar_t, char, std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&gt;(v, ccvt, eh)</code>.
+       </p>
+     </blockquote>
   </blockquote>                           
 
 <h3>UTF based converting stream inserters and extractors</h3>
