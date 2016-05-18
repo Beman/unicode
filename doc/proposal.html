@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-17<!--webbot bot="Timestamp" endspan i-checksum="12341" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-18<!--webbot bot="Timestamp" endspan i-checksum="12343" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -137,35 +137,72 @@ encoded </b></p>
 
 
 
-<p><b>No changes to the core language</b></p>
+<p><b>Focus this proposal on encoding conversion and error detection</b></p>
+
+
+
 <blockquote>
-
-
-
-<p>Types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
-<code>wchar_t</code> remain unchanged, and there is no change to current 
-requirements on their encodings.</p>
-
-
-
-<p>No new core language character types are proposed.</p>
+  <ul>
+    <li>Getting encoding conversion right is hard enough without also coping 
+    with other needs.</li>
+    <li>It is an embarrassment that the standard library has no modern C++ 
+    components to deal with Unicode string encoding conversion needs even though 
+    the core language and standard library provides the character and string 
+    types needed to support Unicode.</li>
+    <li>Other needs requested by domain experts, such as code point iterators, 
+    are important enough to deserve their own proposals.</li>
+    <li>No single Unicode proposal is on the horizon.</li>
+  </ul>
 </blockquote>
 
 
 
-<p><b>Proposed changes to the standard library are pure additions</b></p>
+<p><b>Provide separate codecvt-based and Unicode-based functionality for 
+performing encoding conversions</b></p>
 
 
 
-<p><b>Avoids unexpected hidden conversions</b></p>
+<blockquote>
 
 
 
-<p><b>Its all about string encoding needs</b></p>
+<p>A key point that emerged from discussions of N3398 was that string 
+interoperability needs are somewhat different depending on the encodings.</p>
 
 
 
-<p><b>Agnostic about which character type or UTF encoding is &quot;best&quot;.</b></p>
+<p>The traditional legacy (i.e. non-Unicode) encodings:</p>
+
+
+
+  <ul>
+    <li>Use <code>char</code> as a character type, so cannot use character type 
+    alone to determine the encoding.</li>
+    <li>Have the existing standard library <code>codecvt</code> facility for 
+    determining and performing encoding conversions.</li>
+    <li>Have existing implementations of <code>codecvt</code> facets for all 
+    encodings of economic interest.</li>
+    <li>Face strong committee resistance to introduction of non-<code>codecvt</code> 
+    based conversion features.</li>
+    <li>Have committee interest for <code>codecvt</code> based conversion 
+    features to aid string interoperability.</li>
+  </ul>
+
+
+
+<p>The Unicode (i.e. UTF) encodings:</p>
+
+
+
+  <ul>
+    <li>Can use character types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
+<code>wchar_t</code> alone to determine encoding, and this results in simpler 
+    conversion interfaces with no need to modify the core language.</li>
+    <li>Are the de facto standard for most new internationalized applications.</li>
+    <li>Have committee interest for UTF based conversion features to aid string 
+    interoperability.</li>
+  </ul>
+</blockquote>
 
 
 
@@ -176,60 +213,76 @@ requirements on their encodings.</p>
 
 <p>Provide high-level easy-to-use encoding conversion functions that handle 
 everyday string interoperability needs. Keep the interfaces simple, but do 
-support error handling customization since user needs vary widely.</p>
+support error handling customization since error handling needs vary widely.</p>
 
 
 
-<p>Provide mid-level generic string encoding to support those requiring the 
+<p>Provide mid-level generic string conversion functions to support those requiring the 
 full range of string interoperability needs.</p>
 
 
 
-<p>Provide a low-level encoding conversion algorithm patterned after existing standard 
-library algorithms for those who need to perform encoding conversions on 
-sequences of characters.</p>
+<p>For UTF encoding conversions, provide a low-level encoding conversion algorithm patterned after existing standard 
+library algorithms for users who need to perform encoding conversions on 
+sequences of characters. No low-level algorithm is provided for <code>codecvt</code> 
+based conversion because <code>codecvt</code> facets already provide for 
+low-level needs.</p>
 </blockquote>
 
 
 
-<p><b>Provide the three levels of functionality for both codecvt-based and UTF-based 
-conversions</b></p>
+<p><b>Provide a coherent error detection and handling policy</b></p>
 
 
 
-<blockquote>
+<ul>
+  <li>Follow the Unicode standard&#39;s requirement that &quot;A conformant encoding form 
+  conversion will treat any ill-formed code unit<br>
+  sequence as an error condition.&quot; (Unicode 3.9 D93 and C10).</li>
+  <li>Provide a note to inform users of as to when they do and do not have to 
+  explicitly check for errors themselves.</li>
+  <li>Provide error checking functions so that users can check for errors when 
+  necessary.</li>
+  <li>Handle errors by function object to support varied user needs, as 
+  requested by domain experts.</li>
+  <li>Default the error handler function object to follow the Unicode standard&#39;s 
+  recommendation of U+FFFD as a replacement character to minimize security 
+  risks.</li>
+</ul>
 
 
 
-<p><b>Codecvt-based</b> </p>
+<p><b>Provide encoding conversions as non-member functions</b></p>
 
 
 
-</blockquote>
+<ul>
+  <li>Avoids the need to change existing standard library components.</li>
+  <li>Avoids possibly expensive hidden automatic conversions.</li>
+</ul>
 
 
 
-<p><b>Default error handling in favor of security.</b></p>
+<p><b>Place the proposed components in a <code>unicode</code> namespace</b></p>
 
 
 
-<p><b>Provide a coherent error detection policy so that users know when they do 
-and when they do not have to check for errors themselves</b></p>
+<ul>
+  <li>A separate scope allows easy user control over functions that assume <code>
+  char</code> strings are UTF-8 encoded.</li>
+  <li>Emphasizes the Unicode orientation of the namespace contents.</li>
+</ul>
 
 
 
-<p><b>Provide error checking functions so that users can easily check strings 
-or sequences for valid UTF encoding.</b></p>
-<p><b>Default encoding is Unicode Transformation Form (UTF)</b></p>
-<p>Unless otherwise specified, all functions in namespace <code>
-unicode</code> assume UTF-8, UTF-16, and UTF-32 encoding for <code>char</code>,
-<code>char16_t</code>, and <code>char32_t</code> strings, respectively.</p>
-<p><code>wchar_t</code> strings are encoded as UTF-8, UTF-16, or 
-UTF-32, depending on the encoding of <code>wchar_t</code>.</p>
-<p><b>Do not provide basic_string&lt;&gt; to/from ostream/istream converting 
-operator&lt;&lt;/operator&gt;&gt;</b></p>
-<p>Users can use to_u8|u16|u32|w_string UTF conversion functions. Implicit 
-conversions lull users into ignoring the costs.</p>
+<p><b>Miscellaneous</b></p>
+
+
+
+<ul>
+  <li>Remain studiously neutral as to which character type or UTF encoding is &quot;best&quot;. 
+  Each has their preferred uses.</li>
+</ul>
 <h2>Open questions</h2>
 <p>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
 is accepted, then the proposed wording needs to be reviewed to accommodate 
@@ -265,8 +318,8 @@ unicode</p>
 <a href="http://www.unicode.org/versions/latest/">
 www.unicode.org/versions/latest/</a>, is indispensable for the application of 
 this document.<sup><font face="Arial">[footnote]</font></sup> The latest edition
-(including any amendments) applies. A reference to the Unicode Standard is 
-written in the form &quot;(Unicode 3.4 D10)&quot; to refer to the Unicode Standard, Core 
+(including any amendments) applies. A reference to the Unicode Standard  
+written in the form &quot;(Unicode 3.4 D10)&quot; refers to the Unicode Standard, Core 
 Specification, chapter 3, section 4, sub-section D10.</p>
 
 <p>For convenience, portions of the Unicode Standard are quoted 
@@ -291,7 +344,7 @@ of as a Unicode character.&quot; </p>
   letters A–F (for 10 through 15, respectively). Leading zeros are omitted, 
   unless the code point would have fewer than four hexadecimal digits—for 
   example, U+0001, U+0012, U+0123, U+1234, U+12345, U+102345. </p>
-  <p>[e.g] U+0416 is the Unicode code point for the character named CYRILLIC 
+  <p>[e.g.] U+0416 is the Unicode code point for the character named CYRILLIC 
   CAPITAL LETTER ZHE.&quot; </p>
 </blockquote>
 
@@ -323,7 +376,7 @@ UTF-32 encoding form.&quot;</p>
   U+0000..U+D7FF and U+E000..U+10FFFF to unique code unit sequences. The size of 
   the code unit is specified for each encoding form. This section (Unicode 3.9) 
   presents the formal definition of each of these encoding forms.&quot;</p>
-  <p>For the formal definitions see
+  <p>For formal definitions of UTF-32, UTF-16, and UTF-8, see
   <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
   3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>. </p>
 
@@ -472,8 +525,8 @@ namespace unicode {
   by a codecvt facet (C++ [locale.codecvt]) of type <code>codecvt&lt;wchar_t,char,mbstate_t&gt;</code>.</li>
 </ul>
 
-<p>UTF conversion functions determine encoding based on value type. The 
-relationship between value type and encoding is as specified by the following 
+<p>UTF conversion functions determine encoding based on character type. The 
+relationship between character type and encoding is specified by the following 
 table:</p>
 
 <blockquote>
@@ -483,7 +536,7 @@ table:</p>
     <p align="center"><b><i>UTF Conversions</i></b></td>
       </tr>
   <tr>
-    <td><b>Value type</b></td>
+    <td><b>Character Type</b></td>
     <td><b>Encoding</b></td>
   </tr>
   <tr>
@@ -509,10 +562,6 @@ table:</p>
 and the encoding of execution wide-character set (C++ [lex.charset]). [<i>Note:</i> 
 Codecvt conversion functions are useful for converting between non-UTF narrow character 
 encodings and a UTF encoded execution wide-character set. &mdash; <i>end note</i>]</p>
-
-
-
-<p>&nbsp;</p>
 
 
 
@@ -585,13 +634,13 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      subsequence in the range [<code>first, last</code>):</p>
      <ul>
        <li>
-       <p dir="ltr">If the code unit subsequence is well-formed, copies the 
+       <p>If the code unit subsequence is well-formed, copies the 
        subsequence&#39;s Unicode scalar value by performing <code>*result++ = *u++</code> 
        where u is a <code>ToCharT*</code> pointing to the code units required to represent the 
        subsequence&#39;s Unicode 
        scalar value in the encoding form of <code>result</code>.</li>
-       <li dir="ltr">
-       <p dir="ltr">Otherwise, copies the null-terminated string returned by the <code>eh</code> function 
+       <li>
+       <p>Otherwise, copies the null-terminated string returned by the <code>eh</code> function 
        object by performing <code>*result++ = *p++</code> for each successive 
        value of a pointer <code>p</code> to the returned string.</li>
      </ul>
@@ -623,7 +672,6 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
   </blockquote>                           
 
   <pre>template &lt;class ToCharT, class FromCharT, class Codecvt,
-<span style="background-color: #FFFF00">Why is class Codecvt needed? Isn&#39;t it always </span><code><span style="background-color: #FFFF00">codecvt&lt;wchar_t, char, std::mbstate_t&gt;?</span></code>
     class FromTraits = char_traits&lt;FromCharT&gt;,
     class Error = ufffd&lt;ToCharT&gt;,
     class ToTraits = char_traits&lt;ToCharT&gt;,
@@ -643,7 +691,7 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      <code>v</code>. If an invocation of <code>ccvt.in</code>
      or <code>ccvt.out</code> returns a result value of <code>error</code>, 
      invoke the <code>eh</code> function object and append the string it returns 
-     to the temporary string before processing additional characters in
+     to the temporary string before processing additional characters from
      <code>v</code>.</p>
      </blockquote>
      <p><i>Returns</i>: The temporary string created by <i>Effects</i>.</p>
@@ -692,8 +740,9 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      <blockquote>
      <p> <code>to_utf_string&lt;<i>r_value_type</i>,
      <i>v_value_type</i>, Error&gt;(v, eh)</code> where <i><code>r_value_type</code></i> 
-     is <code>value_type</code> of the returned <code>basic_string</code> and <i>
-     <code>v_value_type</code></i> is <code>value_type</code> of <code>v</code>.</p>
+     is the <code>value_type</code> of the <code>basic_string</code> to be 
+     returned and <i>
+     <code>v_value_type</code></i> is the <code>value_type</code> of <code>v</code>.</p>
      </blockquote>
   </blockquote>                           
 
