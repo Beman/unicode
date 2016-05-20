@@ -45,15 +45,13 @@
 
 <h1 align="center">Unicode Encoding Conversions for the Standard Library</h1>
 
-<p  style="margin-left:20%; margin-right:20%;">Proposes library conversion functions to ease interoperation between 
-existing standard and use-defined string types or streams. Provides conversion functions 
-for Unicode Transformation Form (UTF) 
-encodings, designed for Unicode-centric applications. Provides conversion 
-functions for legacy 
-encodings with existing <code>codecvt</code> facets, designed for conversion to 
-and from UTF encodings. Pure addition to the standard library. No changes to the 
-core language or existing standard library components. Breaks no existing code. User customizable 
-error handling with secure default. Implementation available. Suitable for 
+<p  style="margin-left:20%; margin-right:20%;">Proposes Unicode Transformation 
+Form (UTF) encoding conversion functions to ease interoperability between the 
+standard library&#39;s different character string types. Pure addition to the standard library. 
+Proposes no changes to the 
+core language or existing standard library components. Breaks no existing code 
+or ABI. Specified in accordance with the Unicode Standard. Proposed wording 
+provided. Has been implemented. Suitable for 
 either a Library TS or the standard itself.</p>
 
 
@@ -82,32 +80,6 @@ either a Library TS or the standard itself.</p>
 
 
 <h2>Acknowledgements</h2>
-
-
-
-<h2>Requirements</h2>
-
-
-
-<p><b>[0] Break no existing code</b></p>
-
-
-
-<p><b>[1] No changes to the core language</b></p>
-
-
-
-<p><b>[2] No changes to the existing standard library</b></p>
-
-
-
-<p><b>[3] </b></p>
-
-
-
-<p><b>[4] Utilize existing codecvt facets for conversions to and from <code>char</code> based strings 
-that are not UTF 
-encoded </b></p>
 
 
 
