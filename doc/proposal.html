@@ -426,7 +426,7 @@ namespace unicode {
   OutputIterator convert_utf(InputIterator first, InputIterator last, 
                              OutputIterator result, Error eh = Error());
 
-  //  [uni.enc_gen_cvt], string encoding generic conversions
+  //  [uni.gen_enc_cvt], string encoding generic conversions
   template &lt;class ToCharT, class FromCharT,
     class FromTraits = typename char_traits&lt;FromCharT&gt;,
     class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
@@ -435,18 +435,8 @@ namespace unicode {
     class ToAlloc = allocator&lt;ToCharT&gt;&gt;
   basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
     to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());
-
-  template &lt;class ToCharT, class FromCharT, class Codecvt,
-    class FromTraits = char_traits&lt;FromCharT&gt;,
-    class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = char_traits&lt;ToCharT&gt;,
-    class ToAlloc = allocator&lt;ToCharT&gt;,
-    class View = basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
-  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
-                            Error eh=Error(), const ToAlloc&amp; a=ToAlloc());
   
-  //  [uni.enc_conv_cvt], string encoding convenience conversions
+  //  [uni.conv_enc_cvt], string encoding convenience conversions
   template &lt;class Error = ufffd&lt;char&gt;&gt;
     string to_u8string(string_view v, Error eh = Error());
   template &lt;class Error = ufffd&lt;char&gt;&gt;
@@ -483,16 +473,6 @@ namespace unicode {
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
     wstring to_wstring(wstring_view v, Error eh = Error());
 
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string codecvt_to_string(wstring_view v,
-                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());
-
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring codecvt_to_wstring(string_view v,
-                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());
-
 }  // namespace unicode
 }  // namespace fundamentals_v2
 }  // namespace experimental
@@ -500,15 +480,7 @@ namespace unicode {
 
 
 
-<h3>String encoding conversion functions [uni.enc_cvt]</h3>
-
-<p>Two forms of string encoding conversion functions are provided:</p>
-
-<ul>
-  <li> <i>UTF conversion functions</i> convert only between UTF encodings.</li>
-  <li><i>Codecvt conversion functions</i> convert between encodings determined 
-  by a codecvt facet (C++ [locale.codecvt]) of type <code>codecvt&lt;wchar_t,char,mbstate_t&gt;</code>.</li>
-</ul>
+<h3>UTF encoding conversion functions [uni.enc_cvt]</h3>
 
 <p>UTF conversion functions determine encoding based on character type. The 
 relationship between character type and encoding is specified by the following 
@@ -542,11 +514,6 @@ table:</p>
   </tr>
 </table>
 </blockquote>
-
-<p>Codecvt conversion functions convert between any narrow encoding 
-and the encoding of execution wide-character set (C++ [lex.charset]). [<i>Note:</i> 
-Codecvt conversion functions are useful for converting between non-UTF narrow character 
-encodings and a UTF encoded execution wide-character set. &mdash; <i>end note</i>]</p>
 
 
 
@@ -608,7 +575,7 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
   &mdash;<i>end note</i>]</p>
 </blockquote>
 
-<h4>String encoding conversion algorithm [uni.enc_cvt_alg]</h4>
+<h4>Encoding conversion algorithm [uni.enc_cvt_alg]</h4>
 
 <pre>template &lt;class ToCharT, class InputIterator, class OutputIterator,
           class Error = typename ufffd&lt;ToCharT&gt;&gt;
@@ -636,7 +603,7 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      ToCharT</code> ([uni.enc_cvt]).</p>
   </blockquote>                           
 
-<h4>String encoding generic conversions [uni.enc_gen_cvt]</h4>
+<h4>Generic string encoding conversion functions [uni.gen_enc_cvt]</h4>
 
 <pre> template &lt;class ToCharT, class FromCharT,
     class FromTraits = typename char_traits&lt;FromCharT&gt;,
@@ -656,33 +623,7 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      </blockquote>
   </blockquote>                           
 
-  <pre>template &lt;class ToCharT, class FromCharT, class Codecvt,
-    class FromTraits = char_traits&lt;FromCharT&gt;,
-    class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = char_traits&lt;ToCharT&gt;,
-    class ToAlloc = allocator&lt;ToCharT&gt;,
-    class View = basic_string_view&lt;FromCharT, FromTraits&gt;&gt;
-  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    codecvt_to_basic_string(View v, const Codecvt&amp; ccvt,
-                            Error eh=Error(), const ToAlloc&amp; a=ToAlloc());</pre>
-
-  <blockquote>
-     <p><i>Effects:</i></p>
-     <blockquote>
-     <p>Converts the string described by <code>v</code> to a temporary 
-     string of type <code>basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;</code> 
-     by as many invocations of <code>ccvt.in</code> or
-     <code>ccvt.out</code> as necessary to process all characters in
-     <code>v</code>. If an invocation of <code>ccvt.in</code>
-     or <code>ccvt.out</code> returns a result value of <code>error</code>, 
-     invoke the <code>eh</code> function object and append the string it returns 
-     to the temporary string before processing additional characters from
-     <code>v</code>.</p>
-     </blockquote>
-     <p><i>Returns</i>: The temporary string created by <i>Effects</i>.</p>
-  </blockquote>                           
-
-<h4>String encoding convenience conversions [uni.enc_conv_cvt]</h4>
+<h4>Convenience string encoding conversion functions [uni.conv_enc_cvt]</h4>
 
 <pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
     string to_u8string(string_view v, Error eh = Error());
@@ -731,44 +672,13 @@ handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER
      </blockquote>
   </blockquote>                           
 
-  <pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string codecvt_to_string(wstring_view v,
-                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());</pre>
-
-  <blockquote>
-     <p><i>Returns:</i> Equivalent to: </p>
-     <blockquote>
-     <p> <code>codecvt_to_basic_string&lt;char, 
-     wchar_t, std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&gt;(v, ccvt, eh)</code>.</p>
-     </blockquote>
-  </blockquote>                           
-
-   <pre>template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring codecvt_to_wstring(string_view v,
-                      const codecvt&lt;wchar_t, char, mbstate_t&gt;&amp; ccvt,
-                      const Error eh=Error());</pre>
-
-   <blockquote>
-     <i>Returns:</i> Equivalent to: 
-     <blockquote>
-       <p><code>codecvt_to_basic_string&lt;wchar_t, char, std::codecvt&lt;wchar_t, char, std::mbstate_t&gt;&gt;(v, ccvt, eh)</code>.
-       </p>
-     </blockquote>
-  </blockquote>                           
-
-<h3>UTF based converting stream inserters and extractors</h3>
-
-<p>&nbsp;</p>
+<h4>Encoding conversion stream inserters and extractors</h4>
 
 <p><i><span style="background-color: #FFFF00">What do we do about </span>
 <span style="background-color: #FFFF00">ADL</span><span style="background-color: #FFFF00"> 
 if this goes in </span><span style="background-color: #FFFF00">std::experimental</span><span style="background-color: #FFFF00">::fundamentals_v2?</span></i></p>
 
-<pre>namespace std
-{
-
-&nbsp; //&nbsp; basic_string_view overload
+<pre>&nbsp; //&nbsp; basic_string_view overload
 &nbsp; template &lt;class ToCharT, class ToTraits, class FromCharT, class FromTraits&gt;
 &nbsp; typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
 &nbsp;&nbsp;&nbsp; basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
@@ -787,9 +697,7 @@ if this goes in </span><span style="background-color: #FFFF00">std::experimental
 &nbsp; template &lt;class ToCharT, class ToTraits, class FromCharT&gt;
 &nbsp; typename enable_if_c&lt;!is_same&lt;ToCharT, FromCharT&gt;::value,
 &nbsp;&nbsp;&nbsp; basic_ostream&lt;ToCharT, ToTraits&gt;&amp;&gt;::type
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);
-
-}&nbsp; // namespace std</pre>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; operator&lt;&lt;(basic_ostream&lt;ToCharT, ToTraits&gt;&amp; os, const FromCharT* p);</pre>
 
 <hr>
 
