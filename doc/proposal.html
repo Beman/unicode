@@ -29,7 +29,7 @@
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-18<!--webbot bot="Timestamp" endspan i-checksum="12343" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-21<!--webbot bot="Timestamp" endspan i-checksum="12330" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -55,27 +55,75 @@ provided. Has been implemented. Suitable for
 either a Library TS or the standard itself.</p>
 
 
-<h2>Table of contents</h2>
-
-
-
-<h2>Introduction</h2>
-
-
 
 <h2>Motivation</h2>
 
 
 
-<h2>History</h2>
+<p>Modern C++ has character types <code>char</code>, <code>char16_t</code>, and
+<code>char32_t</code>, with associated strings and string literals, supporting 
+Unicode Transformation Forms UTF-8, UTF-16, and UTF-32. </p>
 
 
 
-<h2>Examples</h2>
+<p>Each of these encodings have uses where one is preferred or required, and use 
+of the others would be unsatisfactory.</p>
 
 
 
-<h2>Implementation and use</h2>
+<blockquote>
+
+
+
+<p>Examples:</p>
+
+
+
+  <ul>
+    <li>The API&#39;s for some operating systems require UTF-8.</li>
+    <li>Interfacing with existing databases may require UTF-16.</li>
+    <li>Applications code may prefer UTF-32 because it is fixed length.</li>
+  </ul>
+</blockquote>
+
+
+
+<p>&nbsp;Each of these needs may appear in the same application, yet the 
+standard library has no convenient modern C++ way to convert between these 
+encoding forms.</p>
+
+
+
+<h2>Prior proposal</h2>
+
+
+
+<p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3398.html">
+N3398</a>, <i>String Interoperation Library</i>, proposed a complete overhaul of 
+the standard library&#39;s mechanisms for character encoding conversion. The 
+proposal was discussed at the Portland meeting in 2012. Some aspects of the 
+proposal drew strong support, such as improving Unicode string interoperability. 
+Other aspects drew strong opposition, such as new low level functionality to 
+replace <code>std::codecvt</code>. Clearly participants did not want N3398 - 
+they wanted a different proposal, less overreaching and more focused on Unicode 
+encoding conversions. The best sound bite came from PJ Plauger who said roughly 
+&quot;Don&#39;t reinvent <code>codecvt</code>. That said, we should pick a winner - 
+Unicode.&quot;</p>
+
+
+
+<p>The current proposal is completely new and not a revision of N3398.</p>
+
+
+
+<h2>Implementation</h2>
+
+
+
+<p>A Boost licensed preliminary implementation is available at
+<a href="https://github.com/Beman/unicode">github.com/Beman/unicode</a>.
+<span style="background-color: #FFFF00">Need to resolve or describe differences 
+between proposal and implementation.</span></p>
 
 
 
@@ -83,107 +131,40 @@ either a Library TS or the standard itself.</p>
 
 
 
+<p dir="ltr">Alisdair Meredith, Eric Niebler, Howard Hinnant, Jeffrey Yasskin, 
+Marshall Clow, PJ Plauger, and Stephan T. Lavavej participated in the Portland 
+discussion of N3398. Many of the design decisions going into the current new 
+proposal flow directly from the Portland discussion.</p>
+
+
+
+<p>After the Portland meeting, Matt Austern sat down with Google&#39;s Unicode 
+people to &quot;clarify things&quot;. His summary of that discussion was very helpful, and 
+its guidance on error handling is strongly reflected in the current new 
+proposal.</p>
+
+
+
 <h2>Design decisions</h2>
 
 
 
-<p><b>Focus this proposal on encoding conversion and error detection</b></p>
+<p><b>Limit this proposal on UTF encoding conversion</b></p>
 
 
 
-<blockquote>
   <ul>
-    <li>Getting encoding conversion right is hard enough without also coping 
-    with other needs.</li>
-    <li>Encoding conversion is important enough to internationalization that 
-    getting it alone into modern C++ is worth the effort.</li>
+    <li>Getting UTF encoding conversion right is hard enough without also coping 
+    with non-conversion related needs.</li>
+    <li>No single all encompassing Unicode proposal is on the horizon.</li>
     <li>Other needs requested by domain experts, such as code point iterators, 
     are important enough to deserve their own proposals.</li>
-    <li>No single all encompassing Unicode proposal is on the horizon.</li>
+    <li>Guidance from both the committee and domain experts clearly favors a 
+    proposal focusing on UTF conversions.</li>
+    <li>UTF encoding conversions can use character type alone to determine 
+    encoding, and this results in simpler conversion interfaces and no need to 
+    add a <code>char8_t</code> character type to the core language.</li>
   </ul>
-</blockquote>
-
-
-
-<p><b>Support multiple use cases for <code>char</code>-based strings </b></p>
-<ul>
-  <li>User code where <code>char</code>-based strings can be assumed to be 
-  UTF-8 encoded.<ul>
-  <li>Applies when UTF-8 is the default encoding for the operating system, and there 
-  is no expectation of moving the code elsewhere.</li>
-  <li>Applies within a given section of code&nbsp;where <code>char</code>-based 
-  strings are known to be UTF-8 encoded.</li>
-</ul>
-
-
-
-  </li>
-  <li>User code where <code>char</code>-based strings can be assumed to be 
-  non-UTF-8 encoded..<ul>
-  <li>Applies when the default encoding for the operating system is not UTF-8, and 
-  there is no expectation of moving the code elsewhere.</li>
-  <li>Applies within a given section of code where <code>char</code>-based strings are 
-  known to be non-UTF-8 encoded.</li>
-</ul>
-
-
-
-  </li>
-  <li>Portable code that must make no assumptions about the default encoding of <code>
-  char</code> based strings</li>
-</ul>
-
-
-
-<p><b>Provide separate codecvt-based and Unicode-based functionality for 
- 
-encoding conversions</b></p>
-
-
-
-<blockquote>
-
-
-
-<p>A key point that emerged from user and committee N3398 discussions is that 
-encoding conversion interface needs vary according to the use cases.</p>
-
-
-
-<p>The traditional legacy (i.e. non-Unicode) encodings:</p>
-
-
-
-  <ul>
-    <li>Use <code>char</code> as a general character type, so cannot use 
-    character type alone to determine the encoding. Encoding conversion 
-    interfaces need to associate an encoding with <code>char</code> -based 
-    strings and passing a <code>codecvt</code> facet ...</li>
-    <li>Have the existing standard library <code>codecvt</code> facility for 
-    determining and performing encoding conversions.</li>
-    <li>Have existing implementations of <code>codecvt</code> facets for all 
-    encodings of economic interest.</li>
-    <li>Face strong committee resistance to introduction of non-<code>codecvt</code> 
-    based conversion features.</li>
-    <li>Have committee interest for <code>codecvt</code> based conversion 
-    features to aid string interoperability.</li>
-  </ul>
-
-
-
-<p>The Unicode (i.e. UTF) encodings:</p>
-
-
-
-  <ul>
-    <li>Can use character types <code>char</code>, <code>char16_t</code>, <code>char32_t</code>, and
-<code>wchar_t</code> alone to determine encoding, and this results in simpler 
-    conversion interfaces with no need to modify the core language.</li>
-    <li>Are the de facto standard for most new internationalized applications.</li>
-    <li>Have committee interest for new UTF based conversion features to aid string 
-    interoperability.</li>
-  </ul>
-</blockquote>
 
 
 
@@ -194,21 +175,59 @@ encoding conversion interface needs vary according to the use cases.</p>
 
 <p>Provide high-level convenience encoding conversion functions that handle 
 everyday string interoperability needs. Keep the interfaces simple, but do 
-support error handling customization since error handling needs vary widely.</p>
+support error handling customization since error handling needs vary widely. For 
+example:</p>
+
+
+
+<blockquote>
+
+
+
+<p><code>string u8str = u16str;</code></p>
+
+
+
+</blockquote>
 
 
 
 <p>Provide mid-level generic string conversion functions to support those requiring 
-generic string interoperability needs.</p>
+generic string interoperability needs. For example:</p>
+
+
+
+<blockquote>
+
+
+
+<p><code>void g(std::string_view v);&nbsp; // requires UTF-8 encoding<br>
+<br>
+template &lt;class StringView&gt;<br>
+void f(StringView v) { g(to_u8string(v)); }</code></p>
+
+
+
+</blockquote>
 
 
 
 <p>For UTF encoding conversions, provide a low-level encoding conversion algorithm patterned after existing standard 
 library algorithms for users who need to perform encoding conversions on 
-sequences of characters. Do not provide a low-level algorithm for <code>codecvt</code> 
-based conversion because <code>codecvt</code> facets already provide for 
-low-level needs and do not adapt well to STL&#39;s iterator based algorithm 
-interfaces.</p>
+sequences of characters.</p>
+<blockquote>
+
+
+
+<p>&nbsp;</p>
+</blockquote>
+
+
+
+<p>Differing user needs is the primary motivation for providing three levels of 
+functionality. Meshing well with existing standard library components such as 
+algorithms and the <code>to_string</code> function family is an additional 
+benefit.</p>
 </blockquote>
 
 
@@ -239,10 +258,27 @@ interfaces.</p>
 
 
 <ul>
-  <li>Avoids possibly expensive hidden automatic conversions.</li>
+  <li>Avoids possibly expensive hidden automatic encoding conversions in 
+  unexpected places.</li>
   <li>Avoids the need to change existing standard library components.</li>
   <li>Meshes well with the other <code>to_string</code> functions already in the 
   standard library.</li>
+</ul>
+
+
+
+<p><b>Support <code>wchar_t</code> as well as <code>char</code>, <code>char16_t</code>, 
+and <code>char32_t</code></b></p>
+
+
+
+<ul>
+  <li dir="ltr">
+  <p dir="ltr"><code>wchar_t</code> strings are the bridge to and from non-UTF encoded
+  <code>char</code> strings, via existing standard library components using 
+  codecvt facets. This requires that <code>wchar_t</code> strings are UTF 
+  encoded, just as we require <code>char16_t</code> and <code>char32_t</code> 
+  strings are UTF encoded.</li>
 </ul>
 
 
@@ -252,9 +288,9 @@ interfaces.</p>
 
 
 <ul>
-  <li>A separate scope allows easy user control over functions that assume <code>
+  <li>A separate scope emphasizes that these functions assume <code>
   char</code> strings are UTF-8 encoded.</li>
-  <li>Emphasizes the Unicode orientation of the namespace contents.</li>
+  <li>Provides a home for these and future Unicode specific functions.</li>
 </ul>
 
 
@@ -270,22 +306,23 @@ interfaces.</p>
 </ul>
 <h2>Open questions</h2>
 <p>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
-is accepted, then the proposed wording needs to be reviewed to accommodate 
+is accepted, then the proposed wording below needs to be reviewed to accommodate 
 changes that may accrue. Such changes, if any, are expected to be minor.</p>
-<h2>TODO</h2>
-<p>TODO: Also provide throwing error handler. Design for exception type to be 
-thrown.</p>
-<p>TODO: Add function that scans a sequence / string for errors, reports 
-results.</p>
-<p>TODO: Follow Marshall&#39;s suggested return of pair&lt;&gt; from string algorithms?</p>
-<p>TODO: UTF first, last, iterators are InputIterators? 
-ForwardIterators? RandomAccess? Contiguous? What does basic_string_view require? How does iterator category interact with error handler? If the actual 
-conversion is done by functions requiring const char* point to a contiguous 
-string, to lesser categories of iterators actually work?</p>
-<p>TODO: Add test cases for other kinds of strings to regression 
-tests</p>
-<p>TODO: add static asserts on character types, other requirements.</p>
-<p>TODO: Arguments for error handler?</p>
+<p>Should an error handler that throws an exception be provided? Although the 
+uffd error handler is clearly the most conservative default, the preferred 
+choice for applications that are working with supposedly well-formed UTF 
+encodings may want an exception thrown if an ill-formed encoding is encountered.</p>
+<p>Should a new exception type such as <code>encoding_error</code> be provided?</p>
+<h2>To do</h2>
+<p>Add sequence and string error-checking functions that detect ill formed 
+encodings.</p>
+<p>Add arguments for error handler function objects:</p>
+<ul>
+  <li>The location of the error in the input sequence. Probably the iterator of 
+  the point where the error was detected.</li>
+  <li>The specifics of the error. Probably an error type enum for the specific 
+  encoding form errors called out in the Unicode Standard.</li>
+</ul>
 <h2>Bikeshed</h2>
 <p>Namespace choice:</p>
 <blockquote>
@@ -408,17 +445,6 @@ namespace unicode {
   template &lt;&gt; struct ufffd&lt;char16_t&gt;;
   template &lt;&gt; struct ufffd&lt;char32_t&gt;;
   template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
-
-  //    Remarks: Errors in input encoding are detected, even when the input
-  //    and output encodings are the same. The eh function object's returned sequence if
-  //    any replaces the invalid input encoding in the output, even when the input and
-  //    output encodings are the same. This implies that if the eh function object always
-  //    returns a valid UTF character sequence, the overall function output sequence is
-  //    a valid UTF sequence.
-  //    Note: ToCharT cannot be inferred via
-  //    std::iterator_traits&lt;OutputIterator&gt;::value_type
-  //    because std::iterator_traits&lt;OutputIterator&gt;::value_type is void for
-  //    OutputIterators such as back_inserter.
 
   //  [uni.enc_cvt_alg], string encoding conversion algorithm
   template &lt;class ToCharT, class InputIterator, class OutputIterator,
