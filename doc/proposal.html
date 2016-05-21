@@ -60,37 +60,18 @@ either a Library TS or the standard itself.</p>
 
 
 
-<p>Modern C++ has character types <code>char</code>, <code>char16_t</code>, and
-<code>char32_t</code>, with associated strings and string literals, supporting 
-Unicode Transformation Forms UTF-8, UTF-16, and UTF-32. </p>
-
-
-
-<p>Each of these encodings have uses where one is preferred or required, and use 
-of the others would be unsatisfactory.</p>
-
-
-
-<blockquote>
-
-
-
-<p>Examples:</p>
-
-
-
-  <ul>
-    <li>The API&#39;s for some operating systems require UTF-8.</li>
-    <li>Interfacing with existing databases may require UTF-16.</li>
-    <li>Applications code may prefer UTF-32 because it is fixed length.</li>
-  </ul>
-</blockquote>
-
-
-
-<p>&nbsp;Each of these needs may appear in the same application, yet the 
-standard library has no convenient modern C++ way to convert between these 
-encoding forms.</p>
+<p dir="ltr">Modern C++ character types <code>char</code>, <code>char16_t</code>, 
+and
+<code>char32_t</code> support 
+Unicode Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Character 
+type <code>wchar_t</code> also supports one of these depending on its size. 
+Character and string literals and several forms of strings are supported for 
+these character types. Use of more than one UTF encoding may appear in the same 
+application, or even the same function. Yet neither the language nor the 
+standard library provides a modern, convenient way to convert between encodings. 
+There is no equivalent to the ease with which <code>std::to_string</code> can 
+convert an arithmetic value to a string. This proposal solves the problems for 
+users by the lack of Unicode encoding conversions in the standard libary.</p>
 
 
 
@@ -301,8 +282,34 @@ and <code>char32_t</code></b></p>
 
 
 <ul>
-  <li>Each has their preferred uses.</li>
-  <li>Bicycle shed discussions are a waste of committee resources.</li>
+  <li>
+
+
+
+<p>Each of these encodings have uses where one is preferred or required, and all 
+of these encoding forms may appear in the same application.</p>
+
+
+
+<blockquote>
+
+
+
+<p>Examples:</p>
+
+
+
+  <ul>
+    <li>The API&#39;s for some operating systems require UTF-8.</li>
+    <li>Interfacing with existing databases may require UTF-16.</li>
+    <li>Applications code uses UTF-32 for single characters because every 
+    Unicode code point can be encoded as a single code unit.</li>
+  </ul>
+</blockquote>
+
+
+
+  </li>
 </ul>
 <h2>Open questions</h2>
 <p>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
