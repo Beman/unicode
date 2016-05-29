@@ -24,7 +24,7 @@ body
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">D0353R0</span></td>
+  <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R0</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
@@ -72,15 +72,34 @@ application, or even the same function. Yet neither the language nor the
 standard library provides a modern, convenient way to convert between these encodings. 
 There is no equivalent to the ease with which the <code>std::to_string</code> 
 family of functions can convert an arithmetic value to a string. This proposal 
-solves the problems encountered by users due to the lack of Unicode encoding 
-conversions in the standard library.</p>
+solves the problems encountered by users due to the lack of convenient Unicode 
+encoding conversions in the standard library. It does so in a way that meets the 
+error handling requirements of the Unicode standard and the error handling needs 
+requested by Unicode experts.</p>
 
 
 
-<p><i><span style="background-color: #FFFF00">Provide example.</span></i></p>
+<blockquote>
+  <p><b>Problem: </b>Given a function <code>f()</code> that returns a UTF-8 
+  encoded <code>std::string</code> from a database, and a function <code>g()</code> 
+  that expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
+  call g()</code> with <code>f()</code> in a way that converts the string types 
+  and encodings, and handles errors according to the best practices documented in 
+  the Unicode standard.</p>
+  <p><b>Using the proposal: </b><code>
+  g(to_u16string(f());</code></p>
+<p><b>Without the proposal, using only the standard library :</b> Who knows? 
+This isn&#39;t too difficult to solve using 3rd party libraries, but writing it from 
+scratch could take days unless the developer had a lot of Unicode experience. A 
+roll-your-own solution would probably have numerous bugs in error detection and 
+handling unless the developer tested against one of the existing UTF-8 test data 
+sets.</p>
 
 
 
+</blockquote
+
+<h2>
 <h2>Prior proposal</h2>
 
 
@@ -372,16 +391,32 @@ of these needs may appear in the same application. For example:</p>
 &nbsp;</li>
   <li>Should a new exception type such as <code>encoding_error</code> be provided?<br>
 &nbsp;</li>
-  <li>The Boost version is going to supply stream inserters and perhaps 
+  <li>The Boost version will supply stream inserters and perhaps 
   extractors that perform encoding conversion. Would LEWG/LWG like to see a 
-  similar proposal? <span style="background-color: #FFFF00">(Provide example 
-  with and without such inserters.)</span><br>
-&nbsp;</li>
-  <li>The Boost version is going to supply codecvt-based encoding conversion 
-  between <code>char</code> and <code>wchar_t</code> strings. Would LEWG/LWG 
-  like to see a similar proposal? <span style="background-color: #FFFF00">
-  (Provide example.)</span></li>
+  similar proposal?</li>
 </ul>
+<blockquote>
+  <blockquote>
+<pre>#include &lt;boost/unicode/stream.hpp&gt;
+u16string str16(u&quot;☺☺☺&quot;);
+...
+cout << str16 << '\n';</pre>
+  </blockquote>
+</blockquote>
+<ul>
+  <li>The Boost version will supply codecvt-based encoding conversion 
+  between <code>char</code> and <code>wchar_t</code> strings. Would LEWG/LWG 
+  like to see a similar proposal?</li>
+</ul>
+<blockquote>
+  <blockquote>
+<pre>#include &lt;boost/unicode/codecvt_conversion.hpp&gt;
+string big5buf;  // big-5 encoded
+wstring wbuf;    // UTF encoded
+...
+wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
+  </blockquote>
+</blockquote>
 <h2>To do</h2>
 <ul>
   <li>
@@ -648,7 +683,9 @@ template &lt;&gt; struct ufffd&lt;char32_t&gt;;
 template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
 
 
-<p><code>struct ufffd</code> provides the default error handler function object for conversion functions. Each specialization shall provide a member function with the signature:</p>
+<p><code>struct ufffd</code> provides the default error handler function object for conversion functions. 
+The default error 
+handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code point error marker. Each specialization shall provide a member function with the signature:</p>
 
 <blockquote>
 
@@ -671,14 +708,10 @@ template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
 </table>
 </blockquote>
 
-<p>In accordance with the Unicode Standard&#39;s recommendations (<span style="background-color: #FFFF00">need 
-reference</span>), the default error 
-handling function object <code>ufffd</code> returns U+FFFD REPLACEMENT CHARACTER as a single code point error marker.</p>
-
 <blockquote>
   <p>[<i>Note:</i> U+FFFD REPLACEMENT CHARACTER is returned as the default 
   single code point error marker in accordance with the recommendations of the Unicode Standard. 
-  The rationale given is essentially that other commonly used approaches, including 
+  The rationale given by the Unicode standard is essentially that other commonly used approaches, including 
   throwing exceptions, can be and have been used as security attack vectors.
   &mdash;<i>end note</i>]</p>
 </blockquote>
