@@ -4,18 +4,18 @@
 <meta http-equiv="Content-Language" content="en-us">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <style>
-  body
-  {
-    font-family: arial, sans-serif;
-    max-width: 6.75in;
-    margin: 0px auto;
-    font-size: 85%;
-  }
-   ins  {background-color: #CCFFCC; text-decoration: none;}
-   del  {background-color: #FFCACA; text-decoration: none;}
-   pre  {background-color: #D7EEFF; font-family: "courier new", courier, serif;}
-   code {font-family: "courier new", courier, serif;}
-   table {font-size: 90%;}
+body
+{
+  font-family: arial, sans-serif;
+  max-width: 6.75in;
+  margin: 0px auto;
+  font-size: 85%;
+}
+ ins  {background-color: #CCFFCC; text-decoration: none;}
+ del  {background-color: #FFCACA; text-decoration: none;}
+ pre  {background-color: #D7EEFF; font-size: 95%; font-family: "courier new", courier, serif;}
+ code {font-family: "courier new", courier, serif;}
+ table {font-size: 90%;}
 </style>
 <title>Unicode Encoding conversions</title>
 </head>
@@ -24,12 +24,12 @@
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">DxxxxR0</span></td>
+  <td align="left"><span style="background-color:yellow">D0353R0</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-22<!--webbot bot="Timestamp" endspan i-checksum="12332" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-29<!--webbot bot="Timestamp" endspan i-checksum="12346" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -47,12 +47,13 @@
 
 <p  style="margin-left:20%; margin-right:20%;">Proposes Unicode Transformation 
 Form (UTF) encoding conversion functions to ease interoperability between the 
-standard library&#39;s different character string types. Pure addition to the standard library. 
-Proposes no changes to the 
+strings of <code>char</code>, <code>char16_t</code>, 
+<code>char32_t</code>, and <code>wchar_t</code> character types. Pure addition to the standard library. 
+No changes to the 
 core language or existing standard library components. Breaks no existing code 
 or ABI. Specified in accordance with the Unicode Standard. Proposed wording 
 provided. Has been implemented. Suitable for 
-either a Library TS or the standard itself.</p>
+either a library TS or the standard itself.</p>
 
 
 
@@ -64,15 +65,19 @@ either a Library TS or the standard itself.</p>
 and
 <code>char32_t</code> support 
 Unicode Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Character 
-type <code>wchar_t</code> also supports one of these depending on its size. 
+type <code>wchar_t</code> also supports one of these encodings. 
 Character and string literals and several forms of strings are supported for 
 these character types. Use of more than one UTF encoding may appear in the same 
 application, or even the same function. Yet neither the language nor the 
-standard library provides a modern, convenient way to convert between encodings. 
+standard library provides a modern, convenient way to convert between these encodings. 
 There is no equivalent to the ease with which the <code>std::to_string</code> 
 family of functions can convert an arithmetic value to a string. This proposal 
 solves the problems encountered by users due to the lack of Unicode encoding 
 conversions in the standard library.</p>
+
+
+
+<p><i><span style="background-color: #FFFF00">Provide example.</span></i></p>
 
 
 
@@ -89,8 +94,8 @@ Other aspects drew strong opposition, such as new low level functionality to
 replace <code>std::codecvt</code>. Clearly participants did not want N3398 - 
 they wanted a different proposal, less overreaching and more focused on Unicode 
 encoding conversions. Bill Plauger summed it up when he said something like 
-&quot;Don&#39;t reinvent <code>codecvt</code>. That said, we should pick  Unicode 
-as the winner.&quot;</p>
+&quot;Don&#39;t reinvent <code>codecvt</code>. That said, we should pick  a 
+winner &mdash; Unicode.&quot;</p>
 
 
 
@@ -115,14 +120,14 @@ between proposal and implementation.</span></p>
 
 <p>Alisdair Meredith, Eric Niebler, Howard Hinnant, Jeffrey Yasskin, 
 Marshall Clow, PJ Plauger, and Stephan T. Lavavej participated in the Portland 
-discussion of N3398. Many of the design decisions going into the current new 
+discussion of N3398. Many of the design decisions that have gone into this current new 
 proposal flow directly from the Portland discussion.</p>
 
 
 
-<p>After the Portland meeting, Matt Austern sat down with Google&#39;s Unicode 
-people to &quot;clarify things&quot;. His summary of that discussion was very helpful. 
-Its guidance, particularly on error handling, is strongly reflected in the current  
+<p>After the Portland meeting, Matt Austern sat down with Google&#39;s &quot;Unicode 
+people&quot; to &quot;clarify things&quot;. His summary of that discussion was very helpful. 
+Its guidance on error handling is  reflected in this current new  
 proposal. <span style="background-color: #FFFF00">Ask Matt if it would be OK to 
 post his summary on the Portland </span><span style="background-color: #FFFF00">
 wiki</span><span style="background-color: #FFFF00"> so it can be referenced 
@@ -140,8 +145,8 @@ here.</span></p>
 
   <ul>
     <li>Getting UTF encoding conversion right is hard enough without also coping 
-    with non-conversion related needs.</li>
-    <li>No single all encompassing Unicode proposal is on the horizon.</li>
+    with other Unicode needs.</li>
+    <li>No all-encompassing Unicode proposal is on the horizon.</li>
     <li>Other needs requested by domain experts, such as code point iterators, 
     are important enough to deserve their own proposals.</li>
     <li>Guidance from both the committee and domain experts clearly favors a 
@@ -160,15 +165,14 @@ here.</span></p>
 
 <p>Differing user needs is the primary motivation for providing three levels of 
 functionality. Meshing well with existing standard library components such as 
-STL algorithms and the <code>to_string</code> family of functions an additional 
+STL algorithms and the <code>to_string</code> family of functions is an additional 
 benefit.</p>
 
 
 
 <ul>
   <li>Provide high-level convenience encoding conversion functions that handle 
-everyday string interoperability needs. Keep the interfaces simple, but do 
-support error handling customization since error handling needs vary widely. Example 
+everyday string interoperability needs. Keep the interfaces simple. Example 
   of use:</li>
 </ul>
 
@@ -212,9 +216,9 @@ support error handling customization since error handling needs vary widely. Exa
 <p><code>// third-party header<br>
 void g(std::string_view v);&nbsp; // requires UTF-8 encoding<br>
 <br>
-// user code to permit other source encodings<br>
+<span style="background-color: #FFFF00">// user code to permit other source encodings<br>
 template &lt;class StringView&gt;<br>
-void f(StringView v) { g(to_u8string(v)); }</code></p>
+void f(StringView v) { g(to_u8string(v)); }</span></code></p>
 
 
 
@@ -256,14 +260,14 @@ sequences of characters. Provides the underlying UTF encoding conversions for
 
 <ul>
   <li>Follow the Unicode standard&#39;s requirement that &quot;A conformant encoding form 
-  conversion will treat any ill-formed code unit<br>
+  conversion will treat any ill-formed code unit
   sequence as an error condition.&quot; (Unicode 3.9 D93 and C10).</li>
   <li>Provide a note to inform users of as to when they do and do not have to 
   explicitly check for errors themselves.</li>
   <li>Provide error checking functions so that users can also explicitly check for errors 
   to meet application needs.</li>
-  <li>Handle errors via function objects to support varied user needs as 
-  requested by domain experts.</li>
+  <li>Handle errors via function objects to support the varied user needs 
+  described by domain experts.</li>
   <li>Default error handler function object follows the Unicode standard&#39;s 
   recommendation of U+FFFD as a replacement character. Their rationale is that 
   the other common approaches, including throwing an exception, can be and have 
@@ -296,8 +300,8 @@ and <code>char32_t</code></b></p>
   <p><code>wchar_t</code> strings are the bridge to and from non-UTF encoded
   <code>char</code> strings, via existing standard library components using 
   codecvt facets. This requires that <code>wchar_t</code> strings are UTF 
-  encoded, just as we require <code>char16_t</code> and <code>char32_t</code> 
-  strings are UTF encoded.</li>
+  encoded, just as the proposal requires <code>char16_t</code> and <code>char32_t</code> 
+  strings be UTF encoded.</li>
 </ul>
 
 
@@ -308,7 +312,7 @@ and <code>char32_t</code></b></p>
 
 <ul>
   <li>Emphasizes that these functions assume <code>
-  char</code> strings are UTF-8 encoded.</li>
+  char</code> strings use a Unicode encoding.</li>
   <li>Signals that the committee cares about Unicode, but doesn&#39;t want to force 
   it on users who prefer other encodings.</li>
   <li>Provides a home for these and future Unicode specific functions.</li>
@@ -326,48 +330,44 @@ and <code>char32_t</code></b></p>
 
 
 
-<p>Each of these encodings have uses where one is preferred or required, and all 
-of these encoding forms may appear in the same application.</p>
-
-
-
-<blockquote>
-
-
-
-<p>Examples:</p>
+<p>Each of these encodings have uses where it is preferred or required, and all 
+of these needs may appear in the same application. For example:</p>
 
 
 
   <ul>
-    <li>The API&#39;s for some operating systems require UTF-8.</li>
-    <li>Interfacing with existing databases may require UTF-16.</li>
-    <li>Applications code uses UTF-32 for single characters because every 
-    Unicode code point can be encoded as a single code unit.</li>
+    <li>UTF-8 is required by the API&#39;s for some operating systems.</li>
+    <li>UTF-16 is required to interfacing with existing databases that use UTF-16 
+    encoding.</li>
+    <li>UTF-32 is preferred in code where every 
+    Unicode code point being encoded as a single code unit is advantageous.</li>
   </ul>
-</blockquote>
 
 
 
   </li>
+</ul>
+<p><b>Base conformance and definitions on the Unicode standard</b></p>
+<ul>
+  <li>Repeating specifications that are already covered by the Unicode standard, 
+  and then trying to stay in sync as the Unicode standard evolves, is the path 
+  to insanity.</li>
+  <li>In an &quot;informative&quot; (i.e. non-normative) section do describe some of the 
+  key Unicode definitions for the convenience of readers who have not memorized 
+  them.</li>
 </ul>
 <h2>Questions for the Library Evolution Working Group</h2>
 <ul>
   <li>The specification for the <code>to_*string</code> convenience functions 
   could be reduced from 16 signatures to four signatures by changing the 
   argument types to SOURCE, and then specifying SOURCE as being any one of the 
-  four current argument types. The implementors would be permitted to comply by 
-  supplying the full 16 signatures. In other words, a less signatures versus 
+  four current argument types. The implementors could comply by 
+  supplying the full 16 signatures or by clever template metaprogramming. In other words, a less signatures versus 
   more complex wording tradeoff. Does the LEWG/LWG have a strong preference 
   either way?<br>
 &nbsp;</li>
-  <li>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
-is accepted, then the proposed wording below needs to be reviewed to accommodate 
-changes that may accrue. Such changes, if any, are expected to be minor.<br>
-&nbsp;</li>
   <li>Should an error handler that throws an exception also be provided? 
-  Although the uffd error handler is clearly the best default, the preferred 
-  choice for applications that work with supposedly well-formed UTF encodings 
+  Although the uffd error handler is clearly the best default,  applications that work with supposedly well-formed UTF encodings 
   may want an exception thrown if an ill-formed encoding is encountered.<br>
 &nbsp;</li>
   <li>Should a new exception type such as <code>encoding_error</code> be provided?<br>
@@ -391,7 +391,7 @@ changes mandated by P0254. Such changes, if any, are expected to be minor.<br>
 &nbsp;</p>
   </li>
   <li>
-<p>Add sequence and string error-checking functions that detect ill 
+<p>Add non-modifying sequence and string error-checking functions that detect ill 
 formed encodings.<br>
 &nbsp;</p>
   </li>
@@ -408,11 +408,13 @@ formed encodings.<br>
 
 <h2>Unicode library [unicode]</h2>
 
+<p>This clause describes components that C++ programs may use to perform 
+operations on sequences and strings encoded in the Unicode character encoding 
+forms UTF-32, UTF-16, and UTF-8.</p>
+
 <h3>Normative references [uni.refs]</h3>
 
-<p>The <i>Unicode Standard</i>,
-<a href="http://www.unicode.org/versions/latest/">
-www.unicode.org/versions/latest/</a>, is indispensable for the application of 
+<p>The <i><a href="http://www.unicode.org/versions/latest/">Unicode Standard</a></i> is indispensable for the application of 
 this document.<sup><font face="Arial">[footnote]</font></sup> The latest edition
 (including any amendments) applies. A reference to the Unicode Standard  
 written in the form &quot;(Unicode 3.4 D10)&quot; refers to the Unicode Standard, Core 
@@ -635,9 +637,9 @@ the error handler throws an exception, the string returned by the error handler
 is added to the output sequence and the ill-formed input code unit subsequence 
 is not added to the output sequence. Detection of ill-formed code unit 
 subsequences is required even when the input and output encodings are the same. 
-This implies that if the error handler function object always returns a 
+[<i>Note:</i> If the error handler function object always returns a 
 well-formed UTF character sequence, the conversions function&#39;s entire output 
-sequence is a well-formed UTF sequence.</p>
+sequence is a well-formed UTF sequence. &mdash; <i>end note</i>]</p>
 
 <pre>template &lt;class CharT&gt; struct ufffd;
 template &lt;&gt; struct ufffd&lt;char&gt;;
