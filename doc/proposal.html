@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-29<!--webbot bot="Timestamp" endspan i-checksum="12346" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-30<!--webbot bot="Timestamp" endspan i-checksum="12329" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -84,15 +84,26 @@ requested by Unicode experts.</p>
 
 
 
-<blockquote>
-  <p><b>Problem: </b>Given a function <code>f()</code> that returns a UTF-8 
+<h3>Example</h3>
+
+
+
+  <p><b>Problem: </b>Given a third-party function <code>f()</code> that returns a UTF-8 
   encoded <code>std::string</code> from a database, and a function <code>g()</code> 
-  that expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
+  from a different third-party that expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
   call g()</code> with <code>f()</code> in a way that converts the string types 
   and encodings, and handles errors according to the best practices documented in 
   the Unicode standard.</p>
-  <p><b>Using the proposal: </b><code>
-  g(to_u16string(f()));</code></p>
+  <p><b>Using the proposal:</b></p>
+  <blockquote>
+  <p dir="ltr">
+  <code>string u8str(f());</code>
+  <code>
+  &nbsp;// get a string that happens to be UTF-8 encoded<br>
+  ...<br>
+  g(<a href="#uni.conv_enc_cvt">to_u16string</a>(u8str)); // call a function 
+  that requires UTF-16</code></p>
+  </blockquote>
 <p><b>Without the proposal, using only the standard library:</b> This might not 
 be too difficult using a third-party library, but is surprisingly difficult 
 using only the standard library. Unless the developer had enough Unicode 
@@ -102,9 +113,6 @@ error-prone.</p>
 
 
 
-</blockquote
-
-<h2>
 <h2>Prior proposal</h2>
 
 
@@ -759,7 +767,7 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
      </blockquote>
   </blockquote>                           
 
-<h4>Convenience string encoding conversion functions [uni.conv_enc_cvt]</h4>
+<h4>Convenience string encoding conversion functions [<a name="uni.conv_enc_cvt">uni.conv_enc_cvt</a>]</h4>
 
 <pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
     string to_u8string(string_view v, Error eh = Error());
