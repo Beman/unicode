@@ -57,6 +57,11 @@ either a library TS or the standard itself.</p>
 
 
 
+<p  style="margin-left:20%; margin-right:20%;">This is a preliminary proposal to 
+gain feedback from the LEWG.</p>
+
+
+
 <h2>Motivation</h2>
 
 
@@ -87,13 +92,13 @@ requested by Unicode experts.</p>
   and encodings, and handles errors according to the best practices documented in 
   the Unicode standard.</p>
   <p><b>Using the proposal: </b><code>
-  g(to_u16string(f());</code></p>
-<p><b>Without the proposal, using only the standard library :</b> Who knows? 
-This isn&#39;t too difficult to solve using 3rd party libraries, but writing it from 
-scratch could take days unless the developer had a lot of Unicode experience. A 
-roll-your-own solution would probably have numerous bugs in error detection and 
-handling unless the developer tested against one of the existing UTF-8 test data 
-sets.</p>
+  g(to_u16string(f()));</code></p>
+<p><b>Without the proposal, using only the standard library:</b> This might not 
+be too difficult using a third-party library, but is surprisingly difficult 
+using only the standard library. Unless the developer had enough Unicode 
+experience to focus on error detection and to test against one of the existing 
+UTF-8 test data sets, a roll-your-own solution would probably be very 
+error-prone.</p>
 
 
 
@@ -127,9 +132,7 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <p>A Boost licensed preliminary implementation is available at
-<a href="https://github.com/Beman/unicode">github.com/Beman/unicode</a>.
-<span style="background-color: #FFFF00">Need to resolve or describe differences 
-between proposal and implementation.</span></p>
+<a href="https://github.com/beman/unicode/tree/std-proposal">github.com/beman/unicode/tree/std-proposal</a>.</p>
 
 
 
@@ -139,18 +142,15 @@ between proposal and implementation.</span></p>
 
 <p>Alisdair Meredith, Eric Niebler, Howard Hinnant, Jeffrey Yasskin, 
 Marshall Clow, PJ Plauger, and Stephan T. Lavavej participated in the Portland 
-discussion of N3398. Many of the design decisions that have gone into this current new 
+discussion of N3398. Many of the design decisions that have gone into the current 
 proposal flow directly from the Portland discussion.</p>
 
 
 
 <p>After the Portland meeting, Matt Austern sat down with Google&#39;s &quot;Unicode 
 people&quot; to &quot;clarify things&quot;. His summary of that discussion was very helpful. 
-Its guidance on error handling is  reflected in this current new  
-proposal. <span style="background-color: #FFFF00">Ask Matt if it would be OK to 
-post his summary on the Portland </span><span style="background-color: #FFFF00">
-wiki</span><span style="background-color: #FFFF00"> so it can be referenced 
-here.</span></p>
+Its guidance on error handling is  reflected in current  
+proposal.</p>
 
 
 
@@ -232,12 +232,7 @@ everyday string interoperability needs. Keep the interfaces simple. Example
 
 
 
-<p><code>// third-party header<br>
-void g(std::string_view v);&nbsp; // requires UTF-8 encoding<br>
-<br>
-<span style="background-color: #FFFF00">// user code to permit other source encodings<br>
-template &lt;class StringView&gt;<br>
-void f(StringView v) { g(to_u8string(v)); }</span></code></p>
+<p><i><code>To Be supplied</code></i></p>
 
 
 
@@ -263,7 +258,7 @@ sequences of characters. Provides the underlying UTF encoding conversions for
 
 
 
-<p><span style="background-color: #FFFF00"><code>Provide Example</code></span></p>
+<p><i><code>To Be supplied</code></i></p>
 </blockquote>
 </blockquote>
 
@@ -385,8 +380,8 @@ of these needs may appear in the same application. For example:</p>
   more complex wording tradeoff. Does the LEWG/LWG have a strong preference 
   either way?<br>
 &nbsp;</li>
-  <li>Should an error handler that throws an exception also be provided? 
-  Although the uffd error handler is clearly the best default,  applications that work with supposedly well-formed UTF encodings 
+  <li>Should a second error handler that throws an exception be provided? 
+  Although the <code>ufffd</code> error handler is clearly the best default,  applications that work with supposedly well-formed UTF encodings 
   may want an exception thrown if an ill-formed encoding is encountered.<br>
 &nbsp;</li>
   <li>Should a new exception type such as <code>encoding_error</code> be provided?<br>
