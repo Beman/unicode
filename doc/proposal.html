@@ -24,12 +24,12 @@ body
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R0</span></td>
+  <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R1</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-05-30<!--webbot bot="Timestamp" endspan i-checksum="12329" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-06-07<!--webbot bot="Timestamp" endspan i-checksum="12404" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -43,7 +43,7 @@ body
 
 
 
-<h1 align="center">Unicode Encoding Conversions for the Standard Library</h1>
+<h1 align="center">Unicode Encoding Conversions for the Standard Library (R1)</h1>
 
 <p  style="margin-left:20%; margin-right:20%;">Proposes Unicode Transformation 
 Form (UTF) encoding conversion functions to ease interoperability between the 
@@ -132,6 +132,26 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <p>The current proposal is completely new and not a revision of N3398.</p>
+
+
+
+<h2>Revision history</h2>
+
+
+
+<p>R1</p>
+
+
+
+<ul>
+  <li>Add <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
+  functions.</li>
+  <li>Add <i><a href="#Requirements">Requirements</a></i> section.</li>
+</ul>
+
+
+
+<p>R0 - pre-Oulu mailing</p>
 
 
 
@@ -621,10 +641,28 @@ namespace unicode {
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
     wstring to_wstring(wstring_view v, Error eh = Error());
 
+  <ins>//  [uni.enc_err_detect], Encoding error detection
+  template &lt;class InputIterator&gt;
+    Input_Iterator first_ill_formed(InputIterator first, InputIterator last);  
+  
+  bool is_well_formed(string_view v);
+  bool is_well_formed(u16string_view v);
+  bool is_well_formed(u32string_view v);
+  bool is_well_formed(wstring_view v);</ins>
+
 }  // namespace unicode
 }  // namespace fundamentals_v2
 }  // namespace experimental
 }  // namespace std</pre>
+
+<h3><ins><a name="Requirements">Requirements</a></ins></h3>
+
+<p><ins>The template parameters <code>CharT</code> and <code>ToCharT</code> are 
+required to be type <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, 
+or <code>char32_t</code>. The template parameter <code>InputIterator</code> is 
+required to satisfy the requirements of an input iterator (C++ [input.iterators]). 
+The template parameter <code>OutputIterator</code> is required to satisfy the 
+requirements of an output iterator (C++ [output.iterators]).</ins></p>
 
 
 
@@ -730,22 +768,23 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
      subsequence in the range [<code>first, last</code>):</p>
      <ul>
        <li>
-       <p>If the code unit subsequence is well-formed, copies the 
-       subsequence&#39;s Unicode scalar value by performing <code>*result++ = *u++</code> 
-       where u is a <code>ToCharT*</code> pointing to the code units required to represent the 
-       subsequence&#39;s Unicode 
-       scalar value in the encoding form of <code>result</code>.</li>
+       <p>If the code unit subsequence is well-formed, copies the subsequence&#39;s 
+       Unicode scalar value by performing <code>*result++ = *u++</code> where u 
+       is a <code>ToCharT*</code> pointing to the code units required to 
+       represent the subsequence&#39;s Unicode scalar value in the encoding form of <code>
+       result</code>.</li>
        <li>
-       <p>Otherwise, copies the null-terminated string returned by the <code>eh</code> function 
-       object by performing <code>*result++ = *p++</code> for each successive 
-       value of a pointer <code>p</code> to the returned string.</li>
+       <p>Otherwise, copies the null-terminated string returned by the <code>eh</code> 
+       function object by performing <code>*result++ = *p++</code> for each 
+       successive value of a pointer <code>p</code> to the returned string.</li>
      </ul>
      <p><i>Returns: </i><code>result</code>.</p>
      <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
-     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]). The 
-     Unicode encoding form for <code>result</code> is determined by <code>
+     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]). 
+     The Unicode encoding form for <code>result</code> is determined by <code>
      ToCharT</code> ([uni.enc_cvt]).</p>
   </blockquote>                           
+
 
 <h4>Generic string encoding conversion functions [uni.gen_enc_cvt]</h4>
 
@@ -816,6 +855,26 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
      </blockquote>
   </blockquote>                           
 
+<h4><ins>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</ins></h4>
+
+<pre><ins>template &lt;class InputIterator&gt;
+<ins>Input_Iterator first_ill_formed(InputIterator first, InputIterator last);</ins></pre>
+  <blockquote>
+     <p><ins><i>Returns: </i>The first iterator <code>i</code> in the range <code>
+     [first, last)</code> for which <code>*i</code> is a minimal ill-formed code unit 
+     subsequence. Returns <code>last</code> if no such iterator is found.</ins></p>
+     <p><ins><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
+     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]).</ins></p>
+  </blockquote>                           
+
+<pre><ins>bool is_well_formed(string_view v);
+bool is_well_formed(u16string_view v);
+bool is_well_formed(u32string_view v);
+bool is_well_formed(wstring_view v);</ins></pre>
+  <blockquote>
+     <p><ins><i>Returns: </i>Equivalent to <code>first_ill_formed(v.begin(), v.end()) 
+     == v.end()</code>.</ins></p>
+  </blockquote>                           
 <hr>
 
 </body>
