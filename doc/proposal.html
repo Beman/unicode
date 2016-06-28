@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-06-07<!--webbot bot="Timestamp" endspan i-checksum="12404" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-06-28<!--webbot bot="Timestamp" endspan i-checksum="12408" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -96,7 +96,7 @@ requested by Unicode experts.</p>
   the Unicode standard.</p>
   <p><b>Using the proposal:</b></p>
   <blockquote>
-  <p dir="ltr">
+  <p>
   <code>string u8str(f());</code>
   <code>
   &nbsp;// get a string that happens to be UTF-8 encoded<br>
@@ -139,19 +139,25 @@ winner &mdash; Unicode.&quot;</p>
 
 
 
-<p>R1</p>
+<p><b>R1 - post-Oulu mailing</b></p>
 
 
 
 <ul>
-  <li>Add <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
+  <li>Added <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
   functions.</li>
-  <li>Add <i><a href="#Requirements">Requirements</a></i> section.</li>
+  <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
+  <li>
+  <p>Changed namespace from <code>unicode</code> to <code>utf</code> 
+  with the encouragement of the Oulu LEWG small group.</li>
+  <li>
+  <p>Added <i>Postcondition</i> to <code>convert_utf</code> to clarify 
+  the requirements for a well formed output sequence.</li>
 </ul>
 
 
 
-<p>R0 - pre-Oulu mailing</p>
+<p><b>R0 - pre-Oulu mailing</b></p>
 
 
 
@@ -348,7 +354,7 @@ and <code>char32_t</code></b></p>
 
 
 
-<p><b>Place the proposed components in a <code>unicode</code> namespace</b></p>
+<p><b>Place the proposed components in namespace <code>utf</code></b></p>
 
 
 
@@ -442,17 +448,6 @@ wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
 </blockquote>
 <h2>To do</h2>
 <ul>
-  <li>
-<p>If P0254, <i>Integrating <code>std::string_view</code> and <code>std::string</code></i>, 
-is accepted, then the proposed wording below needs to be reviewed to accommodate 
-changes mandated by P0254. Such changes, if any, are expected to be minor.<br>
-&nbsp;</p>
-  </li>
-  <li>
-<p>Add non-modifying sequence and string error-checking functions that detect ill 
-formed encodings.<br>
-&nbsp;</p>
-  </li>
   <li>Add arguments to error handler function objects:<ul>
     <li>The location of the error in the input sequence. Probably the iterator of 
   the point where the error was detected.</li>
@@ -460,6 +455,8 @@ formed encodings.<br>
   encoding form errors called out by the Unicode Standard.</li>
   </ul>
   </li>
+  <li>Add Requirements sub-section that spells out the requirements on Error 
+  function objects. Ck WP for the form.</li>
 </ul>
 
 <h1>Proposed wording</h1>
@@ -573,7 +570,7 @@ scalar value.</p>
 <pre>namespace std {
 namespace experimental {
 inline namespace fundamentals_v2 {
-namespace unicode {
+namespace utf {
 
   //  Error function objects are called with no arguments and either throw an
   //  exception or return a const pointer to a possibly empty C-style string.
@@ -641,28 +638,28 @@ namespace unicode {
   template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
     wstring to_wstring(wstring_view v, Error eh = Error());
 
-  <ins>//  [uni.enc_err_detect], Encoding error detection
+  //  [uni.enc_err_detect], Encoding error detection
   template &lt;class InputIterator&gt;
     Input_Iterator first_ill_formed(InputIterator first, InputIterator last);  
   
   bool is_well_formed(string_view v);
   bool is_well_formed(u16string_view v);
   bool is_well_formed(u32string_view v);
-  bool is_well_formed(wstring_view v);</ins>
+  bool is_well_formed(wstring_view v);
 
-}  // namespace unicode
+}  // namespace utf
 }  // namespace fundamentals_v2
 }  // namespace experimental
 }  // namespace std</pre>
 
-<h3><ins><a name="Requirements">Requirements</a></ins></h3>
+<h3><a name="Requirements">Requirements</a></h3>
 
-<p><ins>The template parameters <code>CharT</code> and <code>ToCharT</code> are 
+<p>The template parameters <code>CharT</code> and <code>ToCharT</code> are 
 required to be type <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, 
 or <code>char32_t</code>. The template parameter <code>InputIterator</code> is 
 required to satisfy the requirements of an input iterator (C++ [input.iterators]). 
 The template parameter <code>OutputIterator</code> is required to satisfy the 
-requirements of an output iterator (C++ [output.iterators]).</ins></p>
+requirements of an output iterator (C++ [output.iterators]).</p>
 
 
 
@@ -783,6 +780,10 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
      last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]). 
      The Unicode encoding form for <code>result</code> is determined by <code>
      ToCharT</code> ([uni.enc_cvt]).</p>
+     <p><i>Postcondition: </i>If the string returned by each call to the <code>
+     eh</code> function object during the execution of the algorithm is a well 
+     formed UTF sequence, then the output sequence is a well formed UTF 
+     sequence.</p>
   </blockquote>                           
 
 
@@ -855,25 +856,25 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
      </blockquote>
   </blockquote>                           
 
-<h4><ins>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</ins></h4>
+<h4>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</h4>
 
-<pre><ins>template &lt;class InputIterator&gt;
-<ins>Input_Iterator first_ill_formed(InputIterator first, InputIterator last);</ins></pre>
+<pre>template &lt;class InputIterator&gt;
+Input_Iterator first_ill_formed(InputIterator first, InputIterator last);</pre>
   <blockquote>
-     <p><ins><i>Returns: </i>The first iterator <code>i</code> in the range <code>
+     <p><i>Returns: </i>The first iterator <code>i</code> in the range <code>
      [first, last)</code> for which <code>*i</code> is a minimal ill-formed code unit 
-     subsequence. Returns <code>last</code> if no such iterator is found.</ins></p>
-     <p><ins><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
-     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]).</ins></p>
+     subsequence. Returns <code>last</code> if no such iterator is found.</p>
+     <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
+     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]).</p>
   </blockquote>                           
 
-<pre><ins>bool is_well_formed(string_view v);
+<pre>bool is_well_formed(string_view v);
 bool is_well_formed(u16string_view v);
 bool is_well_formed(u32string_view v);
-bool is_well_formed(wstring_view v);</ins></pre>
+bool is_well_formed(wstring_view v);</pre>
   <blockquote>
-     <p><ins><i>Returns: </i>Equivalent to <code>first_ill_formed(v.begin(), v.end()) 
-     == v.end()</code>.</ins></p>
+     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.begin(), v.end()) 
+     == v.end()</code>.</p>
   </blockquote>                           
 <hr>
 
