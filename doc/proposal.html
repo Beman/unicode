@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-06-28<!--webbot bot="Timestamp" endspan i-checksum="12408" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-09<!--webbot bot="Timestamp" endspan i-checksum="12472" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -139,7 +139,7 @@ winner &mdash; Unicode.&quot;</p>
 
 
 
-<p><b>R1 - post-Oulu mailing</b></p>
+<p><b>R1 - Pre-Issaquah mailing</b></p>
 
 
 
@@ -429,7 +429,7 @@ of these needs may appear in the same application. For example:</p>
 <pre>#include &lt;boost/unicode/stream.hpp&gt;
 u16string str16(u&quot;☺☺☺&quot;);
 ...
-cout << str16 << '\n';</pre>
+cout << str16 << '\n';  // automatic conversion to UTF-8</pre>
   </blockquote>
 </blockquote>
 <ul>
@@ -640,12 +640,12 @@ namespace utf {
 
   //  [uni.enc_err_detect], Encoding error detection
   template &lt;class InputIterator&gt;
-    Input_Iterator first_ill_formed(InputIterator first, InputIterator last);  
+    Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last);  
   
-  bool is_well_formed(string_view v);
-  bool is_well_formed(u16string_view v);
-  bool is_well_formed(u32string_view v);
-  bool is_well_formed(wstring_view v);
+  bool is_well_formed_utf(string_view v);
+  bool is_well_formed_utf(u16string_view v);
+  bool is_well_formed_utf(u32string_view v);
+  bool is_well_formed_utf(wstring_view v);
 
 }  // namespace utf
 }  // namespace fundamentals_v2
@@ -859,7 +859,7 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
 <h4>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</h4>
 
 <pre>template &lt;class InputIterator&gt;
-Input_Iterator first_ill_formed(InputIterator first, InputIterator last);</pre>
+Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last);</pre>
   <blockquote>
      <p><i>Returns: </i>The first iterator <code>i</code> in the range <code>
      [first, last)</code> for which <code>*i</code> is a minimal ill-formed code unit 
@@ -868,12 +868,12 @@ Input_Iterator first_ill_formed(InputIterator first, InputIterator last);</pre>
      last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]).</p>
   </blockquote>                           
 
-<pre>bool is_well_formed(string_view v);
-bool is_well_formed(u16string_view v);
-bool is_well_formed(u32string_view v);
-bool is_well_formed(wstring_view v);</pre>
+<pre>bool is_well_formed_utf(string_view v);
+bool is_well_formed_utf(u16string_view v);
+bool is_well_formed_utf(u32string_view v);
+bool is_well_formed_utf(wstring_view v);</pre>
   <blockquote>
-     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.begin(), v.end()) 
+     <p><i>Returns: </i>Equivalent to <code>first_ill_formed_utf(v.begin(), v.end()) 
      == v.end()</code>.</p>
   </blockquote>                           
 <hr>
