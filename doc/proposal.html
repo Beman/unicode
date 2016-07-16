@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-09<!--webbot bot="Timestamp" endspan i-checksum="12472" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-16<!--webbot bot="Timestamp" endspan i-checksum="12467" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -46,19 +46,14 @@ body
 <h1 align="center">Unicode Encoding Conversions for the Standard Library (R1)</h1>
 
 <p  style="margin-left:20%; margin-right:20%;">Proposes Unicode Transformation 
-Form (UTF) encoding conversion functions to ease interoperability between the 
-strings of <code>char</code>, <code>char16_t</code>, 
+Form (UTF) encoding conversion functions to ease interoperability between  
+strings and other sequences of <code>char</code>, <code>char16_t</code>, 
 <code>char32_t</code>, and <code>wchar_t</code> character types. Pure addition to the standard library. 
 No changes to the 
 core language or existing standard library components. Breaks no existing code 
 or ABI. Specified in accordance with the Unicode Standard. Proposed wording 
 provided. Has been implemented. Suitable for 
 either a library TS or the standard itself.</p>
-
-
-
-<p  style="margin-left:20%; margin-right:20%;">This is a preliminary proposal to 
-gain feedback from the LEWG.</p>
 
 
 
@@ -70,7 +65,7 @@ gain feedback from the LEWG.</p>
 and
 <code>char32_t</code> support 
 Unicode Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Character 
-type <code>wchar_t</code> also supports one of these encodings. 
+type <code>wchar_t</code> also usually supports one of these encodings. 
 Character and string literals and several forms of strings are supported for 
 these character types. Use of more than one UTF encoding may appear in the same 
 application, or even the same function. Yet neither the language nor the 
@@ -79,7 +74,7 @@ There is no equivalent to the ease with which the <code>std::to_string</code>
 family of functions can convert an arithmetic value to a string. This proposal 
 solves the problems encountered by users due to the lack of convenient Unicode 
 encoding conversions in the standard library. It does so in a way that meets the 
-error handling requirements of the Unicode standard and the error handling needs 
+error handling requirements of the Unicode and ISO/IEC 10646 standards and the error handling needs 
 requested by Unicode experts.</p>
 
 
@@ -153,6 +148,9 @@ winner &mdash; Unicode.&quot;</p>
   <li>
   <p>Added <i>Postcondition</i> to <code>convert_utf</code> to clarify 
   the requirements for a well formed output sequence.</li>
+  <li>
+  <p>Changed to assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
+  and so that becomes the base document for references.</li>
 </ul>
 
 
@@ -171,6 +169,11 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <h2>Acknowledgements</h2>
+
+
+
+<p><span style="background-color: #FFFF00">Oulu</span><span style="background-color: #FFFF00"> 
+small group</span></p>
 
 
 
@@ -395,14 +398,11 @@ of these needs may appear in the same application. For example:</p>
 
   </li>
 </ul>
-<p><b>Base conformance and definitions on the Unicode standard</b></p>
+<p><b>Base conformance and definitions on ISO/IEC 10646:2014</b></p>
 <ul>
-  <li>Repeating specifications that are already covered by the Unicode standard, 
-  and then trying to stay in sync as the Unicode standard evolves, is the path 
+  <li>Rewriting specifications that are already covered by another standard, 
+  and then trying to keep that wording in sync as the other standard evolves is the path 
   to insanity.</li>
-  <li>In an &quot;informative&quot; (i.e. non-normative) section do describe some of the 
-  key Unicode definitions for the convenience of readers who have not memorized 
-  them.</li>
 </ul>
 <h2>Questions for the Library Evolution Working Group</h2>
 <ul>
@@ -461,109 +461,31 @@ wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
 
 <h1>Proposed wording</h1>
 
-<h2>Unicode library [unicode]</h2>
+<h2>Unicode library [ucs]</h2>
 
-<p>This clause describes components that C++ programs may use to perform 
-operations on sequences and strings encoded in the Unicode character encoding 
-forms UTF-32, UTF-16, and UTF-8.</p>
-
-<h3>Normative references [uni.refs]</h3>
-
-<p>The <i><a href="http://www.unicode.org/versions/latest/">Unicode Standard</a></i> is indispensable for the application of 
-this document.<sup><font face="Arial">[footnote]</font></sup> The latest edition
-(including any amendments) applies. A reference to the Unicode Standard  
-written in the form &quot;(Unicode 3.4 D10)&quot; refers to the Unicode Standard, Core 
-Specification, chapter 3, section 4, clause D10.</p>
+<p dir="ltr">This clause describes components that C++ programs may use to perform 
+operations on sequences and strings encoded in UCS encoding 
+forms UTF-8, UTF-16, and UTF-32. [<i>Note</i>: Universal Coded Character Set (UCS) 
+is ISO/IEC terminology for <a href="https://en.wikipedia.org/wiki/Unicode">
+Unicode</a>. &mdash;<i>end note</i>]</p>
 
 <p><sup><font face="Arial">[Footnote]</font></sup> Unicode® is a registered 
 trademark of Unicode, Inc. This information is given for the convenience of 
 users of this document and does not constitute an endorsement by ISO or IEC of 
 this product.</p>
 
-<h3>Conformance [uni.conf]</h3>
+<h3>Normative references [ucs.refs]</h3>
 
-<p>Any conflict between this Technical Specification&#39;s Unicode section ([unicode]) 
-and the Unicode Standard, Chapter 3, C (conformance) and D (definitions) clauses 
-is unintentional and should be resolved by reference to the Unicode Standard.</p>
+<p>A reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
+number</i> of ISO/IEC 10646:2014 (C++ [intro.refs]).</p>
 
-<p>The normative definitions for the terms described informally in [uni.defs] 
-are included in this Technical Specification by reference from the indicated 
-D-clause definitions of the Unicode Standard.</p>
+<h3>Definitions&nbsp; [ucs.defs]</h3>
 
-<h3>Definitions (Informative) [uni.defs]</h3>
-
-<p>For convenience, informal summaries of definitions used in [unicode] are 
-given here as quotes from the Unicode Standard. </p>
-
-<h4>Code point (Unicode 3.4 D10)</h4>
-<p>&quot;Any value in the Unicode codespace. Informally, a code point can be thought 
-of as a Unicode character.&quot; </p>
-<blockquote>
-  <p>(Unicode Appendix A - Notational Conventions): </p>
-  <p>&quot;In running text, an individual Unicode code point is expressed as U+n, 
-  where n is four to six hexadecimal digits, using the digits 0–9 and uppercase 
-  letters A–F (for 10 through 15, respectively). Leading zeros are omitted, 
-  unless the code point would have fewer than four hexadecimal digits—for 
-  example, U+0001, U+0012, U+0123, U+1234, U+12345, U+102345. </p>
-  <p>[e.g.] U+0416 is the Unicode code point for the character named CYRILLIC 
-  CAPITAL LETTER ZHE.&quot; </p>
-</blockquote>
-
-<h4>Code unit (Unicode 3.9 D77)</h4>
-<p>&quot;The minimal bit combination that can represent a unit of encoded text for 
-processing or interchange. Code units are particular units of computer storage. 
-... The Unicode Standard uses 8-bit code units in the UTF-8 encoding form, 
-16-bit code units in the UTF-16 encoding form, and 32-bit code units in the 
-UTF-32 encoding form.&quot;</p>
-<blockquote>
-  <p>[<i>Note:</i> In C++ one <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, or 
-  <code>char32_t</code> character holds one 
-  code unit.
-  One to four code units (type <code>char</code>) are required to hold a UTF-8 
-  encoded code 
-  point.
-  One or two code units (type <code>char16_t</code>) are required to hold a UTF-16 encoded 
-  code point.
-  One code unit (type <code>char32_t</code>) is required to hold a UTF-32 code point. 
-  Type <code>wchar_t</code> may use 8, 16, or 32-bit code units, encoded as 
-  UTF-8, UTF-16, or UTF-32, respectively, so will  require 4, 2, or 1 code units
-  to hold a code point depending on the encoding.&mdash;<i>end note</i>]</p>
-</blockquote>
-
-  <h4>Unicode encoding forms (Unicode 3.9)</h4>
-
-  <p>&quot;The Unicode Standard supports three character encoding forms: UTF-32, 
-  UTF-16, and UTF-8. Each encoding form maps the Unicode code points 
-  U+0000..U+D7FF and U+E000..U+10FFFF to unique code unit sequences. The size of 
-  the code unit is specified for each encoding form. This section (Unicode 3.9) 
-  presents the formal definition of each of these encoding forms.&quot;</p>
-  <p>For formal definitions of UTF-32, UTF-16, and UTF-8, see
-  <a href="http://www.unicode.org/versions/Unicode7.0.0/ch03.pdf#G7404">Section 
-  3.9, Unicode Encoding Forms</a> in <em>The Unicode Standard</em>. </p>
-
-<p>[Note: For general questions related to Unicode transformation 
-form (UTF), UTF-8, UTF-16, UTF-32, or byte order marks (BOM), see
-<a href="http://unicode.org/faq/utf_bom.html">unicode.org/faq/utf_bom.html</a>.&mdash;<i>end note</i>]</p>
-
-<h4>Well-formed (Unicode 3.9 D85)</h4>
-
-<p>&quot;A Unicode code unit sequence that purports to be in a Unicode encoding form 
-is called well-formed if and only if it does follow the specification of that 
-Unicode encoding form.&quot;</p>
-
-<h4>Minimal well-formed code unit subsequence (Unicode 3.9 D85a)</h4>
-
-<p>&quot;A well-formed Unicode code unit sequence that maps to a single Unicode 
-scalar value.</p>
-
-
-<blockquote>
-  <ul>
-    <li>For UTF-8, see the specification in Unicode 3.9 D92 and Table 3-7.</li>
-    <li>For UTF-16, see the specification in Unicode 3.9 D91.</li>
-    <li>For UTF-32, see the specification in Unicode 3.9 D90.&quot;</li>
-  </ul>
-</blockquote>
+<p>The definitions from (UCS 4.) apply throughout. [<i>Examples: </i>code point (UCS 4.10), 
+code unit 
+(UCS 4.11), encoding form (UCS 4.23), ill-formed code unit sequence (UCS 4.33), 
+minimal well-formed code unit sequence (UCS 4.41), well-formed code unit 
+sequence (UCS 4.61).&nbsp; &mdash;<i>end examples</i>]</p>
 
 <h3>Header &lt;experimental/unicode&gt; synopsis</h3>
 
@@ -665,8 +587,8 @@ requirements of an output iterator (C++ [output.iterators]).</p>
 
 <h3>UTF encoding conversion functions [uni.enc_cvt]</h3>
 
-<p>UTF conversion functions determine encoding based on character type. The 
-relationship between character type and encoding is specified by the following 
+<p>UTF conversion functions determine UCS encoding form based on character type. The 
+relationship between character type and encoding form is specified by the following 
 table:</p>
 
 <blockquote>
@@ -677,19 +599,19 @@ table:</p>
       </tr>
   <tr>
     <td><b>Character Type</b></td>
-    <td><b>Encoding</b></td>
+    <td><b>UCS Encoding Form</b></td>
   </tr>
   <tr>
     <td><code>char</code></td>
-    <td>UTF-8</td>
+    <td>UTF-8 (UCS 9.2)</td>
   </tr>
   <tr>
     <td><code>char16_t</code></td>
-    <td>UTF-16</td>
+    <td>UTF-16 (UCS 9.3)</td>
   </tr>
   <tr>
     <td><code>char32_t</code></td>
-    <td>UFT-32</td>
+    <td>UFT-32 (UCS 9.4)</td>
   </tr>
   <tr>
     <td><code>wchar_t</code></td>
