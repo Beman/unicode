@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-16<!--webbot bot="Timestamp" endspan i-checksum="12467" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-17<!--webbot bot="Timestamp" endspan i-checksum="12469" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -174,6 +174,10 @@ winner &mdash; Unicode.&quot;</p>
 
 <p><span style="background-color: #FFFF00">Oulu</span><span style="background-color: #FFFF00"> 
 small group</span></p>
+
+
+
+<p><span style="background-color: #FFFF00">Tom</span></p>
 
 
 
@@ -463,11 +467,12 @@ wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
 
 <h2>Unicode library [ucs]</h2>
 
-<p dir="ltr">This clause describes components that C++ programs may use to perform 
-operations on sequences and strings encoded in UCS encoding 
-forms UTF-8, UTF-16, and UTF-32. [<i>Note</i>: Universal Coded Character Set (UCS) 
-is ISO/IEC terminology for <a href="https://en.wikipedia.org/wiki/Unicode">
-Unicode</a>. &mdash;<i>end note</i>]</p>
+<p>This sub-clause describes components that C++ programs may use to perform 
+operations on characters, strings, and other sequences of characters encoded in 
+UCS encoding 
+forms UTF-8, UTF-16, and UTF-32. [<i>Note</i>: ISO/IEC 10646 Universal Coded 
+Character Set (UCS) is the ISO standard for
+<a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>. &mdash;<i>end note</i>]</p>
 
 <p><sup><font face="Arial">[Footnote]</font></sup> Unicode® is a registered 
 trademark of Unicode, Inc. This information is given for the convenience of 
@@ -486,6 +491,27 @@ code unit
 (UCS 4.11), encoding form (UCS 4.23), ill-formed code unit sequence (UCS 4.33), 
 minimal well-formed code unit sequence (UCS 4.41), well-formed code unit 
 sequence (UCS 4.61).&nbsp; &mdash;<i>end examples</i>]</p>
+
+<p>Throughout this sub-clause <code>char</code>, <code>char16_t</code>, <code>
+char32_t</code>, and&nbsp; <code>wchar_t</code> are collectively called <i>
+encoded character types</i>.</p>
+
+<h3>Requirements [ucs.req]</h3>
+
+<p>Class template parameters named <code>CharT</code>, <code>FromCharT</code>, 
+and <code>ToCharT</code> shall be one of the encoded character types. Function 
+templates with parameters named <code>CharT</code>, <code>FromCharT</code>, or
+<code>ToCharT</code> shall not participate in overload resolution unless they 
+are one of the encoded character types.</p>
+
+<p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]). 
+[<i>Note</i>: Input sequences are treated as UTF encoded, so input sequences of
+<code>char</code>s not encoded with UTF-8 and containing non-ASCII characters 
+have a high probability of being detected as ill-formed.&nbsp; &mdash;<i>end 
+note</i>]</p>
+
+<p>Template parameters named <code>OutputIterator</code> shall satisfy the 
+requirements of an output iterator (C++ [output.iterators]).</p>
 
 <h3>Header &lt;experimental/unicode&gt; synopsis</h3>
 
@@ -573,15 +599,6 @@ namespace utf {
 }  // namespace fundamentals_v2
 }  // namespace experimental
 }  // namespace std</pre>
-
-<h3><a name="Requirements">Requirements</a></h3>
-
-<p>The template parameters <code>CharT</code> and <code>ToCharT</code> are 
-required to be type <code>char</code>, <code>wchar_t</code>, <code>char16_t</code>, 
-or <code>char32_t</code>. The template parameter <code>InputIterator</code> is 
-required to satisfy the requirements of an input iterator (C++ [input.iterators]). 
-The template parameter <code>OutputIterator</code> is required to satisfy the 
-requirements of an output iterator (C++ [output.iterators]).</p>
 
 
 
