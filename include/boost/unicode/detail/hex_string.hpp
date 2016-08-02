@@ -9,8 +9,19 @@
 #define BOOST_UNICODE_HEX_STRING_HPP
 
 #include <boost/endian/conversion.hpp>
+#include <cwchar>
 
 namespace boost { namespace unicode { namespace detail {
+
+  template <class T> struct underlying;
+  template<> struct underlying<char> { typedef unsigned char type; };
+  template<> struct underlying<char16_t> { typedef boost::uint_least16_t type; };
+  template<> struct underlying<char32_t> { typedef boost::uint_least32_t type; };
+#if WCHAR_MAX >= 0xFFFFFFFFu
+  template<> struct underlying<wchar_t> { typedef boost::uint_least32_t type; };
+#else
+  template<> struct underlying<wchar_t> { typedef boost::uint_least16_t type; };
+#endif
 
   template <class T>
   std::string to_hex(T x)
