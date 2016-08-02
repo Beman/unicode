@@ -13,7 +13,8 @@
 #include <cstring>  // for strlen
 #include <locale>
 #include <array>
-#include <boost/utility/string_view.hpp> 
+#include <boost/utility/string_view.hpp>
+#include <boost/unicode/utf_conversion.hpp>
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
@@ -41,17 +42,13 @@
 /*
 
 The initial development plan is to concentrate on char <---> wchar_t conversion via
-the standard library's traditional codecvt<char16_t,char,mbstate_t> specialization.
+the standard library's traditional codecvt<wchar_t,char,mbstate_t> specialization.
 
 If the interface can easily be extended to handle other codecvt specializations, fine.
-But if that does not work out, codecvt<char16_t,char,mbstate_t> is sufficiently useful
+But if that does not work out, codecvt<wchar_t,char,mbstate_t> is sufficiently useful
 that the attempt to support other specializations will be abandoned.
 
 */
-
-//  TODO: Add a third detail::codecvt_to_basic_string overload to handle the case
-//  where ToCharT and FromCharT are the same type so no conversion is needed. To be
-//  decided: Should such an overload detect errors (and call the error handler)?
 
 //--------------------------------------------------------------------------------------//
 //                                     Synopsis                                         //
@@ -72,19 +69,35 @@ namespace unicode
     codecvt_to_basic_string(View v, const Codecvt& ccvt,
                             Error eh=Error(), const ToAlloc& a=ToAlloc());
 
-  //  codecvt_to_string
+  //  convenience functions
   template <class Error = ufffd<char>>
-  inline std::string
-    codecvt_to_string(boost::wstring_view v,
-                      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt,
-                      const Error eh=Error());
-
-  //  codecvt_to_wstring
+    inline std::string codecvt_to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt, const Error eh=Error());
+  template <class Error = ufffd<char>>
+    inline std::string codecvt_to_string(boost::string_view v,  // UTF-8 encoded
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<char>>
+    inline std::string codecvt_to_string(boost::u16string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<char>>
+    inline std::string codecvt_to_string(boost::u32string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<char>>
+    inline std::string codecvt_to_string(boost::wstring_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring
-    codecvt_to_wstring(boost::string_view v,
-                       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt,
-                       const Error eh=Error());
+    inline std::string codecvt_to_u8string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<wchar_t>>
+    inline std::u16string codecvt_to_u16string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<wchar_t>>
+    inline std::u32string codecvt_to_u32string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
+  template <class Error = ufffd<wchar_t>>
+    inline std::wstring codecvt_to_wstring(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh=Error());
 
 }  // namespace unicode
 }  // namespace boost
@@ -128,7 +141,7 @@ namespace unicode
         std::is_same<FromCharT, typename Codecvt::intern_type>());  // tag dispatch
   }
 
-  //  codecvt_to_{string|wstring}  -----------------------------------------------------//
+  //  convenience functions  -----------------------------------------------------------//
 
   template <class Error>
   inline std::string  codecvt_to_string(boost::wstring_view v,
@@ -144,6 +157,50 @@ namespace unicode
   {
     return codecvt_to_basic_string<wchar_t, char,
       std::codecvt<wchar_t, char, std::mbstate_t>>(v, ccvt, eh);
+  }
+
+  template <class Error>
+  inline std::string codecvt_to_string(boost::string_view v,
+    const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
+    const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt, const Error eh)
+  {
+    return codecvt_to_string(codecvt_to_wstring(v, from_ccvt, eh), to_ccvt);
+  }
+  template <class Error>
+    inline std::string codecvt_to_string(boost::string_view v,  // UTF-8 encoded
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return codecvt_to_string(to_wstring(v, eh), ccvt);
+  }
+  template <class Error>
+    inline std::string codecvt_to_string(boost::u16string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return codecvt_to_string(to_wstring(v, eh), ccvt);
+  }
+  template <class Error>
+    inline std::string codecvt_to_string(boost::u32string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return codecvt_to_string(to_wstring(v, eh), ccvt);
+  }
+  template <class Error>
+    inline std::string codecvt_to_u8string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return to_u8string(codecvt_to_wstring(v, ccvt, eh));
+  }
+  template <class Error>
+    inline std::u16string codecvt_to_u16string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return to_16string(codecvt_to_wstring(v, ccvt, eh));
+  }
+  template <class Error>
+    inline std::u32string codecvt_to_u32string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
+  {
+    return to_u32string(codecvt_to_wstring(v, ccvt, eh));
   }
 
 //--------------------------------------------------------------------------------------//

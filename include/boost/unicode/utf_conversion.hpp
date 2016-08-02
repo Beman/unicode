@@ -91,40 +91,40 @@ namespace unicode
   //    a valid UTF sequence.
 
   template <class Error = ufffd<char>>
-  inline std::string  to_u8string(boost::string_view v, Error eh = Error());
+    inline std::string  to_u8string(boost::string_view v, Error eh = Error());
   template <class Error = ufffd<char>>
-  inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
+    inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
   template <class Error = ufffd<char>>
-  inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
+    inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
   template <class Error = ufffd<char>>
-  inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
+    inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = ufffd<char16_t>>
-  inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
+    inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
   template <class Error = ufffd<char16_t>>
-  inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
+    inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
   template <class Error = ufffd<char16_t>>
-  inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
+    inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
   template <class Error = ufffd<char16_t>>
-  inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
+    inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = ufffd<char32_t>>
-  inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
+    inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
   template <class Error = ufffd<char32_t>>
-  inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
+    inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
   template <class Error = ufffd<char32_t>>
-  inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
+    inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
   template <class Error = ufffd<char32_t>>
-  inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
+    inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
 
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
+    inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
+    inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
+    inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
   template <class Error = ufffd<wchar_t>>
-  inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
+    inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
 }  // namespace unicode
 }  // namespace boost
