@@ -14,7 +14,6 @@ using std::endl;
 #include <cassert>
 #include <string>
 #include <iterator>
-#include <cwchar>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 
@@ -37,16 +36,6 @@ namespace
   const u16string  ill_u16str(u"$€𐐷𤭢\xD800");
   const u32string  ill_u32str(U"$€𐐷𤭢\xD800");
   const wstring    ill_wstr(  L"$€𐐷𤭢\xD800");
-
-  template <class T> struct underlying;
-  template<> struct underlying<char> { typedef unsigned char type; };
-  template<> struct underlying<char16_t> { typedef boost::uint_least16_t type; };
-  template<> struct underlying<char32_t> { typedef boost::uint_least32_t type; };
-#if WCHAR_MAX >= 0xFFFFFFFFu
-  template<> struct underlying<wchar_t> { typedef boost::uint_least32_t type; };
-#else
-  template<> struct underlying<wchar_t> { typedef boost::uint_least16_t type; };
-#endif
 
 //void invalid_utf8_characters()
 //  {
