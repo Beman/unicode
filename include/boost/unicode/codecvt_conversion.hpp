@@ -194,7 +194,7 @@ namespace unicode
     inline std::u16string codecvt_to_u16string(boost::string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, const Error eh)
   {
-    return to_16string(codecvt_to_wstring(v, ccvt, eh));
+    return to_u16string(codecvt_to_wstring(v, ccvt, eh));
   }
   template <class Error>
     inline std::u32string codecvt_to_u32string(boost::string_view v,
