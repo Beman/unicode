@@ -10,13 +10,13 @@ using std::cout;
 using std::endl;
 #include <typeinfo>
 #include "../include/boost/unicode/utf_conversion.hpp"
+#include "../include/boost/unicode/detail/hex_string.hpp"
 #include <cassert>
 #include <string>
 #include <iterator>
 #include <cwchar>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
-#include <boost/endian/conversion.hpp>
 
 using namespace boost::unicode;
 using std::string;

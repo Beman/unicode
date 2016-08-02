@@ -13,6 +13,7 @@ using std::endl;
 #include "../include/boost/unicode/codecvt_conversion.hpp"
 #include "../include/boost/unicode/stream.hpp"
 #include "../include/boost/unicode/detail/utf8_codecvt_facet.hpp"
+#include "../include/boost/unicode/detail/hex_string.hpp"
 #include <cassert>
 #include <string>
 #include <sstream>
@@ -20,7 +21,6 @@ using std::endl;
 #include <cwchar>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
-#include <boost/endian/conversion.hpp>
 
 #include <boost/config.hpp>
 #if !defined(BOOST_NO_CXX11_HDR_CODECVT)
