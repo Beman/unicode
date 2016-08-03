@@ -236,7 +236,7 @@ namespace detail
     static_assert(!std::is_same<FromCharT, ToCharT>::value,
       "FromCharT and ToCharT must not be the same type");
 
-    std::basic_string<ToCharT, ToTraits, ToAlloc> temp;
+    std::basic_string<ToCharT, ToTraits, ToAlloc> temp(a);
     std::array<ToCharT, 8> buf;  // TODO: increase size after preliminary testing
 
     //  for clarity, use the same names for ccvt.out() arguments as the standard library

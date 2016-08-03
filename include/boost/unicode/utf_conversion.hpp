@@ -52,7 +52,7 @@ namespace unicode
   //    because std::iterator_traits<OutputIterator>::value_type is void for
   //    OutputIterators such as back_inserter.
   template <class ToCharT, class InputIterator, class OutputIterator,
-    class Error = typename ufffd<ToCharT>>
+    class Error = ufffd<ToCharT>>
   inline OutputIterator
     convert_utf(InputIterator first, InputIterator last, 
       OutputIterator result, Error eh = Error());

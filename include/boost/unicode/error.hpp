@@ -45,22 +45,22 @@ namespace unicode
 {
   template <> struct ufffd<char>
   {
-    constexpr char* operator()() const noexcept { return u8"\uFFFD"; }
+    constexpr const char* operator()() const noexcept { return u8"\uFFFD"; }
   };
 
   template <> struct ufffd<char16_t>
   { 
-    constexpr char16_t* operator()() const noexcept { return u"\uFFFD"; }
+    constexpr const char16_t* operator()() const noexcept { return u"\uFFFD"; }
   };
 
   template <> struct ufffd<char32_t>
   { 
-    constexpr char32_t* operator()() const noexcept { return U"\uFFFD"; }
+    constexpr const char32_t* operator()() const noexcept { return U"\uFFFD"; }
   };
 
   template <> struct ufffd<wchar_t>
   { 
-    constexpr wchar_t* operator()() const noexcept { return L"\uFFFD"; }
+    constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
   };
 }  // namespace unicode
 }  // namespace boost
