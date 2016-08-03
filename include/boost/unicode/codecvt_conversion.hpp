@@ -14,7 +14,7 @@
 #include <locale>
 #include <array>
 #include <boost/utility/string_view.hpp>
-#include <boost/unicode/utf_conversion.hpp>
+#include <boost/unicode/string_encoding.hpp>
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>

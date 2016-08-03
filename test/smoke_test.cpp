@@ -9,7 +9,7 @@
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/unicode/utf_conversion.hpp"
+#include "../include/boost/unicode/string_encoding.hpp"
 #include "../include/boost/unicode/codecvt_conversion.hpp"
 #include "../include/boost/unicode/stream.hpp"
 #include "../include/boost/unicode/detail/utf8_codecvt_facet.hpp"
