@@ -120,13 +120,13 @@ namespace
     cout << "  codecvt_short_test done" << endl;
   }
 
-  void convert_utf_test()
+  void convert_encoding_test()
   {
-    cout << "convert_utf_test" << endl;
+    cout << "convert_encoding_test" << endl;
     u16string ru16;
-    convert_utf<char16_t>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
+    convert_encoding<char16_t>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
     BOOST_TEST(ru16 == u16str);
-    cout << "  convert_utf_test done" << endl;
+    cout << "  convert_encoding_test done" << endl;
   }
 
   void to_utf_string_test()
@@ -331,7 +331,7 @@ int main()
 
   inserter_test();
   codecvt_short_test();
-  convert_utf_test();
+  convert_encoding_test();
   to_utf_string_test();
   to_u8string_test();
   to_u16string_test();
