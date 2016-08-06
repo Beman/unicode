@@ -8,7 +8,6 @@
 #include <iostream>
 #include <string>
 #include <boost/unicode/string_encoding.hpp>     // needed for example 1
-#include <boost/unicode/codecvt_conversion.hpp>  // needed for example 1
 #include <locale>                                // needed for example 2
 #include <codecvt>                               // needed for example 2
 #include <boost/unicode/detail/hex_string.hpp>

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <string>
 #include <locale>
+#include <array>
 #include <boost/utility/string_view.hpp> 
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
