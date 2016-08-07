@@ -124,16 +124,16 @@ namespace unicode
   //    a valid UTF sequence.
 
   //  to_string from UTF
-  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
+  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
+  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::u16string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
+  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::u32string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
+  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::wstring_view v, Error eh = Error());
 
