@@ -77,29 +77,22 @@ int cpp_main(int, char*[])
   str = boost::unicode::codecvt_to_string(uwstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
-  boost::unicode::convert_encoding<char>
-    (uwstr.cbegin(), uwstr.cend(), std::back_inserter(str8));
+  // Convert Big-5 string directly to UTF-8 string
+  str8 = boost::unicode::codecvt_to_u8string(big5str, big5ccvt);
+  BOOST_TEST_EQ(str8, u8str);
 
-  str8 = boost::unicode::to_utf_string<char, wchar_t/*, std::char_traits<wchar_t>*/>(uwstr);
+  // Convert Big-5 string directly to UTF-16 string
+  str16 = boost::unicode::codecvt_to_u16string(big5str, big5ccvt);
+  BOOST_TEST(str16 == u16str);
 
-  str8 = boost::unicode::to_string<boost::unicode::utf8>(uwstr);
+  // Convert Big-5 string directly to UTF-32 string
+  str32 = boost::unicode::codecvt_to_u32string(big5str, big5ccvt);
+  BOOST_TEST(str32 == u32str);
 
-  //// Convert Big-5 string directly to UTF-8 string
-  //str8 = boost::unicode::codecvt_to_u8string(big5str, big5ccvt);
-  //BOOST_TEST_EQ(str8, u8str);
-
-  //// Convert Big-5 string directly to UTF-16 string
-  //str16 = boost::unicode::codecvt_to_u16string(big5str, big5ccvt);
-  //BOOST_TEST(str16 == u16str);
-
-  //// Convert Big-5 string directly to UTF-32 string
-  //str32 = boost::unicode::codecvt_to_u32string(big5str, big5ccvt);
-  //BOOST_TEST(str32 == u32str);
-
-  //// Convert Big-5 string directly to wide string
-  //wstr.clear();
-  //wstr = boost::unicode::codecvt_to_wstring(big5str, big5ccvt);
-  //BOOST_TEST(wstr == uwstr);
+  // Convert Big-5 string directly to wide string
+  wstr.clear();
+  wstr = boost::unicode::codecvt_to_wstring(big5str, big5ccvt);
+  BOOST_TEST(wstr == uwstr);
 
   return ::boost::report_errors();
 }

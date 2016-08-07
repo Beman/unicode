@@ -28,7 +28,7 @@
 //  of types char16_t, char32_t, and wchar_t are UTF encoded. Strings and sequences of  //
 //  type char are UTF-8 encoded unless there is an associated codecvt argument, in      //
 //  which case their encoding is determined by that associated codecvt argument, and    //
-//  is typically not a UTF encoding.        //
+//  is commonly not a UTF encoding.                                                     //
 //--------------------------------------------------------------------------------------//
 
 //--------------------------------------------------------------------------------------//
@@ -124,58 +124,18 @@ namespace unicode
   //    a valid UTF sequence.
 
   //  to_string from UTF
-  template <class ToEncoding, class Error = ufffd<char>>
+  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<char16_t>>
+  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::u16string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<char32_t>>
+  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::u32string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<wchar_t>>
+  template <class ToEncoding, class Error = ufffd<encoded<ToEncoding>::type>>
     inline std::basic_string<typename encoded<ToEncoding>::type>
       to_string(boost::wstring_view v, Error eh = Error());
-
-  ////  to_u8string from UTF encoding
-  //template <class Error = ufffd<char>>
-  //  inline std::string  to_u8string(boost::string_view v, Error eh = Error());
-  //template <class Error = ufffd<char>>
-  //  inline std::string  to_u8string(boost::u16string_view v, Error eh = Error());
-  //template <class Error = ufffd<char>>
-  //  inline std::string  to_u8string(boost::u32string_view v, Error eh = Error());
-  //template <class Error = ufffd<char>>
-  //  inline std::string  to_u8string(boost::wstring_view v, Error eh = Error());
-
-  ////  to_u16string from UTF encoding
-  //template <class Error = ufffd<char16_t>>
-  //  inline std::u16string  to_u16string(boost::string_view v, Error eh = Error());
-  //template <class Error = ufffd<char16_t>>
-  //  inline std::u16string  to_u16string(boost::u16string_view v, Error eh = Error());
-  //template <class Error = ufffd<char16_t>>
-  //  inline std::u16string  to_u16string(boost::u32string_view v, Error eh = Error());
-  //template <class Error = ufffd<char16_t>>
-  //  inline std::u16string  to_u16string(boost::wstring_view v, Error eh = Error());
-
-  ////  to_u32string from UTF encoding
-  //template <class Error = ufffd<char32_t>>
-  //  inline std::u32string  to_u32string(boost::string_view v, Error eh = Error());
-  //template <class Error = ufffd<char32_t>>
-  //  inline std::u32string  to_u32string(boost::u16string_view v, Error eh = Error());
-  //template <class Error = ufffd<char32_t>>
-  //  inline std::u32string  to_u32string(boost::u32string_view v, Error eh = Error());
-  //template <class Error = ufffd<char32_t>>
-  //  inline std::u32string  to_u32string(boost::wstring_view v, Error eh = Error());
-
-  ////  to_wstring from UTF encoding
-  //template <class Error = ufffd<wchar_t>>
-  //  inline std::wstring  to_wstring(boost::string_view v, Error eh = Error());
-  //template <class Error = ufffd<wchar_t>>
-  //  inline std::wstring  to_wstring(boost::u16string_view v, Error eh = Error());
-  //template <class Error = ufffd<wchar_t>>
-  //  inline std::wstring  to_wstring(boost::u32string_view v, Error eh = Error());
-  //template <class Error = ufffd<wchar_t>>
-  //  inline std::wstring  to_wstring(boost::wstring_view v, Error eh = Error());
 
   //  narrow-to-narrow string-conversion convenience function
   template <class Error = ufffd<char>>
@@ -631,57 +591,6 @@ Encoding Form Conversion (D93) extract:
       to_string(boost::wstring_view v, Error eh)
   { return to_utf_string<typename encoded<ToEncoding>::type, wchar_t, Error>(v, eh); }
 
-  //template <class Error>
-  //inline std::string  to_u8string(boost::string_view v, Error eh)
-  //  { return to_utf_string<char, char, Error>(v, eh); }
-  //template <class Error>
-  //inline std::string  to_u8string(boost::u16string_view v, Error eh)
-  //  { return to_utf_string<char, char16_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::string  to_u8string(boost::u32string_view v, Error eh)
-  //  { return to_utf_string<char, char32_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::string  to_u8string(boost::wstring_view v, Error eh)
-  //  { return to_utf_string<char, wchar_t, Error>(v, eh); }
-
-  //template <class Error>
-  //inline std::u16string  to_u16string(boost::string_view v, Error eh)
-  //  { return to_utf_string<char16_t, char, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u16string  to_u16string(boost::u16string_view v, Error eh)
-  //  { return to_utf_string<char16_t, char16_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u16string  to_u16string(boost::u32string_view v, Error eh)
-  //  { return to_utf_string<char16_t, char32_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u16string  to_u16string(boost::wstring_view v, Error eh)
-  //  { return to_utf_string<char16_t, wchar_t, Error>(v, eh); }
-
-  //template <class Error>
-  //inline std::u32string  to_u32string(boost::string_view v, Error eh)
-  //  { return to_utf_string<char32_t, char, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u32string  to_u32string(boost::u16string_view v, Error eh)
-  //  { return to_utf_string<char32_t, char16_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u32string  to_u32string(boost::u32string_view v, Error eh)
-  //  { return to_utf_string<char32_t, char32_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::u32string  to_u32string(boost::wstring_view v, Error eh)
-  //  { return to_utf_string<char32_t, wchar_t, Error>(v, eh); }
-
-  //template <class Error>
-  //inline std::wstring  to_wstring(boost::string_view v, Error eh)
-  //  { return to_utf_string<wchar_t, char, Error>(v, eh); }
-  //template <class Error>
-  //inline std::wstring  to_wstring(boost::u16string_view v, Error eh)
-  //  { return to_utf_string<wchar_t, char16_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::wstring  to_wstring(boost::u32string_view v, Error eh)
-  //  { return to_utf_string<wchar_t, char32_t, Error>(v, eh); }
-  //template <class Error>
-  //inline std::wstring  to_wstring(boost::wstring_view v, Error eh)
-  //  { return to_utf_string<wchar_t, wchar_t, Error>(v, eh); }
   namespace detail
   {
     //  detail::codecvt_to_basic_string()
