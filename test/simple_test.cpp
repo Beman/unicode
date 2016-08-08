@@ -38,6 +38,18 @@ int cpp_main(int, char*[])
   s = boost::unicode::to_string<boost::unicode::utf8>(wstr);
   BOOST_TEST(s == u8str);
 
+  boost::unicode::convert_encoding<wchar_t>
+    (u8str.cbegin(), u8str.cend(), std::back_inserter(sw));
+  BOOST_TEST(sw == wstr);
+
+  sw.clear();
+  sw = boost::unicode::to_utf_string<wchar_t, char>(u8str);
+  BOOST_TEST(sw == wstr);
+
+  sw.clear();
+  sw = boost::unicode::to_string<boost::unicode::wide>(u8str);
+  BOOST_TEST(sw == wstr);
+
   return ::boost::report_errors();
 }
 
