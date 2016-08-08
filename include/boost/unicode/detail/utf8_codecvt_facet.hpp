@@ -191,8 +191,8 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
 
         // The unsigned char conversion is necessary in case char is
         // signed   (I learned this the hard way)
-        wchar_t ucs_result = 
-            (unsigned char)(*from++) - octet1_modifier_table[cont_octet_count];
+        wchar_t ucs_result = static_cast<wchar_t>(
+            (unsigned char)(*from++) - octet1_modifier_table[cont_octet_count]);
 
         // Invariants   : 
         //   1) At the start of the loop,   'i' continuing characters have been
@@ -208,11 +208,12 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
                 return std::codecvt_base::error;
             }
 
-            ucs_result *= (1 << 6); 
+            ucs_result = static_cast<wchar_t>(ucs_result * (1 << 6)); 
 
             // each continuing character has an extra (10xxxxxx)b attached to 
             // it that must be removed.
-            ucs_result += (unsigned char)(*from++) - 0x80;
+            ucs_result = static_cast<wchar_t>(ucs_result
+              + ((unsigned char)(*from++) - 0x80));
             ++i;
         }
 
