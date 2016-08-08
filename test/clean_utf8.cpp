@@ -46,7 +46,7 @@ int cpp_main(int argc, char* argv[])
   while (in.good())
   {
     getline(in, line);
-    string cleaned_line = boost::unicode::to_u8string(line);
+    string cleaned_line = boost::unicode::to_string<boost::unicode::utf8>(line);
     cout << cleaned_line << '\n';
   }
 
