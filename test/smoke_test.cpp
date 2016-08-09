@@ -271,11 +271,15 @@ namespace
     cout << u8s.size() << endl;
     cout << hex_string(u8s) << endl;
     wstring w = codecvt_to_wstring(u8s, ccvt_utf8);
+    BOOST_TEST(w == ws);
+    cout << ws.size() << endl;
+    cout << hex_string(ws) << endl;
     cout << w.size() << endl;
     cout << hex_string(w) << endl;
-    BOOST_TEST(w == ws);
 
     BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8) == ws);
+    cout << hex_string(codecvt_to_wstring(u8s, ccvt_utf8)) << endl;
+    cout << hex_string(ws) << endl;
     BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8, ufffd<wchar_t>()) == ws);
 
     BOOST_TEST(codecvt_to_string(ws, ccvt_utf8) == u8s);

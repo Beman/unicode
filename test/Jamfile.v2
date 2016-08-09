@@ -15,7 +15,7 @@ project
          [ run smoke_test.cpp # sources
            : # command line
            : # input files
-           : # requirements, including <test-info>always_show_run_output
+           : <test-info>always_show_run_output # requirements, such as <link>shared
            : # target name
          ]
          [ run error_handler_test.cpp ]
