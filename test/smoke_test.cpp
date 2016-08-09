@@ -21,7 +21,9 @@ using std::endl;
 #include <boost/core/lightweight_test.hpp>
 
 #include <boost/config.hpp>
-#if !defined(BOOST_NO_CXX11_HDR_CODECVT)
+// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
+// but it does not affect all_codecvt_test() uses of <codecvt>
+#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
 #  include <codecvt>  // for codecvt_utf8
 #endif
 
@@ -254,7 +256,9 @@ namespace
 
   void all_codecvt_test()
   {
-#if !defined(BOOST_NO_CXX11_HDR_CODECVT)
+// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
+// but it does not affect all_codecvt_test() uses of <codecvt>
+#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
     cout << "all_codecvt_test" << endl;
 
     //  for now, limit code points to the BMP to ensure test codecvt facet support
@@ -272,10 +276,10 @@ namespace
     BOOST_TEST(w == ws);
 
     BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8) == ws);
-    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8, std::allocator<wchar_t>()) == ws);
+    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8, ufffd<wchar_t>()) == ws);
 
     BOOST_TEST(codecvt_to_string(ws, ccvt_utf8) == u8s);
-    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8, std::allocator<char>()) == u8s);
+    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8, ufffd<char>()) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
 #endif
