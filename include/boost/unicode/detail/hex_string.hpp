@@ -17,7 +17,7 @@ namespace boost { namespace unicode { namespace detail {
   template<> struct underlying<char> { typedef unsigned char type; };
   template<> struct underlying<char16_t> { typedef boost::uint_least16_t type; };
   template<> struct underlying<char32_t> { typedef boost::uint_least32_t type; };
-#if WCHAR_MAX >= 0xFFFFFFFFu
+#if WCHAR_MAX >= 0x1FFFFFFFu
   template<> struct underlying<wchar_t> { typedef boost::uint_least32_t type; };
 #else
   template<> struct underlying<wchar_t> { typedef boost::uint_least16_t type; };

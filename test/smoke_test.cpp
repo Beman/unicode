@@ -332,7 +332,7 @@ int main()
   g<char, std::char_traits<char>>(string("std::string"));   // works
   g<char, std::char_traits<char>>("C-string");              // works
 
-
+  cout << "WCHAR_MAX: " << std::hex << WCHAR_MAX << std::dec << endl;
 
   cout << "wstr   :" << hex_string(wstr) << endl;
   cout << "u8str  :" << hex_string(u8str) << endl;

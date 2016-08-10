@@ -235,19 +235,19 @@ Encoding Form Conversion (D93) extract:
     template <> struct encoding<char32_t> { typedef utf32_tag type; };
     // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
     // encoding of wchar_t.
-# if WCHAR_MAX >= 0xFFFFFFFFu
+# if WCHAR_MAX >= 0x1FFFFFFFu
     template <> struct encoding<wchar_t>  { typedef utf32_tag type; };
-# elif WCHAR_MAX >= 0xFFFFu
+# elif WCHAR_MAX >= 0x1FFFu
     template <> struct encoding<wchar_t>  { typedef utf16_tag type; };
 # else
     template <> struct encoding<wchar_t>  { typedef utf8_tag type; };
 # endif
 
-    //  For the utf8<-->utf16 encoding conversion, which uses utf32 as an intermediary,
+    //  For any conversion that uses utf32 as an intermediary,
     //  we need a value that can never appear in valid utf32 to pass the error through
     //  to the final output type and there be detected as an error and then processed
-    //  by the appropriate error handler for the output type.
-    struct err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
+    //  by the appropriate error handler for that output type.
+    struct u32_err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
 
     //  handy constants
     constexpr char16_t high_surrogate_base = 0xD7C0u;
@@ -300,7 +300,8 @@ Encoding Form Conversion (D93) extract:
 
     template <class OutputIterator, class OutError>
     inline
-    OutputIterator char32_t_to_u16string(char32_t u32, OutputIterator result, OutError out_eh)
+    OutputIterator char32_t_to_u16string(char32_t u32, OutputIterator result,
+      OutError out_eh)
     {
       if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <=0xFFFFu))  // valid code point in BMP
       {
@@ -463,7 +464,7 @@ Encoding Form Conversion (D93) extract:
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<utf8_tag>(first, last, result, err_pass_thru(), eh);
+      return utf8_to_char32_t<utf8_tag>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -472,7 +473,7 @@ Encoding Form Conversion (D93) extract:
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<utf16_tag>(first, last, result, err_pass_thru(), eh);
+      return utf16_to_char32_t<utf16_tag>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -494,7 +495,7 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_encoding(utf16_tag, utf32_tag, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<utf32_tag>(first, last, result, eh , eh);
+      return utf16_to_char32_t<utf32_tag>(first, last, result, eh, eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
@@ -523,14 +524,18 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_encoding(utf8_tag, utf16_tag,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf8_to_char32_t<utf16_tag>(first, last, result, err_pass_thru(), eh);
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf8_to_char32_t<utf16_tag>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(utf16_tag, utf8_tag,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<utf8_tag>(first, last, result, err_pass_thru(), eh);
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf16_to_char32_t<utf8_tag>(first, last, result, u32_err_pass_thru(), eh);
     }
 
   } // namespace detail
@@ -738,12 +743,12 @@ namespace detail
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, static_cast<string_type::size_type>(to_next - to));
+        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, static_cast<string_type::size_type>(to_next - to));
+        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
         temp.append(eh());
         from = from_next + 1;  // bypass error
       }
@@ -757,7 +762,7 @@ namespace detail
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<string_type::size_type>(to_next - to));
+          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
           from = from_next;
         }
       }
@@ -806,12 +811,12 @@ namespace detail
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, static_cast<string_type::size_type>(to_next - to));
+        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, static_cast<string_type::size_type>(to_next - to));
+        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
         temp.append(eh());
         from = from_next + 1;  // bypass error
       }
@@ -825,7 +830,7 @@ namespace detail
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<string_type::size_type>(to_next - to));
+          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
           from = from_next;
         }
       }

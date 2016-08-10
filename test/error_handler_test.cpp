@@ -102,10 +102,10 @@ namespace
     BOOST_TEST((to_string<wide, errwnul>(ill_u32str) == wstr));
     BOOST_TEST((to_string<utf8, err8nul>(ill_u32str) == u8str));
 
-    //  TODO: this test is failing because std::copy is still being used, and that
-    //  fails to detect ill-formed code.
     BOOST_TEST((to_string<utf16, err16nul>(ill_u32str) == u16str));
 
+    //  TODO: this test is failing because std::copy is still being used, and that
+    //  fails to detect ill-formed code.
     BOOST_TEST((to_string<utf32, err32nul>(ill_u32str) == u32str));
     cout << "  ill_formed_utf32_source test done" << endl;
   }
