@@ -176,7 +176,7 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
     while (from != from_end && to != to_end) {
 
         // Error checking   on the first octet
-        if (invalid_leading_octet(*from)){
+        if (invalid_leading_octet(static_cast<unsigned char>(*from))){
             from_next = from;
             to_next = to;
             return std::codecvt_base::error;
@@ -184,7 +184,8 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
 
         // The first octet is   adjusted by a value dependent upon 
         // the number   of "continuing octets" encoding the character
-        const   int cont_octet_count = get_cont_octet_count(*from);
+        const unsigned int cont_octet_count = get_cont_octet_count(
+          static_cast<unsigned char>(*from));
         const   wchar_t octet1_modifier_table[] =   {
             0x00, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc
         };
@@ -198,11 +199,11 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
         //   1) At the start of the loop,   'i' continuing characters have been
         //    processed 
         //   2) *from   points to the next continuing character to be processed.
-        int i   = 0;
+        unsigned int i   = 0;
         while(i != cont_octet_count && from != from_end) {
 
             // Error checking on continuing characters
-            if (invalid_continuing_octet(*from)) {
+            if (invalid_continuing_octet(static_cast<unsigned char>(*from))) {
                 from_next   = from;
                 to_next =   to;
                 return std::codecvt_base::error;
@@ -218,7 +219,7 @@ std::codecvt_base::result utf8_codecvt_facet::do_in(
         }
 
         // If   the buffer ends with an incomplete unicode character...
-        if (from == from_end && i   != cont_octet_count) {
+        if (from == from_end && i != cont_octet_count) {
             // rewind "from" to before the current character translation
             from_next = from - (i+1); 
             to_next = to;
@@ -315,13 +316,13 @@ int utf8_codecvt_facet::do_length(
     // within the bounds so far (no greater than max_limit)
     // 3) from_next points to the octet 'last_octet_count' before the
     // last measured character.  
-    int last_octet_count=0;
+    unsigned int last_octet_count=0;
     std::size_t char_count = 0;
     const char* from_next = from;
     // Use "<" because the buffer may represent incomplete characters
     while (from_next+last_octet_count <= from_end && char_count <= max_limit) {
         from_next += last_octet_count;
-        last_octet_count = (get_octet_count(*from_next));
+        last_octet_count = (get_octet_count(static_cast<unsigned char>(*from_next)));
         ++char_count;
     }
     return static_cast<int>(from_next-from);

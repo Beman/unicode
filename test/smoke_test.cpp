@@ -5,14 +5,21 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
+#if defined(_MSC_VER)
+// MSVC -Wall is overaggresive about reporting these as warnings 
+#  pragma warning(disable:4710) // function not inlined
+#  pragma warning(disable:4514) // unreferenced inline function has been removed
+#endif
+
+
 #include <iostream>
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/unicode/string_encoding.hpp"
-#include "../include/boost/unicode/stream.hpp"
-#include "../include/boost/unicode/detail/utf8_codecvt_facet.hpp"
-#include "../include/boost/unicode/detail/hex_string.hpp"
+#include <boost/unicode/string_encoding.hpp>
+#include <boost/unicode/stream.hpp>
+#include <boost/unicode/detail/utf8_codecvt_facet.hpp>
+#include <boost/unicode/detail/hex_string.hpp>
 #include <cassert>
 #include <string>
 #include <sstream>

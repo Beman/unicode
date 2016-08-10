@@ -266,11 +266,11 @@ Encoding Form Conversion (D93) extract:
     OutputIterator char32_t_to_u8string(char32_t u32, OutputIterator result, Error eh)
     {
       if (u32 <= 0x007Fu)
-        *result++ = static_cast<unsigned char>(u32);
+        *result++ = static_cast<char>(u32);
       else if (u32 <= 0x07FFu)
       {
-        *result++ = static_cast<unsigned char>(0xC0u + (u32 >> 6));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<char>(0xC0u + (u32 >> 6));
+        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
       }
       else if (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogates are ill-formed
       {
@@ -279,16 +279,16 @@ Encoding Form Conversion (D93) extract:
       }
       else if (u32 <= 0xFFFFu)
       {
-        *result++ = static_cast<unsigned char>(0xE0u + (u32 >> 12));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<char>(0xE0u + (u32 >> 12));
+        *result++ = static_cast<char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
       }
       else if (u32 <= 0x10FFFFu)
       {
-        *result++ = static_cast<unsigned char>(0xF0u + (u32 >> 18));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 12) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<unsigned char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<char>(0xF0u + (u32 >> 18));
+        *result++ = static_cast<char>(0x80u + ((u32 >> 12) & 0x3Fu));
+        *result++ = static_cast<char>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
       }
       else  // invalid code point
       {
@@ -714,8 +714,9 @@ namespace detail
     static_assert(!std::is_same<FromCharT, ToCharT>::value,
       "FromCharT and ToCharT must not be the same type");
 
-    std::basic_string<ToCharT, ToTraits, ToAlloc> temp(a);
-    std::array<ToCharT, 8> buf;  // TODO: increase size after preliminary testing
+    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
+    string_type temp(a);
+    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
 
     //  for clarity, use the same names for ccvt.out() arguments as the standard library
     std::mbstate_t mbstate  = std::mbstate_t();
@@ -737,12 +738,12 @@ namespace detail
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, to_next - to);
+        temp.append(to, static_cast<string_type::size_type>(to_next - to));
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, to_next - to);
+        temp.append(to, static_cast<string_type::size_type>(to_next - to));
         temp.append(eh());
         from = from_next + 1;  // bypass error
       }
@@ -756,7 +757,7 @@ namespace detail
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, to_next - to);
+          temp.append(to, static_cast<string_type::size_type>(to_next - to));
           from = from_next;
         }
       }
@@ -781,8 +782,9 @@ namespace detail
     static_assert(!std::is_same<FromCharT, ToCharT>::value,
       "FromCharT and ToCharT must not be the same type");
 
-    std::basic_string<ToCharT, ToTraits, ToAlloc> temp;
-    std::array<ToCharT, 8> buf;  // TODO: increase size after preliminary testing
+    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
+    string_type temp(a);
+    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
 
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
     std::mbstate_t mbstate  = std::mbstate_t();
@@ -804,12 +806,12 @@ namespace detail
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, to_next - to);
+        temp.append(to, static_cast<string_type::size_type>(to_next - to));
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, to_next - to);
+        temp.append(to, static_cast<string_type::size_type>(to_next - to));
         temp.append(eh());
         from = from_next + 1;  // bypass error
       }
@@ -823,7 +825,7 @@ namespace detail
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, to_next - to);
+          temp.append(to, static_cast<string_type::size_type>(to_next - to));
           from = from_next;
         }
       }
