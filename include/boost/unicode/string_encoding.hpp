@@ -426,7 +426,7 @@ Encoding Form Conversion (D93) extract:
           || (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogate (which is ill-formed UTF-32)
           )
         {
-          for (const char32_t* itr = u32_eh(); *itr; ++itr)
+          for (auto itr = u32_eh(); *itr; ++itr)
             result = u32_outputer<ToCharT>(encoding_tag(), *itr, result, out_eh);
         }
         else
@@ -463,7 +463,7 @@ Encoding Form Conversion (D93) extract:
         }
         else  // invalid code point
         {
-          for (const char32_t* itr = u32_eh(); *itr; ++itr)
+          for (auto itr = u32_eh(); *itr; ++itr)
             result = u32_outputer<ToCharT>(encoding_tag(), *itr, result, out_eh);
           continue;  // no need to increment first; that has already been done above
           // cases: c was high surrogate          action: do not increment first again
