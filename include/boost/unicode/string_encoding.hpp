@@ -638,6 +638,13 @@ Encoding Form Conversion (D93) extract:
       return convert_encoding(BOOST_UNICODE_WIDE_UTF(), wide(), first, last, result, eh);
     }
 
+    //  dispatching tag
+    template <class CharT> struct dispatch;
+    template <> struct dispatch<char> { typedef utf8 tag; };
+    template <> struct dispatch<char16_t> { typedef utf16 tag; };
+    template <> struct dispatch<char32_t> { typedef utf32 tag; };
+    template <> struct dispatch<wchar_t> { typedef wide tag; };
+
   } // namespace detail
 
   //------------------------------------------------------------------------------------//
@@ -654,9 +661,9 @@ Encoding Form Conversion (D93) extract:
     // tag dispatch to the specific conversion function
     return detail::convert_encoding(
       typename  // from encoding
-       utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
+        detail::dispatch<typename std::iterator_traits<InputIterator>::value_type>::tag(),
       typename  // to encoding
-       utf_encoding<ToCharT>::type(),
+        detail::dispatch<ToCharT>::tag(),
       first, last, result, eh);
   }
 
