@@ -248,6 +248,12 @@ Encoding Form Conversion (D93) extract:
     constexpr char16_t low_surrogate_base = 0xDC00u;
     constexpr char32_t ten_bit_mask = 0x3FFu;
 
+    //  forward declare functions used to implement u32_outputer
+    template <class ToCharT, class OutputIterator, class Error> inline
+      OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh);
+    template <class ToCharT, class OutputIterator, class Error> inline
+      OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
+
     //  char32_t outputers; these helpers take a single char32_t code point, and output as
     //  many code units as needed to represent the code point. OutputT may be wchar_t for
     //  one of the overloads; which one depends on the platform.
@@ -608,28 +614,28 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_encoding(wide, utf8, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf8, first, last, result, eh);
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF(), utf8(), first, last, result, eh);
     }
  
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(wide, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf16, first, last, result, eh);
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF(), utf16(), first, last, result, eh);
     }
  
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(wide, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf32, first, last, result, eh);
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF(), utf32(), first, last, result, eh);
     }
  
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(wide, wide, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return convert_encoding(BOOST_UNICODE_WIDE_UTF, wide, first, last, result, eh);
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF(), wide(), first, last, result, eh);
     }
 
   } // namespace detail
