@@ -39,7 +39,7 @@ namespace boost
 {
 namespace unicode
 {
-  //     encodings
+  //     encoding tags
   struct narrow {};  // char
   struct wide {};    // wchar_t
   struct utf8 {};    // char
@@ -53,6 +53,20 @@ namespace unicode
   template <> struct encoded<utf8>   { typedef char type; };
   template <> struct encoded<utf16>  { typedef char16_t type; };
   template <> struct encoded<utf32>  { typedef char32_t type; };
+
+  template <class CharT> struct utf_encoding;
+  template <> struct utf_encoding<char> { typedef utf8 type; };
+  template <> struct utf_encoding<char16_t> { typedef utf16 type; };
+  template <> struct utf_encoding<char32_t> { typedef utf32 type; };
+    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
+    // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
+# if WCHAR_MAX >= 0x1FFFFFFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf32 type; };
+# elif WCHAR_MAX >= 0x1FFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf16 type; };
+# else
+    template <> struct utf_encoding<wchar_t>  { typedef utf8 type; };
+# endif
 
   //typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
@@ -219,30 +233,10 @@ Encoding Form Conversion (D93) extract:
 
 */
 
-//  convert_encoding helpers  ---------------------------------------------------------------//
+//  convert_encoding helpers  ----------------------------------------------------------//
 
   namespace detail
   {
-    //  encodings (used to tag dispatch character types to their encodings)
-    struct utf8_tag {};      
-    struct utf16_tag {};
-    struct utf32_tag {};
-
-    //  encoding type-trait
-    template <class CharT> struct encoding;
-    template <> struct encoding<char>     { typedef utf8_tag type; };
-    template <> struct encoding<char16_t> { typedef utf16_tag type; };
-    template <> struct encoding<char32_t> { typedef utf32_tag type; };
-    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
-    // encoding of wchar_t.
-# if WCHAR_MAX >= 0x1FFFFFFFu
-    template <> struct encoding<wchar_t>  { typedef utf32_tag type; };
-# elif WCHAR_MAX >= 0x1FFFu
-    template <> struct encoding<wchar_t>  { typedef utf16_tag type; };
-# else
-    template <> struct encoding<wchar_t>  { typedef utf8_tag type; };
-# endif
-
     //  For any conversion that uses utf32 as an intermediary,
     //  we need a value that can never appear in valid utf32 to pass the error through
     //  to the final output type and there be detected as an error and then processed
@@ -254,23 +248,43 @@ Encoding Form Conversion (D93) extract:
     constexpr char16_t low_surrogate_base = 0xDC00u;
     constexpr char32_t ten_bit_mask = 0x3FFu;
 
+    //  char32_t outputers; these helpers take a single char32_t code point, and output as
+    //  many code units as needed to represent the code point. OutputT may be wchar_t for
+    //  one of the overloads; which one depends on the platform.
+    template <class ToCharT, class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf32, char32_t x, OutputIterator result, Error)
+    {
+      *result++ = static_cast<ToCharT>(x);
+      return result;
+    }
+    template <class ToCharT, class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf16, char32_t x, OutputIterator result, Error eh)
+    {
+      return char32_t_to_utf16<ToCharT>(x, result, eh);
+    }
+    template <class ToCharT, class OutputIterator, class Error> inline
+    OutputIterator u32_outputer(utf8, char32_t x, OutputIterator result, Error eh)
+    {
+      return char32_t_to_utf8<ToCharT>(x, result, eh);
+    }
+
 //--------------------------------------------------------------------------------------//
 //  Algorithms for converting UTF-8 and UTF-16 to and from a single UTF-32 encoded      //
 //  char32_t; these can then be composed into complete conversion functions without     //
 //  having to duplicate a lot of complex code and without the need for intermediate     //
-//  strings, such as in a UTF-8 to UTF-16 conversion.                                   //
+//  strings. For example, in a UTF-8 to UTF-16 conversion.                              //
 //--------------------------------------------------------------------------------------//
  
-    template <class OutputIterator, class Error>
+    template <class ToCharT, class OutputIterator, class Error>
     inline
-    OutputIterator char32_t_to_u8string(char32_t u32, OutputIterator result, Error eh)
+    OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh)
     {
       if (u32 <= 0x007Fu)
-        *result++ = static_cast<char>(u32);
+        *result++ = static_cast<ToCharT>(u32);
       else if (u32 <= 0x07FFu)
       {
-        *result++ = static_cast<char>(0xC0u + (u32 >> 6));
-        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0xC0u + (u32 >> 6));
+        *result++ = static_cast<ToCharT>(0x80u + (u32 & 0x3Fu));
       }
       else if (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogates are ill-formed
       {
@@ -279,40 +293,40 @@ Encoding Form Conversion (D93) extract:
       }
       else if (u32 <= 0xFFFFu)
       {
-        *result++ = static_cast<char>(0xE0u + (u32 >> 12));
-        *result++ = static_cast<char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0xE0u + (u32 >> 12));
+        *result++ = static_cast<ToCharT>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0x80u + (u32 & 0x3Fu));
       }
       else if (u32 <= 0x10FFFFu)
       {
-        *result++ = static_cast<char>(0xF0u + (u32 >> 18));
-        *result++ = static_cast<char>(0x80u + ((u32 >> 12) & 0x3Fu));
-        *result++ = static_cast<char>(0x80u + ((u32 >> 6) & 0x3Fu));
-        *result++ = static_cast<char>(0x80u + (u32 & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0xF0u + (u32 >> 18));
+        *result++ = static_cast<ToCharT>(0x80u + ((u32 >> 12) & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0x80u + ((u32 >> 6) & 0x3Fu));
+        *result++ = static_cast<ToCharT>(0x80u + (u32 & 0x3Fu));
       }
       else  // invalid code point
       {
-        for (const char* rep = eh(); *rep; ++rep)
+        for (auto rep = eh(); *rep; ++rep)
           *result++ = *rep;
       }
       return result;
     }
 
-    template <class OutputIterator, class OutError>
+    template <class ToCharT, class OutputIterator, class OutError>
     inline
-    OutputIterator char32_t_to_u16string(char32_t u32, OutputIterator result,
+    OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result,
       OutError out_eh)
     {
       if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <=0xFFFFu))  // valid code point in BMP
       {
-        *result++ = static_cast<char16_t>(u32);  
+        *result++ = static_cast<ToCharT>(u32);  
       }
       else if (u32 >= 0x10000u && u32 <= 0x10FFFFu) // valid code point needing surrogate pair
       {
-        *result++ = static_cast<char16_t>(high_surrogate_base
-          + static_cast<char16_t>(u32 >> 10));
-        *result++ = static_cast<char16_t>(low_surrogate_base
-          + static_cast<char16_t>(u32 & ten_bit_mask));
+        *result++ = static_cast<ToCharT>(high_surrogate_base
+          + static_cast<ToCharT>(u32 >> 10));
+        *result++ = static_cast<ToCharT>(low_surrogate_base
+          + static_cast<ToCharT>(u32 & ten_bit_mask));
       }
       else  // invalid code point
       {
@@ -322,30 +336,30 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-    //  char32_t outputers
-    template <class OutputIterator, class Error> inline
-    OutputIterator u32_outputer(utf32_tag, char32_t x, OutputIterator result, Error)
+    template <class ToCharT, class OutputIterator, class OutError>
+    inline
+    OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result,
+      OutError out_eh)
     {
-      *result++ = x;
+      if (u32 < 0xD800u || (u32 >= 0xE000u && u32 <= 0x10FFFFu))  // valid code point
+      {
+        *result++ = static_cast<ToCharT>(u32);  
+      }
+      else  // invalid code point
+      {
+        for (auto itr = out_eh(); *itr; ++itr)
+          *result++ = *itr;
+      }
       return result;
     }
-    template <class OutputIterator, class Error> inline
-    OutputIterator u32_outputer(utf16_tag, char32_t x, OutputIterator result, Error eh)
-    {
-      return char32_t_to_u16string(x, result, eh);
-    }
-    template <class OutputIterator, class Error> inline
-    OutputIterator u32_outputer(utf8_tag, char32_t x, OutputIterator result, Error eh)
-    {
-      return char32_t_to_u8string(x, result, eh);
-    }
 
-    template <class OutEncoding, class InputIterator, class OutputIterator,
+    template <class ToCharT, class InputIterator, class OutputIterator,
       class U32Error, class OutError>
     inline
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
+      typedef typename utf_encoding<ToCharT>::type encoding_tag;
 
       for (; first != last;)
       {
@@ -354,7 +368,7 @@ Encoding Form Conversion (D93) extract:
         if (u32 <= 0x7Fu)  // 7-bit ASCII
         {
           //  by definition, 7-bit ASCII is valid UTF-8, so bypass further checking
-          result = u32_outputer(OutEncoding(), u32, result, out_eh);
+          result = u32_outputer<ToCharT>(encoding_tag(), u32, result, out_eh);
           continue;
         }
 
@@ -407,20 +421,22 @@ Encoding Form Conversion (D93) extract:
           )
         {
           for (const char32_t* itr = u32_eh(); *itr; ++itr)
-            result = u32_outputer(OutEncoding(), *itr, result, out_eh);
+            result = u32_outputer<ToCharT>(encoding_tag(), *itr, result, out_eh);
         }
         else
-          result = u32_outputer(OutEncoding(), u32, result, out_eh);
+          result = u32_outputer<ToCharT>(encoding_tag(), u32, result, out_eh);
       }
       return result;
     }
 
-    template <class OutEncoding, class InputIterator, class OutputIterator,
+    template <class ToCharT, class InputIterator, class OutputIterator,
       class U32Error, class OutError>
     inline
       OutputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
         OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
+      typedef typename utf_encoding<ToCharT>::type encoding_tag;
+
       for (; first != last;)
       {
         char32_t u32;
@@ -442,100 +458,178 @@ Encoding Form Conversion (D93) extract:
         else  // invalid code point
         {
           for (const char32_t* itr = u32_eh(); *itr; ++itr)
-            result = u32_outputer(OutEncoding(), *itr, result, out_eh);
+            result = u32_outputer<ToCharT>(encoding_tag(), *itr, result, out_eh);
           continue;  // no need to increment first; that has already been done above
           // cases: c was high surrogate          action: do not increment first again
           //        *first is not high surrogate  action: do not increment first again
           //        first == last                 action: do not increment first again
         }
-        result = u32_outputer(OutEncoding(), u32, result, out_eh);
+        result = u32_outputer<ToCharT>(encoding_tag(), u32, result, out_eh);
       }
       return result;
     }
 
 //--------------------------------------------------------------------------------------//
-//                      detail::convert_encoding implementation                              //
+//                      detail::convert_encoding implementation                         //
 //        overload resolution performed by tag dispatch on from_tag, to_tag             //
 //--------------------------------------------------------------------------------------//
 
+# if WCHAR_MAX >= 0x1FFFFFFFu
+#   define BOOST_UNICODE_WIDE_UTF utf32
+# elif WCHAR_MAX >= 0x1FFFu
+#   define BOOST_UNICODE_WIDE_UTF utf16  
+# else
+#   define BOOST_UNICODE_WIDE_UTF utf8
+# endif
+
+    // from utf8 -----------------------------------------------------------------------//
+
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf8_tag /*from_tag*/, utf8_tag /*to_tag*/,
+    OutputIterator convert_encoding(utf8 /*from*/, utf8 /*to*/,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<utf8_tag>(first, last, result, u32_err_pass_thru(), eh);
+      return utf8_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf16_tag, utf16_tag, 
+    OutputIterator convert_encoding(utf8, utf16,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       // pass input sequence through UTF-32 conversion to ensure the
       // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<utf16_tag>(first, last, result, u32_err_pass_thru(), eh);
+      return utf8_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf32_tag, utf32_tag, 
+    OutputIterator convert_encoding(utf8, utf32,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      // TODO: Validate output. Pass through UTF-16?
-      return std::copy(first, last, result);
+      return utf8_to_char32_t<char32_t>(first, last, result, eh, eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf8_tag, utf32_tag,
+    OutputIterator convert_encoding(utf8, wide,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf8_to_char32_t<utf32_tag>(first, last, result, eh, eh);
+      return utf8_to_char32_t<wchar_t>(first, last, result, eh, eh);
     }
 
+    // from utf16 ----------------------------------------------------------------------//
+
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf16_tag, utf32_tag, 
+    OutputIterator convert_encoding(utf16, utf8,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<utf32_tag>(first, last, result, eh, eh);
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf16_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf32_tag, utf16_tag, 
+    OutputIterator convert_encoding(utf16, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf16_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(utf16, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return utf16_to_char32_t<char32_t>(first, last, result, eh, eh);
+    }
+
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(utf16, wide, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return utf16_to_char32_t<wchar_t>(first, last, result, eh, eh);
+    }
+
+    // from utf32 ----------------------------------------------------------------------//
+
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(utf32, utf8, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       for (; first != last; ++first)
       {
-        result = char32_t_to_u16string(*first, result, eh);
+        result = char32_t_to_utf8<char>(*first, result, eh);
       }
       return result;
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf32_tag, utf8_tag, 
+    OutputIterator convert_encoding(utf32, utf16, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
       for (; first != last; ++first)
       {
-        result = char32_t_to_u8string(*first, result, eh);
+        result = char32_t_to_utf16<char16_t>(*first, result, eh);
       }
       return result;
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf8_tag, utf16_tag,
+    OutputIterator convert_encoding(utf32, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<utf16_tag>(first, last, result, u32_err_pass_thru(), eh);
+      for (; first != last; ++first)
+      {
+        result = char32_t_to_utf32<char32_t>(*first, result, eh);
+      }
+      return result;
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator convert_encoding(utf16_tag, utf8_tag,
+    OutputIterator convert_encoding(utf32, wide, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<utf8_tag>(first, last, result, u32_err_pass_thru(), eh);
+      for (; first != last; ++first)
+      {
+#       if WCHAR_MAX >= 0x1FFFFFFFu
+        result = char32_t_to_utf32<wchar_t>(*first, result, eh);
+#       elif WCHAR_MAX >= 0x1FFFu
+        result = char32_t_to_utf16<wchar_t>(*first, result, eh);
+#       else
+        result = char32_t_to_utf8<wchar_t>(*first, result, eh);
+#       endif
+      }
+      return result;
+    }
+
+    // from wide -----------------------------------------------------------------------//
+ 
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(wide, utf8, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf8, first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(wide, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf16, first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(wide, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF, utf32, first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator, class Error> inline
+    OutputIterator convert_encoding(wide, wide, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh)
+    {
+      return convert_encoding(BOOST_UNICODE_WIDE_UTF, wide, first, last, result, eh);
     }
 
   } // namespace detail
@@ -554,9 +648,9 @@ Encoding Form Conversion (D93) extract:
     // tag dispatch to the specific conversion function
     return detail::convert_encoding(
       typename  // from encoding
-       detail::encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
+       utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::type(),
       typename  // to encoding
-       detail::encoding<ToCharT>::type(),
+       utf_encoding<ToCharT>::type(),
       first, last, result, eh);
   }
 
@@ -573,7 +667,7 @@ Encoding Form Conversion (D93) extract:
     return tmp;
   }
 
-  //  to_string convenience functions  -----------------------------------//
+  //  to_string convenience functions  -------------------------------------------------//
 
   //  to_string from UTF
   template <class ToEncoding, class Error>

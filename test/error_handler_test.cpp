@@ -37,6 +37,7 @@ namespace
   const u32string  ill_u32str(U"$€𐐷𤭢\xD800");
   const wstring    ill_wstr(  L"$€𐐷𤭢\xD800");
 
+  // TODO: what was being tested here and why is it commented out?
 //void invalid_utf8_characters()
 //  {
 //    cout << "invalid_utf8_characters" << endl;
@@ -50,12 +51,6 @@ namespace
 ////    cout << std::hex << e1 << endl;
 ////    BOOST_TEST(to_string<utf16, utf8>(e1) == u"\xFFFD");
 //    cout << "  invalid_utf8_characters done" << endl;
-//  }
-
-//void ill_formed_utf32()
-//  {
-//    cout << "ill_formed_utf32 test" << endl;
-//    cout << "  ill_formed_utf32 test done" << endl;
 //  }
 
   //  User supplied error handlers
@@ -104,8 +99,6 @@ namespace
 
     BOOST_TEST((to_string<utf16, err16nul>(ill_u32str) == u16str));
 
-    //  TODO: this test is failing because std::copy is still being used, and that
-    //  fails to detect ill-formed code.
     BOOST_TEST((to_string<utf32, err32nul>(ill_u32str) == u32str));
     cout << "  ill_formed_utf32_source test done" << endl;
   }
