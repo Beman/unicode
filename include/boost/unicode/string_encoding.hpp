@@ -512,14 +512,14 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_encoding(utf8, utf32,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf8_to_char32_t<char32_t>(first, last, result, eh, eh);
+      return utf8_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(utf8, wide,
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf8_to_char32_t<wchar_t>(first, last, result, eh, eh);
+      return utf8_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     // from utf16 ----------------------------------------------------------------------//
@@ -546,14 +546,14 @@ Encoding Form Conversion (D93) extract:
     OutputIterator convert_encoding(utf16, utf32, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<char32_t>(first, last, result, eh, eh);
+      return utf16_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     template <class InputIterator, class OutputIterator, class Error> inline
     OutputIterator convert_encoding(utf16, wide, 
       InputIterator first, InputIterator last, OutputIterator result, Error eh)
     {
-      return utf16_to_char32_t<wchar_t>(first, last, result, eh, eh);
+      return utf16_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
     }
 
     // from utf32 ----------------------------------------------------------------------//
@@ -564,7 +564,7 @@ Encoding Form Conversion (D93) extract:
     {
       for (; first != last; ++first)
       {
-        result = char32_t_to_utf8<char>(*first, result, eh);
+        result = char32_t_to_utf8<char>(static_cast<char32_t>(*first), result, eh);
       }
       return result;
     }
@@ -575,7 +575,7 @@ Encoding Form Conversion (D93) extract:
     {
       for (; first != last; ++first)
       {
-        result = char32_t_to_utf16<char16_t>(*first, result, eh);
+        result = char32_t_to_utf16<char16_t>(static_cast<char32_t>(*first), result, eh);
       }
       return result;
     }
@@ -586,7 +586,7 @@ Encoding Form Conversion (D93) extract:
     {
       for (; first != last; ++first)
       {
-        result = char32_t_to_utf32<char32_t>(*first, result, eh);
+        result = char32_t_to_utf32<char32_t>(static_cast<char32_t>(*first), result, eh);
       }
       return result;
     }
@@ -598,11 +598,11 @@ Encoding Form Conversion (D93) extract:
       for (; first != last; ++first)
       {
 #       if WCHAR_MAX >= 0x1FFFFFFFu
-        result = char32_t_to_utf32<wchar_t>(*first, result, eh);
+        result = char32_t_to_utf32<wchar_t>(static_cast<char32_t>(*first), result, eh);
 #       elif WCHAR_MAX >= 0x1FFFu
-        result = char32_t_to_utf16<wchar_t>(*first, result, eh);
+        result = char32_t_to_utf16<wchar_t>(static_cast<char32_t>(*first), result, eh);
 #       else
-        result = char32_t_to_utf8<wchar_t>(*first, result, eh);
+        result = char32_t_to_utf8<wchar_t>(static_cast<char32_t>(*first), result, eh);
 #       endif
       }
       return result;
