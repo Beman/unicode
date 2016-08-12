@@ -250,6 +250,8 @@ Encoding Form Conversion (D93) extract:
 
     //  forward declare functions used to implement u32_outputer
     template <class ToCharT, class OutputIterator, class Error> inline
+      OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result, Error eh);
+    template <class ToCharT, class OutputIterator, class Error> inline
       OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh);
     template <class ToCharT, class OutputIterator, class Error> inline
       OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
@@ -258,10 +260,9 @@ Encoding Form Conversion (D93) extract:
     //  many code units as needed to represent the code point. OutputT may be wchar_t for
     //  one of the overloads; which one depends on the platform.
     template <class ToCharT, class OutputIterator, class Error> inline
-    OutputIterator u32_outputer(utf32, char32_t x, OutputIterator result, Error)
+    OutputIterator u32_outputer(utf32, char32_t x, OutputIterator result, Error eh)
     {
-      *result++ = static_cast<ToCharT>(x);
-      return result;
+      return char32_t_to_utf32<ToCharT>(x, result, eh);
     }
     template <class ToCharT, class OutputIterator, class Error> inline
     OutputIterator u32_outputer(utf16, char32_t x, OutputIterator result, Error eh)

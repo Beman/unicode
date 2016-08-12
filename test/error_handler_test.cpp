@@ -18,6 +18,7 @@ using std::endl;
 #include <boost/core/lightweight_test.hpp>
 
 using namespace boost::unicode;
+using boost::unicode::detail::hex_string;
 using std::string;
 using std::wstring;
 using std::u16string;
