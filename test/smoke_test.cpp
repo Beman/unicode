@@ -27,12 +27,12 @@ using std::endl;
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 
-#include <boost/config.hpp>
-// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
-// but it does not affect all_codecvt_test() uses of <codecvt>
-#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
-#  include <codecvt>  // for codecvt_utf8
-#endif
+//#include <boost/config.hpp>
+//// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
+//// but it does not affect all_codecvt_test() uses of <codecvt>
+//#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
+//#  include <codecvt>  // for codecvt_utf8
+//#endif
 
 using namespace boost::unicode;
 using namespace boost::unicode::detail;
@@ -263,9 +263,6 @@ namespace
 
   void all_codecvt_test()
   {
-// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
-// but it does not affect all_codecvt_test() uses of <codecvt>
-#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
     cout << "all_codecvt_test" << endl;
 
     //  for now, limit code points to the BMP to ensure test codecvt facet support
@@ -273,27 +270,26 @@ namespace
     const string     u8s(u8"$€Ꭶ❄");
     const wstring      ws(L"$€Ꭶ❄");
 
-    std::codecvt_utf8<wchar_t> ccvt_utf8; 
+    boost::unicode::detail::utf8_codecvt_facet ccvt(0);
 
     cout << u8s.size() << endl;
     cout << hex_string(u8s) << endl;
-    wstring w = codecvt_to_wstring(u8s, ccvt_utf8);
+    wstring w = codecvt_to_wstring(u8s, ccvt);
     BOOST_TEST(w == ws);
     cout << ws.size() << endl;
     cout << hex_string(ws) << endl;
     cout << w.size() << endl;
     cout << hex_string(w) << endl;
 
-    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8) == ws);
-    cout << hex_string(codecvt_to_wstring(u8s, ccvt_utf8)) << endl;
+    BOOST_TEST(codecvt_to_wstring(u8s, ccvt) == ws);
+    cout << hex_string(codecvt_to_wstring(u8s, ccvt)) << endl;
     cout << hex_string(ws) << endl;
-    BOOST_TEST(codecvt_to_wstring(u8s, ccvt_utf8, ufffd<wchar_t>()) == ws);
+    BOOST_TEST(codecvt_to_wstring(u8s, ccvt, ufffd<wchar_t>()) == ws);
 
-    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8) == u8s);
-    BOOST_TEST(codecvt_to_string(ws, ccvt_utf8, ufffd<char>()) == u8s);
+    BOOST_TEST(codecvt_to_string(ws, ccvt) == u8s);
+    BOOST_TEST(codecvt_to_string(ws, ccvt, ufffd<char>()) == u8s);
 
     cout << "  all_codecvt_test done" << endl;
-#endif
   }
 
   //  Probe CharTraits template argument deduction
