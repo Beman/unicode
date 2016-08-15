@@ -152,6 +152,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\simple_test.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\boost\unicode\error.hpp" />
+    <ClInclude Include="..\..\..\include\boost\unicode\stream.hpp" />
+    <ClInclude Include="..\..\..\include\boost\unicode\string_encoding.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

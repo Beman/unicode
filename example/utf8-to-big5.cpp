@@ -16,13 +16,15 @@
 #include <boost/core/lightweight_test.hpp>
 #include <cvt/big5>
 
+using namespace boost::unicode;
+
 int cpp_main(int, char*[])
 {
   const std::string u8str(u8"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
   const std::u16string u16str(u"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
   const std::u32string u32str(U"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
   const std::wstring uwstr(L"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
-  const std::string big5str("\u00A2\u00B9"  // big-5 encoded romanⅠ-Ⅹ  
+  const std::string big5str("\u00A2\u00B9"  // big-5 encoded roman Ⅰ-Ⅹ  
                             "\u00A2\u00BA"
                             "\u00A2\u00BB"
                             "\u00A2\u00BC"
@@ -41,11 +43,11 @@ int cpp_main(int, char*[])
   // Example 1 (converts UTF-8 string to Big-5 string via wstring)
   //   requires wstring encoding be UTF-8, UTF-16, or  UTF-32
   stdext::cvt::codecvt_big5<wchar_t> big5ccvt;
-  wstr = boost::unicode::to_string<boost::unicode::wide>(u8str);
-  str = boost::unicode::codecvt_to_string(wstr, big5ccvt);
+  wstr = recode<wide>(u8str);
+  str = recode_to_narrow(wstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
-  //std::cout << boost::unicode::detail::hex_string(str) << '\n';
-  //std::cout << boost::unicode::detail::hex_string(big5str) << '\n';
+  //std::cout << detail::hex_string(str) << '\n';
+  //std::cout << detail::hex_string(big5str) << '\n';
 
   // Example 2 (converts UTF-8 string to Big-5 string via wstring)
   //   assumes wstring encoding is UCS2/UCS4
@@ -59,39 +61,39 @@ int cpp_main(int, char*[])
 
   // Convert UTF-8 string directly to Big-5 string)
   str.clear();
-  str = boost::unicode::codecvt_to_string(u8str, big5ccvt);
+  str = recode_to_narrow(u8str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert UTF-16 string directly to Big-5 string)
   str.clear();
-  str = boost::unicode::codecvt_to_string(u16str, big5ccvt);
+  str = recode_to_narrow(u16str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert UTF-32 string directly to Big-5 string)
   str.clear();
-  str = boost::unicode::codecvt_to_string(u32str, big5ccvt);
+  str = recode_to_narrow(u32str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert wide string directly to Big-5 string)
   str.clear();
-  str = boost::unicode::codecvt_to_string(uwstr, big5ccvt);
+  str = recode_to_narrow(uwstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert Big-5 string directly to UTF-8 string
-  str8 = boost::unicode::codecvt_to_u8string(big5str, big5ccvt);
+  str8 = recode_from_narrow<utf8>(big5str, big5ccvt);
   BOOST_TEST_EQ(str8, u8str);
 
   // Convert Big-5 string directly to UTF-16 string
-  str16 = boost::unicode::codecvt_to_u16string(big5str, big5ccvt);
+  str16 = recode_from_narrow<utf16>(big5str, big5ccvt);
   BOOST_TEST(str16 == u16str);
 
   // Convert Big-5 string directly to UTF-32 string
-  str32 = boost::unicode::codecvt_to_u32string(big5str, big5ccvt);
+  str32 = recode_from_narrow<utf32>(big5str, big5ccvt);
   BOOST_TEST(str32 == u32str);
 
   // Convert Big-5 string directly to wide string
   wstr.clear();
-  wstr = boost::unicode::codecvt_to_wstring(big5str, big5ccvt);
+  wstr = recode_from_narrow<wide>(big5str, big5ccvt);
   BOOST_TEST(wstr == uwstr);
 
   return ::boost::report_errors();
