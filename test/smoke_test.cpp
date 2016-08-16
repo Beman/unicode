@@ -27,13 +27,6 @@ using std::endl;
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 
-//#include <boost/config.hpp>
-//// there is a bug in MSVC 14.0 that causes BOOST_NO_CXX11_HDR_CODECVT to be defined,
-//// but it does not affect all_codecvt_test() uses of <codecvt>
-//#if !defined(BOOST_NO_CXX11_HDR_CODECVT) || (defined(_CPPLIB_VER) && (_CPPLIB_VER == 650))
-//#  include <codecvt>  // for codecvt_utf8
-//#endif
-
 using namespace boost::unicode;
 using namespace boost::unicode::detail;
 using std::string;
@@ -259,7 +252,6 @@ namespace
 
     cout << "  all_utf_test done" << endl;
   }
-
 
   void all_codecvt_test()
   {

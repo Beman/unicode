@@ -40,17 +40,19 @@ namespace boost
 namespace unicode
 {
   //     encoding tags
-  struct wide {};    // wchar_t
+  struct narrow {};  // char
   struct utf8 {};    // char
   struct utf16 {};   // char16_t
   struct utf32 {};   // char32_t
+  struct wide {};    // wchar_t
 
   //  encoding value_type type-trait
   template <class Encoding> struct encoded;
-  template <> struct encoded<wide>   { typedef wchar_t type; };
+  template <> struct encoded<narrow> { typedef char type; };
   template <> struct encoded<utf8>   { typedef char type; };
   template <> struct encoded<utf16>  { typedef char16_t type; };
   template <> struct encoded<utf32>  { typedef char32_t type; };
+  template <> struct encoded<wide>   { typedef wchar_t type; };
 
   template <class CharT> struct utf_encoding;
   template <> struct utf_encoding<char> { typedef utf8 type; };
@@ -780,7 +782,7 @@ Encoding Form Conversion (D93) extract:
       const ccvt_type& from_ccvt,
       const ccvt_type& to_ccvt, const Error eh)
   {
-    return codecvt_to_basic_string(
+    return codecvt_to_basic_string<char, wchar_t, ccvt_type>(
       recode_from_narrow<wide>(v, from_ccvt, detail::wide_err_pass_thru()), to_ccvt, eh);
   }
 
