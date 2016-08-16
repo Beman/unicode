@@ -40,34 +40,12 @@ namespace boost
 {
 namespace unicode
 {
-  //     encoding tags
-  struct narrow {};  // char, encoding determined by codecvt facet
-  struct utf8 {};    // char, UTF-8 encoded
-  struct utf16 {};   // char16_t, UTF-16 encoded
-  struct utf32 {};   // char32_t, UTF-32 encoded
-  struct wide {};    // wchar_t, UTF-8, 16, or 32 encoded
-
-  //  encoding value_type type-trait
-  template <class Encoding> struct encoded;
-  template <> struct encoded<narrow> { typedef char type; };
-  template <> struct encoded<utf8>   { typedef char type; };
-  template <> struct encoded<utf16>  { typedef char16_t type; };
-  template <> struct encoded<utf32>  { typedef char32_t type; };
-  template <> struct encoded<wide>   { typedef wchar_t type; };
-
-  template <class CharT> struct utf_encoding;
-  template <> struct utf_encoding<char> { typedef utf8 type; };
-  template <> struct utf_encoding<char16_t> { typedef utf16 type; };
-  template <> struct utf_encoding<char32_t> { typedef utf32 type; };
-    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
-    // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
-# if WCHAR_MAX >= 0x1FFFFFFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf32 type; };
-# elif WCHAR_MAX >= 0x1FFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf16 type; };
-# else
-    template <> struct utf_encoding<wchar_t>  { typedef utf8 type; };
-# endif
+  //  encoding tags and value_types
+  struct narrow {typedef char     value_type;}; // encoding determined by codecvt facet
+  struct utf8   {typedef char     value_type;}; // UTF-8 encoded
+  struct utf16  {typedef char16_t value_type;}; // UTF-16 encoded
+  struct utf32  {typedef char32_t value_type;}; // UTF-32 encoded
+  struct wide   {typedef wchar_t  value_type;}; // UTF-8, 16, or 32, platform determined
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
 
@@ -131,22 +109,22 @@ namespace unicode
   //  string-conversion convenience functions  -----------------------------------------//
 
   //  UTF-to-UTF string-conversion convenience functions
-  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+  template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+  template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::u16string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+  template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::u32string_view v, Error eh = Error());
-  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+  template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::wstring_view v, Error eh = Error());
 
   //  narrow-to-UTF string-conversion convenience function
-  template <class ToEncoding, class Error = ufffd<typename encoded<ToEncoding>::type>>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+  template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_from_narrow(boost::string_view v,
         const ccvt_type& ccvt, const Error eh=Error());
  
@@ -227,6 +205,20 @@ Encoding Form Conversion (D93) extract:
     //  to the final output type and there be detected as an error and then processed
     //  by the appropriate error handler for that output type.
     struct u32_err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
+
+    template <class CharT> struct utf_encoding;
+    template <> struct utf_encoding<char>     { typedef utf8 tag; };
+    template <> struct utf_encoding<char16_t> { typedef utf16 tag; };
+    template <> struct utf_encoding<char32_t> { typedef utf32 tag; };
+    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
+    // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
+# if WCHAR_MAX >= 0x1FFFFFFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
+# elif WCHAR_MAX >= 0x1FFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
+# else
+    template <> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
+# endif
 
     //  handy constants
     constexpr char16_t high_surrogate_base = 0xD7C0u;
@@ -351,7 +343,7 @@ Encoding Form Conversion (D93) extract:
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      typedef typename utf_encoding<ToCharT>::type encoding_tag;
+      typedef typename utf_encoding<ToCharT>::tag encoding_tag;
 
       for (; first != last;)
       {
@@ -427,7 +419,7 @@ Encoding Form Conversion (D93) extract:
       OutputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
         OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      typedef typename utf_encoding<ToCharT>::type encoding_tag;
+      typedef typename utf_encoding<ToCharT>::tag encoding_tag;
 
       for (; first != last;)
       {
@@ -670,24 +662,24 @@ Encoding Form Conversion (D93) extract:
 
   //  recode from UTF
   template <class ToEncoding, class Error>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::string_view v, Error eh)
-  { return to_utf_string<typename encoded<ToEncoding>::type, char, Error>(v, eh); }
+  { return to_utf_string<typename ToEncoding::value_type, char, Error>(v, eh); }
 
   template <class ToEncoding, class Error>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::u16string_view v, Error eh)
-  { return to_utf_string<typename encoded<ToEncoding>::type, char16_t, Error>(v, eh); }
+  { return to_utf_string<typename ToEncoding::value_type, char16_t, Error>(v, eh); }
 
   template <class ToEncoding, class Error>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::u32string_view v, Error eh)
-  { return to_utf_string<typename encoded<ToEncoding>::type, char32_t, Error>(v, eh); }
+  { return to_utf_string<typename ToEncoding::value_type, char32_t, Error>(v, eh); }
 
   template <class ToEncoding, class Error>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode(boost::wstring_view v, Error eh)
-  { return to_utf_string<typename encoded<ToEncoding>::type, wchar_t, Error>(v, eh); }
+  { return to_utf_string<typename ToEncoding::value_type, wchar_t, Error>(v, eh); }
 
   namespace detail
   {
@@ -736,7 +728,7 @@ Encoding Form Conversion (D93) extract:
 
   //  narrow-to-UTF string-conversion convenience function
   template <class ToEncoding, class Error>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_from_narrow(boost::string_view v,
         const ccvt_type& ccvt, const Error eh)
     {

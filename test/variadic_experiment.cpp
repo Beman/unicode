@@ -6,7 +6,7 @@
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/core/lightweight_test.hpp>
 
-using boost::unicode::encoded;
+//using boost::unicode::encoded;
 using boost::unicode::narrow;
 using boost::unicode::utf8;
 using boost::unicode::utf16;
@@ -31,9 +31,9 @@ namespace test
     template<> struct folded<wide>   { typedef utf_tag tag; };
 
   template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_dispatch(utf_tag, utf_tag,
-        boost::basic_string_view<typename encoded<FromEncoding>::type> v,
+        boost::basic_string_view<typename FromEncoding::value_type> v,
         const T& ... args)
     {
       static_assert(sizeof...(args) <= 1, "too many arguments");
@@ -41,30 +41,27 @@ namespace test
     }
 
   template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_dispatch(narrow_tag, utf_tag,
-        boost::basic_string_view<typename encoded<FromEncoding>::type> v,
-        const T& ... args)
+        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
     {
       static_assert(sizeof...(args) <= 2, "too many arguments");
       return boost::unicode::recode_to_narrow(v, args ...);
     }
 
   template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_dispatch(utf_tag, narrow_tag, 
-        boost::basic_string_view<typename encoded<FromEncoding>::type> v,
-        const T& ... args)
+        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
     {
       static_assert(sizeof...(args) <= 2, "too many arguments");
       return boost::unicode::recode_from_narrow<ToEncoding>(v, args ...);
     }
 
   template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename encoded<ToEncoding>::type>
+    inline std::basic_string<typename ToEncoding::value_type>
       recode_dispatch(narrow_tag, narrow_tag,
-        boost::basic_string_view<typename encoded<FromEncoding>::type> v,
-        const T& ... args)
+        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
     {
       static_assert(sizeof...(args) <= 3, "too many arguments");
       return boost::unicode::recode_narrow_to_narrow(v, args ...);
@@ -73,8 +70,8 @@ namespace test
   }  // detail
 
   template <class ToEncoding, class FromEncoding, class ... T>
-  inline std::basic_string<typename encoded<ToEncoding>::type>
-    recode(boost::basic_string_view<typename encoded<FromEncoding>::type> v,
+  inline std::basic_string<typename ToEncoding::value_type>
+    recode(boost::basic_string_view<typename FromEncoding::value_type> v, 
       const T& ... args)
   {
     return detail::recode_dispatch<ToEncoding, FromEncoding>(
