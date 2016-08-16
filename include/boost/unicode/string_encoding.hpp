@@ -22,6 +22,7 @@
 # include <boost/unicode/error.hpp>
 #endif
 
+// TODO: update this:
 //--------------------------------------------------------------------------------------//
 //  This header deals with both Unicode Transformation Format (UTF) encodings and       //
 //  non-UTF encodings of strings and other character sequences. Strings and sequences   //
@@ -40,11 +41,11 @@ namespace boost
 namespace unicode
 {
   //     encoding tags
-  struct narrow {};  // char
-  struct utf8 {};    // char
-  struct utf16 {};   // char16_t
-  struct utf32 {};   // char32_t
-  struct wide {};    // wchar_t
+  struct narrow {};  // char, encoding determined by codecvt facet
+  struct utf8 {};    // char, UTF-8 encoded
+  struct utf16 {};   // char16_t, UTF-16 encoded
+  struct utf32 {};   // char32_t, UTF-32 encoded
+  struct wide {};    // wchar_t, UTF-8, 16, or 32 encoded
 
   //  encoding value_type type-trait
   template <class Encoding> struct encoded;
