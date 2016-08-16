@@ -78,17 +78,64 @@ namespace test
       detail::folded<ToEncoding>::tag(), detail::folded<FromEncoding>::tag(),
       v, args ...);
   }
-}
+}  // namespace test
+
+namespace
+{
+  const std::string     u8str(u8"$€𐐷𤭢");
+  const std::u16string  u16str(u"$€𐐷𤭢");
+  const std::u32string  u32str(U"$€𐐷𤭢");
+  const std::wstring    wstr(  L"$€𐐷𤭢");
+  const std::string     nstr( u8"$€𐐷𤭢");
+
+  const std::string     ill_u8str
+    = {0x24,                                      // $
+    char(0xE2),char(0x82),                        // €
+    char(0xAC),                                   // ill-formed
+    char(0xF0),char(0x90),char(0x90),char(0xB7),  // 𐐷
+    char(0xF0),char(0xA4),char(0xAD),char(0xA2),  // 𤭢
+    char(0xED),char(0xA0),char(0x80)};            // ill-formed
+  const std::u16string  ill_u16str(u"$€𐐷𤭢\xD800");
+  const std::u32string  ill_u32str(U"$€𐐷𤭢\xD800");
+  const std::wstring    ill_wstr(  L"$€𐐷𤭢\xD800");
+
+  //  User supplied error handlers
+  struct err8  { const char* operator()() const     { return "*ill*"; } };
+  struct err16 { const char16_t* operator()() const { return u"*ill*"; } };
+  struct err32 { const char32_t* operator()() const { return U"*ill*"; } };
+  struct errw  { const wchar_t* operator()() const  { return L"*ill*"; } };
+  struct err8nul  { const char* operator()() const     { return ""; } };
+  struct err16nul { const char16_t* operator()() const { return u""; } };
+  struct err32nul { const char32_t* operator()() const { return U""; } };
+  struct errwnul  { const wchar_t* operator()() const  { return L""; } };
+
+  //  The ancient utf8 codecvt facet used for testing works only for the basic
+  //  multilingual plane (BMP). Thus for any tests that involve narrow strings,
+  //  test characters must be limited to the BMP.
+
+  const std::string     u8bmp(u8"$€Ꭶ❄");
+  const std::u16string u16bmp( u"$€Ꭶ❄");
+  const std::u32string u32bmp( U"$€Ꭶ❄");
+  const std::wstring     wbmp( L"$€Ꭶ❄");
+  const std::string      nbmp(u8"$€Ꭶ❄");
+
+  const std::string     ill_u8bmp
+    = {0x24,                                      // $
+    char(0xE2),char(0x82),                        // €
+    char(0xAC),                                   // ill-formed
+    char(0xE1),char(0x8E),char(0xA6),             // Ꭶ
+    char(0xE2),char(0x9D),char(0x84),             // ❄
+    char(0xED),char(0xA0),char(0x80)};            // ill-formed
+  const std::u16string  ill_u16bmp(u"$€Ꭶ❄\xD800");
+  const std::u32string  ill_u32bmp(U"$€Ꭶ❄\xD800");
+  const std::wstring    ill_wbmp(  L"$€Ꭶ❄\xD800");
+
+  boost::unicode::detail::utf8_codecvt_facet ccvt(0);
+
+}  // unnamed namespace
 
 int cpp_main(int, char*[])
 {
-  //  for now, limit code points to the BMP to ensure test codecvt facet support
-  const std::string     u8str(u8"$€Ꭶ❄");
-  const std::u16string u16str(u"$€Ꭶ❄");
-  const std::u32string u32str(U"$€Ꭶ❄");
-  const std::wstring     wstr(L"$€Ꭶ❄");
-
-  boost::unicode::detail::utf8_codecvt_facet ccvt(0);
 
   // UTF to UTF
   {
@@ -105,25 +152,25 @@ int cpp_main(int, char*[])
     s = test::recode<utf8, wide>(wstr);
     BOOST_TEST(s == u8str);
     s.clear();
-    s = test::recode<utf8, narrow>(u8str, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<utf8, narrow>(nbmp, ccvt);
+    BOOST_TEST(s == u8bmp);
   }
   {
     std::string s;
-    s = test::recode<narrow, utf8>(u8str, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<narrow, utf8>(u8bmp, ccvt);
+    BOOST_TEST(s == nbmp);
     s.clear();
-    s = test::recode<narrow, utf16>(u16str, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<narrow, utf16>(u16bmp, ccvt);
+    BOOST_TEST(s == nbmp);
     s.clear();
-    s = test::recode<narrow, utf32>(u32str, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<narrow, utf32>(u32bmp, ccvt);
+    BOOST_TEST(s == nbmp);
     s.clear();
-    s = test::recode<narrow, wide>(wstr, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<narrow, wide>(wbmp, ccvt);
+    BOOST_TEST(s == nbmp);
     s.clear();
-    s = test::recode<narrow, narrow>(u8str, ccvt, ccvt);
-    BOOST_TEST(s == u8str);
+    s = test::recode<narrow, narrow>(nbmp, ccvt, ccvt);
+    BOOST_TEST(s == nbmp);
   }
   {
     std::u16string s;
@@ -139,8 +186,8 @@ int cpp_main(int, char*[])
     s = test::recode<utf16, wide>(wstr);
     BOOST_TEST(s == u16str);
     s.clear();
-    s = test::recode<utf16, narrow>(u8str, ccvt);
-    BOOST_TEST(s == u16str);
+    s = test::recode<utf16, narrow>(nbmp, ccvt);
+    BOOST_TEST(s == u16bmp);
   }
   {
     std::u32string s;
@@ -156,8 +203,8 @@ int cpp_main(int, char*[])
     s = test::recode<utf32, wide>(wstr);
     BOOST_TEST(s == u32str);
     s.clear();
-    s = test::recode<utf32, narrow>(u8str, ccvt);
-    BOOST_TEST(s == u32str);
+    s = test::recode<utf32, narrow>(nbmp, ccvt);
+    BOOST_TEST(s == u32bmp);
   }
   {
     std::wstring s;
@@ -173,8 +220,8 @@ int cpp_main(int, char*[])
     s = test::recode<wide, wide>(wstr);
     BOOST_TEST(s == wstr);
     s.clear();
-    s = test::recode<wide, narrow>(u8str, ccvt);
-    BOOST_TEST(s == wstr);
+    s = test::recode<wide, narrow>(nbmp, ccvt);
+    BOOST_TEST(s == wbmp);
   }
 
   return ::boost::report_errors();
