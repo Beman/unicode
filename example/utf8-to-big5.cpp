@@ -44,7 +44,7 @@ int cpp_main(int, char*[])
   //   requires wstring encoding be UTF-8, UTF-16, or  UTF-32
   stdext::cvt::codecvt_big5<wchar_t> big5ccvt;
   wstr = recode<wide, utf8>(u8str);
-  str = recode<n(wstr, big5ccvt);
+  str = recode<narrow, wide>(wstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
   //std::cout << detail::hex_string(str) << '\n';
   //std::cout << detail::hex_string(big5str) << '\n';
@@ -61,39 +61,39 @@ int cpp_main(int, char*[])
 
   // Convert UTF-8 string directly to Big-5 string)
   str.clear();
-  str = recode_to_narrow(u8str, big5ccvt);
+  str = recode<narrow, utf8>(u8str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert UTF-16 string directly to Big-5 string)
   str.clear();
-  str = recode_to_narrow(u16str, big5ccvt);
+  str = recode<narrow, utf16>(u16str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert UTF-32 string directly to Big-5 string)
   str.clear();
-  str = recode_to_narrow(u32str, big5ccvt);
+  str = recode<narrow, utf32>(u32str, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert wide string directly to Big-5 string)
   str.clear();
-  str = recode_to_narrow(uwstr, big5ccvt);
+  str = recode<narrow, wide>(uwstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
 
   // Convert Big-5 string directly to UTF-8 string
-  str8 = recode_from_narrow<utf8>(big5str, big5ccvt);
+  str8 = recode<utf8, narrow>(big5str, big5ccvt);
   BOOST_TEST_EQ(str8, u8str);
 
   // Convert Big-5 string directly to UTF-16 string
-  str16 = recode_from_narrow<utf16>(big5str, big5ccvt);
+  str16 = recode<utf16, narrow>(big5str, big5ccvt);
   BOOST_TEST(str16 == u16str);
 
   // Convert Big-5 string directly to UTF-32 string
-  str32 = recode_from_narrow<utf32>(big5str, big5ccvt);
+  str32 = recode<utf32, narrow>(big5str, big5ccvt);
   BOOST_TEST(str32 == u32str);
 
   // Convert Big-5 string directly to wide string
   wstr.clear();
-  wstr = recode_from_narrow<wide>(big5str, big5ccvt);
+  wstr = recode<wide, narrow>(big5str, big5ccvt);
   BOOST_TEST(wstr == uwstr);
 
   return ::boost::report_errors();
