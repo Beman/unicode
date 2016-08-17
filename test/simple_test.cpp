@@ -28,28 +28,28 @@ int cpp_main(int, char*[])
   std::u32string s32;
 
 
-  convert_encoding<char>
+  recode_utf<char>
     (wstr.cbegin(), wstr.cend(), std::back_inserter(s));
   BOOST_TEST(s == u8str);
 
   s.clear();
-  s = to_utf_string<char, wchar_t>(wstr);
+  s = recode_utf_string<char, wchar_t>(wstr);
   BOOST_TEST(s == u8str);
 
   s.clear();
-  s = recode<utf8>(wstr);
+  s = recode<utf8, wide>(wstr);
   BOOST_TEST(s == u8str);
 
-  convert_encoding<wchar_t>
+  recode_utf<wchar_t>
     (u8str.cbegin(), u8str.cend(), std::back_inserter(sw));
   BOOST_TEST(sw == wstr);
 
   sw.clear();
-  sw = to_utf_string<wchar_t, char>(u8str);
+  sw = recode_utf_string<wchar_t, char>(u8str);
   BOOST_TEST(sw == wstr);
 
   sw.clear();
-  sw = recode<wide>(u8str);
+  sw = recode<wide, utf8>(u8str);
   BOOST_TEST(sw == wstr);
 
   return ::boost::report_errors();

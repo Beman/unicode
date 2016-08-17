@@ -43,8 +43,8 @@ int cpp_main(int, char*[])
   // Example 1 (converts UTF-8 string to Big-5 string via wstring)
   //   requires wstring encoding be UTF-8, UTF-16, or  UTF-32
   stdext::cvt::codecvt_big5<wchar_t> big5ccvt;
-  wstr = recode<wide>(u8str);
-  str = recode_to_narrow(wstr, big5ccvt);
+  wstr = recode<wide, utf8>(u8str);
+  str = recode<n(wstr, big5ccvt);
   BOOST_TEST_EQ(str, big5str);
   //std::cout << detail::hex_string(str) << '\n';
   //std::cout << detail::hex_string(big5str) << '\n';

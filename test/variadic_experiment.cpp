@@ -6,79 +6,10 @@
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/core/lightweight_test.hpp>
 
-//using boost::unicode::encoded;
-using boost::unicode::narrow;
-using boost::unicode::utf8;
-using boost::unicode::utf16;
-using boost::unicode::utf32;
-using boost::unicode::wide;
+using namespace boost::unicode;
 using boost::unicode::detail::hex_string;
 using std::cout;
 using std::endl;
-
-namespace test
-{
-  namespace detail
-  {
-    struct utf_tag {};
-    struct narrow_tag {};
-
-    template <class Encoding> struct folded;
-    template<> struct folded<narrow> { typedef narrow_tag tag; };
-    template<> struct folded<utf8>   { typedef utf_tag tag; };
-    template<> struct folded<utf16>  { typedef utf_tag tag; };
-    template<> struct folded<utf32>  { typedef utf_tag tag; };
-    template<> struct folded<wide>   { typedef utf_tag tag; };
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(utf_tag, utf_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v,
-        const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 1, "too many arguments");
-      return boost::unicode::recode<ToEncoding>(v, args ...);
-    }
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(narrow_tag, utf_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 2, "too many arguments");
-      return boost::unicode::recode_to_narrow(v, args ...);
-    }
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(utf_tag, narrow_tag, 
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 2, "too many arguments");
-      return boost::unicode::recode_from_narrow<ToEncoding>(v, args ...);
-    }
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(narrow_tag, narrow_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 3, "too many arguments");
-      return boost::unicode::recode_narrow_to_narrow(v, args ...);
-    }
-
-  }  // detail
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-  inline std::basic_string<typename ToEncoding::value_type>
-    recode(boost::basic_string_view<typename FromEncoding::value_type> v, 
-      const T& ... args)
-  {
-    return detail::recode_dispatch<ToEncoding, FromEncoding>(
-      detail::folded<ToEncoding>::tag(), detail::folded<FromEncoding>::tag(),
-      v, args ...);
-  }
-}  // namespace test
 
 namespace
 {
@@ -146,87 +77,87 @@ namespace
       "\n  all input characters are well-formed" << endl;
     {
       std::string s;
-      s = test::recode<utf8, utf8>(u8str);
+      s = recode<utf8, utf8>(u8str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, utf16>(u16str);
+      s = recode<utf8, utf16>(u16str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, utf32>(u32str);
+      s = recode<utf8, utf32>(u32str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, wide>(wstr);
+      s = recode<utf8, wide>(wstr);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, narrow>(nbmp, ccvt);
+      s = recode<utf8, narrow>(nbmp, ccvt);
       BOOST_TEST(s == u8bmp);
     }
     {
       std::string s;
-      s = test::recode<narrow, utf8>(u8bmp, ccvt);
+      s = recode<narrow, utf8>(u8bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, utf16>(u16bmp, ccvt);
+      s = recode<narrow, utf16>(u16bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, utf32>(u32bmp, ccvt);
+      s = recode<narrow, utf32>(u32bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, wide>(wbmp, ccvt);
+      s = recode<narrow, wide>(wbmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, narrow>(nbmp, ccvt, ccvt);
+      s = recode<narrow, narrow>(nbmp, ccvt, ccvt);
       BOOST_TEST(s == nbmp);
     }
     {
       std::u16string s;
-      s = test::recode<utf16, utf8>(u8str);
+      s = recode<utf16, utf8>(u8str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, utf16>(u16str);
+      s = recode<utf16, utf16>(u16str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, utf32>(u32str);
+      s = recode<utf16, utf32>(u32str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, wide>(wstr);
+      s = recode<utf16, wide>(wstr);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, narrow>(nbmp, ccvt);
+      s = recode<utf16, narrow>(nbmp, ccvt);
       BOOST_TEST(s == u16bmp);
     }
     {
       std::u32string s;
-      s = test::recode<utf32, utf8>(u8str);
+      s = recode<utf32, utf8>(u8str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, utf16>(u16str);
+      s = recode<utf32, utf16>(u16str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, utf32>(u32str);
+      s = recode<utf32, utf32>(u32str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, wide>(wstr);
+      s = recode<utf32, wide>(wstr);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, narrow>(nbmp, ccvt);
+      s = recode<utf32, narrow>(nbmp, ccvt);
       BOOST_TEST(s == u32bmp);
     }
     {
       std::wstring s;
-      s = test::recode<wide, utf8>(u8str);
+      s = recode<wide, utf8>(u8str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, utf16>(u16str);
+      s = recode<wide, utf16>(u16str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, utf32>(u32str);
+      s = recode<wide, utf32>(u32str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, wide>(wstr);
+      s = recode<wide, wide>(wstr);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, narrow>(nbmp, ccvt);
+      s = recode<wide, narrow>(nbmp, ccvt);
       BOOST_TEST(s == wbmp);
     }
     cout << "  end basic_tests()" << endl;
@@ -238,91 +169,91 @@ namespace
       "\n  all input strings include ill-formed characters" << endl;
     {
       std::string s;
-      s = test::recode<utf8, utf8>(ill_u8str, err8nul());
+      s = recode<utf8, utf8>(ill_u8str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, utf16>(ill_u16str, err8nul());
+      s = recode<utf8, utf16>(ill_u16str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, utf32>(ill_u32str, err8nul());
+      s = recode<utf8, utf32>(ill_u32str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, wide>(ill_wstr, err8nul());
+      s = recode<utf8, wide>(ill_wstr, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = test::recode<utf8, narrow>(ill_nbmp, ccvt, err8nul());
+      s = recode<utf8, narrow>(ill_nbmp, ccvt, err8nul());
       BOOST_TEST(s == u8bmp);
     }
     {
       std::string s;
-      s = test::recode<narrow, utf8>(ill_u8bmp, ccvt, errnnul());
+      s = recode<narrow, utf8>(ill_u8bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       cout << hex_string(ill_u8bmp) << endl;
       cout << hex_string(s) << endl;
       cout << hex_string(nbmp) << endl;
 
       s.clear();
-      s = test::recode<narrow, utf16>(ill_u16bmp, ccvt, errnnul());
+      s = recode<narrow, utf16>(ill_u16bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, utf32>(ill_u32bmp, ccvt, errnnul());
+      s = recode<narrow, utf32>(ill_u32bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, wide>(ill_wbmp, ccvt, errnnul());
+      s = recode<narrow, wide>(ill_wbmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = test::recode<narrow, narrow>(ill_nbmp, ccvt, ccvt, errnnul());
+      s = recode<narrow, narrow>(ill_nbmp, ccvt, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
     }
     {
       std::u16string s;
-      s = test::recode<utf16, utf8>(ill_u8str, err16nul());
+      s = recode<utf16, utf8>(ill_u8str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, utf16>(ill_u16str, err16nul());
+      s = recode<utf16, utf16>(ill_u16str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, utf32>(ill_u32str, err16nul());
+      s = recode<utf16, utf32>(ill_u32str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, wide>(ill_wstr, err16nul());
+      s = recode<utf16, wide>(ill_wstr, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = test::recode<utf16, narrow>(ill_nbmp, ccvt, err16nul());
+      s = recode<utf16, narrow>(ill_nbmp, ccvt, err16nul());
       BOOST_TEST(s == u16bmp);
     }
     {
       std::u32string s;
-      s = test::recode<utf32, utf8>(ill_u8str, err32nul());
+      s = recode<utf32, utf8>(ill_u8str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, utf16>(ill_u16str, err32nul());
+      s = recode<utf32, utf16>(ill_u16str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, utf32>(ill_u32str, err32nul());
+      s = recode<utf32, utf32>(ill_u32str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, wide>(ill_wstr, err32nul());
+      s = recode<utf32, wide>(ill_wstr, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = test::recode<utf32, narrow>(ill_nbmp, ccvt, err32nul());
+      s = recode<utf32, narrow>(ill_nbmp, ccvt, err32nul());
       BOOST_TEST(s == u32bmp);
     }
     {
       std::wstring s;
-      s = test::recode<wide, utf8>(ill_u8str, errwnul());
+      s = recode<wide, utf8>(ill_u8str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, utf16>(ill_u16str, errwnul());
+      s = recode<wide, utf16>(ill_u16str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, utf32>(ill_u32str, errwnul());
+      s = recode<wide, utf32>(ill_u32str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, wide>(ill_wstr, errwnul());
+      s = recode<wide, wide>(ill_wstr, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = test::recode<wide, narrow>(ill_nbmp, ccvt, errwnul());
+      s = recode<wide, narrow>(ill_nbmp, ccvt, errwnul());
       BOOST_TEST(s == wbmp);
     }
     cout << "  end user_supplied_error_handler_tests()" << endl;

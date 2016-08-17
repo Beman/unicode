@@ -16,6 +16,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 using std::getline;
+using boost::unicode::utf8;
 
 namespace
 {
@@ -46,7 +47,7 @@ int cpp_main(int argc, char* argv[])
   while (in.good())
   {
     getline(in, line);
-    string cleaned_line = boost::unicode::recode<boost::unicode::utf8>(line);
+    string cleaned_line = boost::unicode::recode<utf8, utf8>(line);
     cout << cleaned_line << '\n';
   }
 

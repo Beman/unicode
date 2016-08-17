@@ -125,7 +125,7 @@ namespace
   {
     cout << "convert_encoding_test" << endl;
     u16string ru16;
-    convert_encoding<char16_t>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
+    recode_utf<char16_t>(u8str.cbegin(), u8str.cend(), std::back_inserter(ru16));
     BOOST_TEST(ru16 == u16str);
     cout << "  convert_encoding_test done" << endl;
   }
@@ -135,39 +135,39 @@ namespace
     cout << "to_utf_string_test" << endl;
 
     // three argument tests
-    u16string ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str),
+    u16string ru16 = recode_utf_string<char16_t, char>(boost::string_view(u8str),
       ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(
+    ru16 = recode_utf_string<char16_t, char>(
       boost::string_view(u8str), ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str, ufffd<char16_t>(),
+    ru16 = recode_utf_string<char16_t, char>(u8str, ufffd<char16_t>(),
       std::allocator<char16_t>());
-    ru16 = to_utf_string<char16_t, char>(
+    ru16 = recode_utf_string<char16_t, char>(
       u8str, ufffd<char16_t>(), std::allocator<char16_t>());
     BOOST_TEST(ru16 == u16str);
     cout << "  to_utf_string_test done" << endl;
 
     // two argument tests
-    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str), ufffd<char16_t>());
+    ru16 = recode_utf_string<char16_t, char>(boost::string_view(u8str), ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(
+    ru16 = recode_utf_string<char16_t, char>(
       boost::string_view(u8str), ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str, ufffd<char16_t>());
+    ru16 = recode_utf_string<char16_t, char>(u8str, ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(
+    ru16 = recode_utf_string<char16_t, char>(
       u8str, ufffd<char16_t>());
     BOOST_TEST(ru16 == u16str);
 
     // one argument tests
-    ru16 = to_utf_string<char16_t, char>(boost::string_view(u8str));
+    ru16 = recode_utf_string<char16_t, char>(boost::string_view(u8str));
     BOOST_TEST(ru16 == u16str);
-    //ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(boost::string_view(u8str));
+    //ru16 = recode_utf_string<char16_t, char, std::char_traits<char>>(boost::string_view(u8str));
     //BOOST_TEST(ru16 == u16str);
-    ru16 = to_utf_string<char16_t, char>(u8str);
+    ru16 = recode_utf_string<char16_t, char>(u8str);
     BOOST_TEST(ru16 == u16str);
-    //ru16 = to_utf_string<char16_t, char, std::char_traits<char>>(u8str);
+    //ru16 = recode_utf_string<char16_t, char, std::char_traits<char>, utf8>(u8str);
     //BOOST_TEST(ru16 == u16str);
   }
  
@@ -178,7 +178,7 @@ namespace
     string u8s(u8"$€𐐷𤭢");
     cout << u8s.size() << endl;
 
-    string u8r = recode<utf8>(u16s);
+    string u8r = recode<utf8, utf16>(u16s);
     BOOST_TEST_EQ(u8r.size(), u8s.size());
     BOOST_TEST(u8r == u8s);
     cout << "u8r :" << hex_string(u8r) << endl;
@@ -189,17 +189,17 @@ namespace
   void to_u16string_test()
   {
     cout << "to_u16string_test" << endl;
-    recode<utf16>(u8str);
+    recode<utf16, utf8>(u8str);
 
     cout << "  u32s.size() " << u32str.size() << endl;
     cout << "  u16s.size() " << u16str.size() << endl;
-    u16string u16r = recode<utf16>(u32str);
+    u16string u16r = recode<utf16, utf32>(u32str);
     cout << "  u16r.size() " << u16r.size() << endl;
     BOOST_TEST_EQ(u16r.size(), 6u);
     BOOST_TEST(u16r == u16str);
 
     u16r.clear();
-    u16r = recode<utf16>(u8str);
+    u16r = recode<utf16, utf8>(u8str);
     BOOST_TEST_EQ(u16r.size(), u16str.size());
     BOOST_TEST(u16r == u16str);
 
@@ -209,16 +209,16 @@ namespace
   void to_u32string_test()
   {
     cout << "to_u32string_test" << endl;
-    BOOST_TEST(recode<utf32>(u8str) == u32str);
+    BOOST_TEST((recode<utf32, utf8>(u8str) == u32str));
 
     string u8s(u8"$¢€𐍈");
     BOOST_TEST_EQ(u8s.size(), 10u);
-    u32string u32r = recode<utf32>(u8s);
+    u32string u32r = recode<utf32, utf8>(u8s);
     BOOST_TEST_EQ(u32r.size(), 4u);
     u32string u32s = {0x24, 0xA2, 0x20AC, 0x10348};
     BOOST_TEST(u32r == u32s);
 
-    u32string u32sr3 = recode<utf32>(u16str);
+    u32string u32sr3 = recode<utf32, utf16>(u16str);
     BOOST_TEST(u32sr3 == u32str);
 
     cout << "  to_u32string_test done" << endl;
@@ -228,27 +228,27 @@ namespace
   {
     cout << "all_utf_test" << endl;
 
-    BOOST_TEST(recode<wide>(wstr) == wstr);
-    BOOST_TEST(recode<wide>(u8str) == wstr);
-    BOOST_TEST(recode<wide>(u8str, ufffd<wchar_t>()) == wstr);
-    BOOST_TEST(recode<wide>(u16str) == wstr);
-    BOOST_TEST(recode<wide>(u32str) == wstr);
-    BOOST_TEST(recode<wide>(u32str, ufffd<wchar_t>()) == wstr);
+    BOOST_TEST((recode<wide, wide>(wstr) == wstr));
+    BOOST_TEST((recode<wide, utf8>(u8str) == wstr));
+    BOOST_TEST((recode<wide, utf8>(u8str, ufffd<wchar_t>()) == wstr));
+    BOOST_TEST((recode<wide, utf16>(u16str) == wstr));
+    BOOST_TEST((recode<wide, utf32>(u32str) == wstr));
+    BOOST_TEST((recode<wide, utf32>(u32str, ufffd<wchar_t>()) == wstr));
 
-    BOOST_TEST(recode<utf8>(wstr) == u8str);
-    BOOST_TEST(recode<utf8>(u8str) == u8str);
-    BOOST_TEST(recode<utf8>(u16str) == u8str);
-    BOOST_TEST(recode<utf8>(u32str) == u8str);
+    BOOST_TEST((recode<utf8, wide>(wstr) == u8str));
+    BOOST_TEST((recode<utf8, utf8>(u8str) == u8str));
+    BOOST_TEST((recode<utf8, utf16>(u16str) == u8str));
+    BOOST_TEST((recode<utf8, utf32>(u32str) == u8str));
 
-    BOOST_TEST(recode<utf16>(wstr) == u16str);
-    BOOST_TEST(recode<utf16>(u8str) == u16str);
-    BOOST_TEST(recode<utf16>(u16str) == u16str);
-    BOOST_TEST(recode<utf16>(u32str) == u16str);
+    BOOST_TEST((recode<utf16, wide>(wstr) == u16str));
+    BOOST_TEST((recode<utf16, utf8>(u8str) == u16str));
+    BOOST_TEST((recode<utf16, utf16>(u16str) == u16str));
+    BOOST_TEST((recode<utf16, utf32>(u32str) == u16str));
 
-    BOOST_TEST(recode<utf32>(wstr) == u32str);
-    BOOST_TEST(recode<utf32>(u8str) == u32str);
-    BOOST_TEST(recode<utf32>(u16str) == u32str);
-    BOOST_TEST(recode<utf32>(u32str) == u32str);
+    BOOST_TEST((recode<utf32, wide>(wstr) == u32str));
+    BOOST_TEST((recode<utf32, utf8>(u8str) == u32str));
+    BOOST_TEST((recode<utf32, utf16>(u16str) == u32str));
+    BOOST_TEST((recode<utf32, utf32>(u32str) == u32str));
 
     cout << "  all_utf_test done" << endl;
   }
@@ -273,13 +273,13 @@ namespace
     cout << w.size() << endl;
     cout << hex_string(w) << endl;
 
-    BOOST_TEST(recode_from_narrow<wide>(u8s, ccvt) == ws);
+    BOOST_TEST((recode_from_narrow<wide>(u8s, ccvt) == ws));
     cout << hex_string(recode_from_narrow<wide>(u8s, ccvt)) << endl;
     cout << hex_string(ws) << endl;
-    BOOST_TEST(recode_from_narrow<wide>(u8s, ccvt, ufffd<wchar_t>()) == ws);
+    BOOST_TEST((recode_from_narrow<wide>(u8s, ccvt, ufffd<wchar_t>()) == ws));
 
-    BOOST_TEST(recode_to_narrow(ws, ccvt) == u8s);
-    BOOST_TEST(recode_to_narrow(ws, ccvt, ufffd<char>()) == u8s);
+    BOOST_TEST((recode_to_narrow(ws, ccvt) == u8s));
+    BOOST_TEST((recode_to_narrow(ws, ccvt, ufffd<char>()) == u8s));
 
     cout << "  all_codecvt_test done" << endl;
   }
