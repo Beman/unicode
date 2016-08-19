@@ -12,9 +12,11 @@
 #include <string>
 #include <locale>
 #include <array>
+#include <type_traits>
+#include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
 #include <boost/utility/string_view.hpp> 
-#include <boost/config.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
 
@@ -31,6 +33,31 @@
 //  have an associated codecvt argument that determines the specific narrow encoding,   //
 //  such as Big5, Shift-JIS, EBCIDIC, or even UTF-8.                                                     //
 //--------------------------------------------------------------------------------------//
+
+/*
+UTF-32 (D90) extract:
+* "Because surrogate code points are not included in the set of Unicode scalar values,
+   UTF-32 code units in the range U+D800..U+DFFF are ill-formed."
+* "Any UTF-32 code unit greater than U+10FFFF is ill-formed."
+
+UTF-16 (D91) extract:
+* "Because surrogate code points are not Unicode scalar values, isolated UTF-16
+   code units in the range U+D800..U+DFFF are ill-formed."
+UTD-8 (D92) extract:
+* "Any UTF-8 byte sequence that does not match the patterns listed in Table 3-7 is
+   ill-formed."
+* "... “non-shortest form” byte sequences in UTF-8 ... are ill-formed ..."
+* "Because surrogate code points are not Unicode scalar values, any UTF-8 byte
+   sequence that would otherwise map to code points D800..DFFF is ill-formed."
+
+Encoding Form Conversion (D93) extract:
+* "A conformant encoding form conversion will treat any ill-formed code unit
+   sequence as an error condition. ... it will neither interpret nor emit an ill-formed
+   code unit sequence. Any implementation of encoding form conversion must take this
+   requirement into account, because an encoding form conversion implicitly involves a
+   verification that the Unicode strings being converted do, in fact, contain well-formed
+   code unit sequences."
+*/
 
 //--------------------------------------------------------------------------------------//
 //                                     Synopsis                                         //
@@ -49,53 +76,31 @@ namespace unicode
 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
 
-  //  recode: high-level, high-convenience, string encoding conversion
-  template <class ToEncoding, class FromEncoding, class ... T>
-  inline std::basic_string<typename ToEncoding::value_type>
-    recode(boost::basic_string_view<typename FromEncoding::value_type> v,
-      const T& ... args);
+  template <class T> struct is_encoding { static const bool value = false; };
+  template<> struct is_encoding<narrow> { static const bool value = true; };
+  template<> struct is_encoding<utf8>   { static const bool value = true; };
+  template<> struct is_encoding<utf16>  { static const bool value = true; };
+  template<> struct is_encoding<utf32>  { static const bool value = true; };
+  template<> struct is_encoding<wide>   { static const bool value = true; };
 
-  //  recode_utf_string and recode_codecvt_string: mid-level string encoding conversion
-  template <class ToCharT, class FromCharT,
-    //class FromTraits = typename std::char_traits<FromCharT>,
-    //    Note: See "Probe CharTraits template argument deduction" in test/smoke_test.cpp
-    //    for why two overloads are needed for each form rather than providing a default
-    //    template parameter for FromTraits. Short answer: With a default FromTraits
-    //    parameter, template argument deduction fails.
-    class Error = ufffd<ToCharT>,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    recode_utf_string(boost::basic_string_view<FromCharT/*, FromTraits*/> v,
-      Error eh = Error(), const ToAlloc& a = ToAlloc());
+  //  to_string: string encoding conversion
+  template <class ToEncoding, class FromEncoding, class ... T> inline
+  typename boost::enable_if<is_encoding<ToEncoding>,
+    typename std::basic_string<typename ToEncoding::value_type>>::type
+  to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
+    const T& ... args);
 
-  template <class ToCharT, class FromCharT, class Codecvt,
-    class FromTraits = std::char_traits<FromCharT>,
-    class Error = ufffd<ToCharT>,
-    class ToTraits = std::char_traits<ToCharT>,
-    class ToAlloc = std::allocator<ToCharT>,
-    class View = boost::basic_string_view<FromCharT, FromTraits>>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    recode_codecvt_string(View v, const Codecvt& ccvt,
-                            Error eh=Error(), const ToAlloc& a=ToAlloc());
-
-
-  //  recode_utf: algorithm for UTF-to-UTF sequence encoding conversion
-  template <class ToCharT, class InputIterator, class OutputIterator,
-    class Error = ufffd<ToCharT>>
-  inline OutputIterator
-    recode_utf(InputIterator first, InputIterator last, 
-      OutputIterator result, Error eh = Error());
-  //    Note: ToCharT cannot be determined by
-  //    std::iterator_traits<OutputIterator>::value_type
-  //    because std::iterator_traits<OutputIterator>::value_type is void for
-  //    OutputIterators such as std::back_inserter.
+  //  recode: encoding conversion algorithm
+  template <class FromEncoding, class ToEncoding,
+    class InputIterator, class OutputIterator, class ... T> inline
+  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
+    const T& ... args);
 
 }  // namespace unicode
 }  // namespace boost
 // <!-- end snippet -->
 
-//---------------------------------  end synopsis  -------------------------------------// 
+//---------------------------------  end synopsis  -------------------------------------//
 
 //--------------------------------------------------------------------------------------//
 //                                  implementation                                      //
@@ -105,144 +110,317 @@ namespace boost
 {
 namespace unicode
 {
-/*
-UTF-32 (D90) extract:
+   // to_string implementation ---------------------------------------------------------//
 
-* "Because surrogate code points are not included in the set of Unicode scalar values,
-   UTF-32 code units in the range U+D800..U+DFFF are ill-formed."
-
-* "Any UTF-32 code unit greater than U+10FFFF is ill-formed."
-
-UTF-16 (D91) extract:
-
-* "Because surrogate code points are not Unicode scalar values, isolated UTF-16
-   code units in the range U+D800..U+DFFF are ill-formed."
-
-UTD-8 (D92) extract:
-
-* "Any UTF-8 byte sequence that does not match the patterns listed in Table 3-7 is
-   ill-formed."
-
-* "... “non-shortest form” byte sequences in UTF-8 ... are ill-formed ..."
-
-* "Because surrogate code points are not Unicode scalar values, any UTF-8 byte
-   sequence that would otherwise map to code points D800..DFFF is ill-formed."
-
-Encoding Form Conversion (D93) extract:
-
-* "A conformant encoding form conversion will treat any ill-formed code unit
-   sequence as an error condition. ... it will neither interpret nor emit an ill-formed
-   code unit sequence. Any implementation of encoding form conversion must take this
-   requirement into account, because an encoding form conversion implicitly involves a
-   verification that the Unicode strings being converted do, in fact, contain well-formed
-   code unit sequences."
-
-*/
-
-  namespace detail
-  {
-
-    //  UTF-to-UTF string-conversion convenience functions
-    template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::string_view v, Error eh = Error());
-    template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::u16string_view v, Error eh = Error());
-    template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::u32string_view v, Error eh = Error());
-    template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::wstring_view v, Error eh = Error());
-
-    //  narrow-to-UTF string-conversion convenience function
-    template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_from_narrow(boost::string_view v,
-        const ccvt_type& ccvt, const Error eh = Error());
-
-    //  UTF-to-narrow string-conversion convenience functions
-    template <class Error = ufffd<char>>
-    inline std::string recode_to_narrow(boost::string_view v,  // v is UTF-8 encoded
-      const ccvt_type& ccvt, const Error eh = Error());
-    template <class Error = ufffd<char>>
-    inline std::string recode_to_narrow(boost::u16string_view v,
-      const ccvt_type& ccvt, const Error eh = Error());
-    template <class Error = ufffd<char>>
-    inline std::string recode_to_narrow(boost::u32string_view v,
-      const ccvt_type& ccvt, const Error eh = Error());
-    template <class Error = ufffd<char>>
-    inline std::string recode_to_narrow(boost::wstring_view v,
-      const ccvt_type& ccvt, const Error eh = Error());
-
-    //  narrow-to-narrow string-conversion convenience function
-    template <class Error = ufffd<char>>
-    inline std::string recode_narrow_to_narrow(boost::string_view v,
-      const ccvt_type& from_ccvt,
-      const ccvt_type& to_ccvt, const Error eh = Error());
-
-    struct utf_tag {};
-    struct narrow_tag {};
-
-    template <class Encoding> struct folded;
-    template<> struct folded<narrow> { typedef narrow_tag tag; };
-    template<> struct folded<utf8> { typedef utf_tag tag; };
-    template<> struct folded<utf16> { typedef utf_tag tag; };
-    template<> struct folded<utf32> { typedef utf_tag tag; };
-    template<> struct folded<wide> { typedef utf_tag tag; };
-
-    template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(utf_tag, utf_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v,
-        const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 1, "too many arguments");
-      return recode_utf_to_utf<ToEncoding>(v, args ...);
-    }
-
-    template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(narrow_tag, utf_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 2, "too many arguments");
-      return recode_to_narrow(v, args ...);
-    }
-
-    template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(utf_tag, narrow_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 2, "too many arguments");
-      return recode_from_narrow<ToEncoding>(v, args ...);
-    }
-
-    template <class ToEncoding, class FromEncoding, class ... T>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_dispatch(narrow_tag, narrow_tag,
-        boost::basic_string_view<typename FromEncoding::value_type> v, const T& ... args)
-    {
-      static_assert(sizeof...(args) <= 3, "too many arguments");
-      return recode_narrow_to_narrow(v, args ...);
-    }
-  }  // namespace detail
-
-  template <class ToEncoding, class FromEncoding, class ... T>
-  inline std::basic_string<typename ToEncoding::value_type>
-    recode(boost::basic_string_view<typename FromEncoding::value_type> v, 
+  template <class ToEncoding, class FromEncoding, class ... T> inline
+  typename boost::enable_if<is_encoding<ToEncoding>,
+    typename std::basic_string<typename ToEncoding::value_type>>::type
+  to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
       const T& ... args)
   {
-    return detail::recode_dispatch<ToEncoding, FromEncoding>(
-      detail::folded<ToEncoding>::tag(), detail::folded<FromEncoding>::tag(),
-      v, args ...);
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp), args ...);
+    return tmp;
   }
 
   namespace detail
   {
-    //  recode_utf helpers  ------------------------------------------------------//
+    // forward declare the functions needed to implement recode_utf_to_utf -------------//
+
+    template <class ToCharT, class InputIterator, class OutputIterator,
+      class U32Error, class OutError> inline
+      OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
+        OutputIterator result, U32Error u32_eh, OutError out_eh);
+    template <class ToCharT, class InputIterator, class OutputIterator,
+      class U32Error, class OutError> inline
+      OutputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
+        OutputIterator result, U32Error u32_eh, OutError out_eh);
+    template <class ToCharT, class OutputIterator, class Error> inline
+      OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
+    template <class ToCharT, class OutputIterator, class OutError> inline
+      OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result,
+        OutError out_eh);
+    template <class ToCharT, class OutputIterator, class OutError> inline
+      OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result,
+        OutError out_eh);
+    
+    //----------------------------------------------------------------------------------//
+    //                      recode_utf_to_utf implementation                            //
+    //        The appropriate overload is called by recode_dispatch()                   //
+    //----------------------------------------------------------------------------------//
+
+# if WCHAR_MAX >= 0x1FFFFFFFu
+#   define BOOST_UNICODE_WIDE_UTF utf32
+# elif WCHAR_MAX >= 0x1FFFu
+#   define BOOST_UNICODE_WIDE_UTF utf16  
+# else
+#   define BOOST_UNICODE_WIDE_UTF utf8
+# endif
+
+    // from utf8 -----------------------------------------------------------------------//
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char>> inline
+    OutputIterator recode_utf_to_utf(utf8 /*from*/, utf8 /*to*/,
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf8_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char16_t>> inline
+    OutputIterator recode_utf_to_utf(utf8, utf16,
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf8_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char32_t>> inline
+    OutputIterator recode_utf_to_utf(utf8, utf32,
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return utf8_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<wchar_t>> inline
+    OutputIterator recode_utf_to_utf(utf8, wide,
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return utf8_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    // from utf16 ----------------------------------------------------------------------//
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char>> inline
+    OutputIterator recode_utf_to_utf(utf16, utf8,
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf16_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char16_t>> inline
+    OutputIterator recode_utf_to_utf(utf16, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      // pass input sequence through UTF-32 conversion to ensure the
+      // output sequence is valid even if the input sequence isn't valid
+      return utf16_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char32_t>> inline
+    OutputIterator recode_utf_to_utf(utf16, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return utf16_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<wchar_t>> inline
+    OutputIterator recode_utf_to_utf(utf16, wide, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return utf16_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
+    }
+
+    // from utf32 ----------------------------------------------------------------------//
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char>> inline
+    OutputIterator recode_utf_to_utf(utf32, utf8, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      for (; first != last; ++first)
+      {
+        result = char32_t_to_utf8<char>(static_cast<char32_t>(*first), result, eh);
+      }
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char16_t>> inline
+    OutputIterator recode_utf_to_utf(utf32, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      for (; first != last; ++first)
+      {
+        result = char32_t_to_utf16<char16_t>(static_cast<char32_t>(*first), result, eh);
+      }
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char32_t>> inline
+    OutputIterator recode_utf_to_utf(utf32, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      for (; first != last; ++first)
+      {
+        result = char32_t_to_utf32<char32_t>(static_cast<char32_t>(*first), result, eh);
+      }
+      return result;
+    }
+
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<wchar_t>> inline
+    OutputIterator recode_utf_to_utf(utf32, wide, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      for (; first != last; ++first)
+      {
+#       if WCHAR_MAX >= 0x1FFFFFFFu
+        result = char32_t_to_utf32<wchar_t>(static_cast<char32_t>(*first), result, eh);
+#       elif WCHAR_MAX >= 0x1FFFu
+        result = char32_t_to_utf16<wchar_t>(static_cast<char32_t>(*first), result, eh);
+#       else
+        result = char32_t_to_utf8<wchar_t>(static_cast<char32_t>(*first), result, eh);
+#       endif
+      }
+      return result;
+    }
+
+    // from wide -----------------------------------------------------------------------//
+ 
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char>> inline
+    OutputIterator recode_utf_to_utf(wide, utf8, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf8(), first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char16_t>> inline
+    OutputIterator recode_utf_to_utf(wide, utf16, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf16(), first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<char32_t>> inline
+    OutputIterator recode_utf_to_utf(wide, utf32, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf32(), first, last, result, eh);
+    }
+ 
+    template <class InputIterator, class OutputIterator,
+      class Error = ufffd<wchar_t>> inline
+    OutputIterator recode_utf_to_utf(wide, wide, 
+      InputIterator first, InputIterator last, OutputIterator result, Error eh = Error())
+    {
+      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), wide(), first, last, result, eh);
+    }
+
+    ////  narrow-to-UTF string-conversion convenience function
+    //template <class ToEncoding, class Error = ufffd<typename ToEncoding::value_type>>
+    //inline std::basic_string<typename ToEncoding::value_type>
+    //  recode_narrow_to_utf(boost::string_view v,
+    //    const ccvt_type& ccvt, const Error eh = Error());
+
+    ////  UTF-to-narrow string-conversion convenience functions
+    //template <class Error = ufffd<char>>
+    //inline std::string recode_utf_to_narrow(boost::string_view v,  // v is UTF-8 encoded
+    //  const ccvt_type& ccvt, const Error eh = Error());
+    //template <class Error = ufffd<char>>
+    //inline std::string recode_utf_to_narrow(boost::u16string_view v,
+    //  const ccvt_type& ccvt, const Error eh = Error());
+    //template <class Error = ufffd<char>>
+    //inline std::string recode_utf_to_narrow(boost::u32string_view v,
+    //  const ccvt_type& ccvt, const Error eh = Error());
+    //template <class Error = ufffd<char>>
+    //inline std::string recode_utf_to_narrow(boost::wstring_view v,
+    //  const ccvt_type& ccvt, const Error eh = Error());
+
+    ////  narrow-to-narrow string-conversion convenience function
+    //template <class Error = ufffd<char>>
+    //inline std::string recode_narrow_to_narrow(boost::string_view v,
+    //  const ccvt_type& from_ccvt,
+    //  const ccvt_type& to_ccvt, const Error eh = Error());
+
+    //  recode_dispatch implementation -------------------------------------------------//
+
+    //  Four recode_dispatch overloads are used to implement recode for
+    //  utf-to-utf, utf-to-narrow, narrow-to-utf and narrow-to-narrow conversions,
+    //  respectively.
+
+    struct utf_tag {};
+    struct narrow_tag {};
+
+    template <class FromEncoding, class ToEncoding,
+      class InputIterator, class OutputIterator, class ... T> inline
+    OutputIterator recode_dispatch(utf_tag, utf_tag, InputIterator first,
+        InputIterator last, OutputIterator result, const T& ... args)
+    {
+      static_assert(sizeof...(args) <= 1, "too many arguments");
+      return recode_utf_to_utf(FromEncoding(), ToEncoding(),
+        first, last, result, args ...);
+    }
+
+    template <class FromEncoding, class ToEncoding,
+      class InputIterator, class OutputIterator, class ... T> inline
+    OutputIterator recode_dispatch(narrow_tag, utf_tag, InputIterator first,
+        InputIterator last, OutputIterator result, const T& ... args)
+    {
+      static_assert(sizeof...(args) <= 2, "too many arguments");
+      return recode_utf_to_narrow(first, last, result, args ...);
+    }
+
+    template <class FromEncoding, class ToEncoding,
+      class InputIterator, class OutputIterator, class ... T> inline
+    OutputIterator recode_dispatch(utf_tag, narrow_tag, InputIterator first,
+        InputIterator last, OutputIterator result, const T& ... args)
+    {
+      static_assert(sizeof...(args) <= 2, "too many arguments");
+      return recode_narrow_to_utf<ToEncoding>(first, last, result, args ...);
+    }
+
+    template <class FromEncoding, class ToEncoding,
+      class InputIterator, class OutputIterator, class ... T> inline
+    OutputIterator recode_dispatch(narrow_tag, narrow_tag, InputIterator first,
+        InputIterator last, OutputIterator result, const T& ... args)
+    {
+      static_assert(sizeof...(args) <= 3, "too many arguments");
+      return recode_narrow_to_narrow(first, last, result, args ...);
+    }
+
+    template <class Encoding> struct dispatch;
+    template<> struct dispatch<narrow> { typedef narrow_tag tag; };
+    template<> struct dispatch<utf8> { typedef utf_tag tag; };
+    template<> struct dispatch<utf16> { typedef utf_tag tag; };
+    template<> struct dispatch<utf32> { typedef utf_tag tag; };
+    template<> struct dispatch<wide> { typedef utf_tag tag; };
+
+  }  // namespace detail
+
+  //-------------------------- recode definition -----------------------------//
+
+  template <class FromEncoding, class ToEncoding,
+    class InputIterator, class OutputIterator, class ... T> inline
+  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
+    const T& ... args)
+  {
+    return detail::recode_dispatch<FromEncoding, ToEncoding>(
+      detail::dispatch<FromEncoding>::tag(),
+      detail::dispatch<ToEncoding>::tag(),
+      first, last, result, args ...);
+  }
+
+  namespace detail
+  {
+    //  utf-to-utf conversion helpers  -------------------------------------------------//
 
     //  For any conversion that uses utf32 as an intermediary,
     //  we need a value that can never appear in valid utf32 to pass the error through
@@ -269,13 +447,13 @@ Encoding Form Conversion (D93) extract:
     constexpr char16_t low_surrogate_base = 0xDC00u;
     constexpr char32_t ten_bit_mask = 0x3FFu;
 
-    //  forward declare functions used to implement u32_outputer
-    template <class ToCharT, class OutputIterator, class Error> inline
-      OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result, Error eh);
-    template <class ToCharT, class OutputIterator, class Error> inline
-      OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh);
-    template <class ToCharT, class OutputIterator, class Error> inline
-      OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
+    ////  forward declare functions used to implement u32_outputer
+    //template <class ToCharT, class OutputIterator, class Error> inline
+    //  OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result, Error eh);
+    //template <class ToCharT, class OutputIterator, class Error> inline
+    //  OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh);
+    //template <class ToCharT, class OutputIterator, class Error> inline
+    //  OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
 
     //  char32_t outputers; these helpers take a single char32_t code point, and output as
     //  many code units as needed to represent the code point. OutputT may be wchar_t for
@@ -497,175 +675,13 @@ Encoding Form Conversion (D93) extract:
       return result;
     }
 
-//--------------------------------------------------------------------------------------//
-//                      detail::recode_utf_to_utf implementation                        //
-//        overload resolution performed by tag dispatch on from_tag, to_tag             //
-//--------------------------------------------------------------------------------------//
 
-# if WCHAR_MAX >= 0x1FFFFFFFu
-#   define BOOST_UNICODE_WIDE_UTF utf32
-# elif WCHAR_MAX >= 0x1FFFu
-#   define BOOST_UNICODE_WIDE_UTF utf16  
-# else
-#   define BOOST_UNICODE_WIDE_UTF utf8
-# endif
-
-    // from utf8 -----------------------------------------------------------------------//
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf8 /*from*/, utf8 /*to*/,
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf8, utf16,
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf8_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf8, utf32,
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return utf8_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf8, wide,
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return utf8_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    // from utf16 ----------------------------------------------------------------------//
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf16, utf8,
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<char>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf16, utf16, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      // pass input sequence through UTF-32 conversion to ensure the
-      // output sequence is valid even if the input sequence isn't valid
-      return utf16_to_char32_t<char16_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf16, utf32, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return utf16_to_char32_t<char32_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf16, wide, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return utf16_to_char32_t<wchar_t>(first, last, result, u32_err_pass_thru(), eh);
-    }
-
-    // from utf32 ----------------------------------------------------------------------//
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf32, utf8, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      for (; first != last; ++first)
-      {
-        result = char32_t_to_utf8<char>(static_cast<char32_t>(*first), result, eh);
-      }
-      return result;
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf32, utf16, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      for (; first != last; ++first)
-      {
-        result = char32_t_to_utf16<char16_t>(static_cast<char32_t>(*first), result, eh);
-      }
-      return result;
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf32, utf32, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      for (; first != last; ++first)
-      {
-        result = char32_t_to_utf32<char32_t>(static_cast<char32_t>(*first), result, eh);
-      }
-      return result;
-    }
-
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(utf32, wide, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      for (; first != last; ++first)
-      {
-#       if WCHAR_MAX >= 0x1FFFFFFFu
-        result = char32_t_to_utf32<wchar_t>(static_cast<char32_t>(*first), result, eh);
-#       elif WCHAR_MAX >= 0x1FFFu
-        result = char32_t_to_utf16<wchar_t>(static_cast<char32_t>(*first), result, eh);
-#       else
-        result = char32_t_to_utf8<wchar_t>(static_cast<char32_t>(*first), result, eh);
-#       endif
-      }
-      return result;
-    }
-
-    // from wide -----------------------------------------------------------------------//
- 
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(wide, utf8, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf8(), first, last, result, eh);
-    }
- 
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(wide, utf16, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf16(), first, last, result, eh);
-    }
- 
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(wide, utf32, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), utf32(), first, last, result, eh);
-    }
- 
-    template <class InputIterator, class OutputIterator, class Error> inline
-    OutputIterator recode_utf_to_utf(wide, wide, 
-      InputIterator first, InputIterator last, OutputIterator result, Error eh)
-    {
-      return recode_utf_to_utf(BOOST_UNICODE_WIDE_UTF(), wide(), first, last, result, eh);
-    }
-
-    //  dispatching tag
-    template <class CharT> struct dispatch;
-    template <> struct dispatch<char> { typedef utf8 tag; };
-    template <> struct dispatch<char16_t> { typedef utf16 tag; };
-    template <> struct dispatch<char32_t> { typedef utf32 tag; };
-    template <> struct dispatch<wchar_t> { typedef wide tag; };
+    ////  dispatching tag
+    //template <class CharT> struct dispatch;
+    //template <> struct dispatch<char> { typedef utf8 tag; };
+    //template <> struct dispatch<char16_t> { typedef utf16 tag; };
+    //template <> struct dispatch<char32_t> { typedef utf32 tag; };
+    //template <> struct dispatch<wchar_t> { typedef wide tag; };
 
   } // namespace detail
 
@@ -674,91 +690,63 @@ Encoding Form Conversion (D93) extract:
   //                              implementation                                        //
   //------------------------------------------------------------------------------------//
 
-  //  recode_utf algorithm  -----------------------------------------------------------//
+  //namespace detail
+  //{
+  //  //  recode_utf_to_utf()
+  //  template <class ToEncoding, class Error>
+  //  inline std::basic_string<typename ToEncoding::value_type>
+  //    recode_utf_to_utf(boost::string_view v, Error eh)
+  //  {
+  //    return recode_utf_string<typename ToEncoding::value_type, char, Error>(v, eh);
+  //  }
 
-  template <class ToCharT, class InputIterator, class OutputIterator, class Error>
-  inline OutputIterator
-    recode_utf(InputIterator first, InputIterator last, OutputIterator result, Error eh)
-  {
-    // tag dispatch to the specific conversion function
-    return detail::recode_utf_to_utf(
-      typename  // from encoding
-        detail::dispatch<typename std::iterator_traits<InputIterator>::value_type>::tag(),
-      typename  // to encoding
-        detail::dispatch<ToCharT>::tag(),
-      first, last, result, eh);
-  }
+  //  template <class ToEncoding, class Error>
+  //  inline std::basic_string<typename ToEncoding::value_type>
+  //    recode_utf_to_utf(boost::u16string_view v, Error eh)
+  //  {
+  //    return recode_utf_string<typename ToEncoding::value_type, char16_t, Error>(v, eh);
+  //  }
 
-  //  recode_utf_string  -------------------------------------------------------------------//
+  //  template <class ToEncoding, class Error>
+  //  inline std::basic_string<typename ToEncoding::value_type>
+  //    recode_utf_to_utf(boost::u32string_view v, Error eh)
+  //  {
+  //    return recode_utf_string<typename ToEncoding::value_type, char32_t, Error>(v, eh);
+  //  }
 
-  template <class ToCharT, class FromCharT,// class FromTraits,
-    class Error, class ToTraits, class ToAlloc>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    recode_utf_string(boost::basic_string_view<FromCharT/*, FromTraits*/> v, Error eh,
-      const ToAlloc& a)
-  {
-    std::basic_string<ToCharT, ToTraits, ToAlloc> tmp(a);
-    recode_utf<ToCharT>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
-    return tmp;
-  }
+  //  template <class ToEncoding, class Error>
+  //  inline std::basic_string<typename ToEncoding::value_type>
+  //    recode_utf_to_utf(boost::wstring_view v, Error eh)
+  //  {
+  //    return recode_utf_string<typename ToEncoding::value_type, wchar_t, Error>(v, eh);
+  //  }
 
-  namespace detail
-  {
-    //  recode_utf_to_utf()
-    template <class ToEncoding, class Error>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::string_view v, Error eh)
-    {
-      return recode_utf_string<typename ToEncoding::value_type, char, Error>(v, eh);
-    }
+  //  //  do_recode_codecvt_string()
+  //  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+  //    class Error, class ToTraits, class ToAlloc, class View>
+  //    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+  //      std::true_type);
 
-    template <class ToEncoding, class Error>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::u16string_view v, Error eh)
-    {
-      return recode_utf_string<typename ToEncoding::value_type, char16_t, Error>(v, eh);
-    }
+  //  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+  //    class Error, class ToTraits, class ToAlloc, class View>
+  //    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+  //      std::false_type);
 
-    template <class ToEncoding, class Error>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::u32string_view v, Error eh)
-    {
-      return recode_utf_string<typename ToEncoding::value_type, char32_t, Error>(v, eh);
-    }
-
-    template <class ToEncoding, class Error>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_utf_to_utf(boost::wstring_view v, Error eh)
-    {
-      return recode_utf_string<typename ToEncoding::value_type, wchar_t, Error>(v, eh);
-    }
-
-    //  do_recode_codecvt_string()
-    template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-      class Error, class ToTraits, class ToAlloc, class View>
-      inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-      do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-        std::true_type);
-
-    template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-      class Error, class ToTraits, class ToAlloc, class View>
-      inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-      do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-        std::false_type);
-
-  }  // namespace detail
+  //}  // namespace detail
   
-  //  recode_codecvt_string  ---------------------------------------------------------//
+  ////  recode_codecvt_string  ---------------------------------------------------------//
 
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-    class Error, class ToTraits, class ToAlloc, class View>
-  inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a)
-  {
-    return detail::do_recode_codecvt_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
-      ToTraits, ToAlloc, View>(v, ccvt, eh, a,
-        std::is_same<FromCharT, typename Codecvt::intern_type>());  // tag dispatch
-  }
+  //template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+  //  class Error, class ToTraits, class ToAlloc, class View>
+  //inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+  //  recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a)
+  //{
+  //  return detail::do_recode_codecvt_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
+  //    ToTraits, ToAlloc, View>(v, ccvt, eh, a,
+  //      std::is_same<FromCharT, typename Codecvt::intern_type>());  // tag dispatch
+  //}
 
   namespace detail
   {
@@ -774,208 +762,208 @@ Encoding Form Conversion (D93) extract:
     struct wide_err_pass_thru {const wchar_t* operator()() const {return L"\xED\B0\80";}};
 # endif
 
-  //  narrow-to-UTF string-conversion convenience function
-  template <class ToEncoding, class Error>
-    inline std::basic_string<typename ToEncoding::value_type>
-      recode_from_narrow(boost::string_view v,
-        const ccvt_type& ccvt, const Error eh)
-    {
-      // TODO: optimize away the call to recode if ToEncoding is wide
-      return recode_utf_to_utf<ToEncoding>(
-        recode_codecvt_string<wchar_t, char, ccvt_type>(
-          v, ccvt, wide_err_pass_thru()), eh);
-    }
- 
-  //  UTF-to-narrow string-conversion convenience functions
-  template <class Error>
-    inline std::string recode_to_narrow(boost::string_view v,
-      const ccvt_type& ccvt, const Error eh)
-  {
-    return recode_codecvt_string<char, wchar_t, ccvt_type>
-      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-  }
-  template <class Error>
-    inline std::string recode_to_narrow(boost::u16string_view v,
-      const ccvt_type& ccvt, const Error eh)
-  {
-    return recode_codecvt_string<char, wchar_t, ccvt_type>
-      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-  }
-  template <class Error>
-    inline std::string recode_to_narrow(boost::u32string_view v,
-      const ccvt_type& ccvt, const Error eh)
-  {
-    return recode_codecvt_string<char, wchar_t, ccvt_type>
-      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-  }
-  template <class Error>
-    inline std::string recode_to_narrow(boost::wstring_view v,
-      const ccvt_type& ccvt, const Error eh)
-  {
-    return recode_codecvt_string<char, wchar_t, ccvt_type>
-      // wide-to-wide recode ensures well-formed UTF
-      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-  }
-
-  //  narrow-to-narrow string-conversion convenience function
-  template <class Error>
-    inline std::string recode_narrow_to_narrow(boost::string_view v,
-      const ccvt_type& from_ccvt,
-      const ccvt_type& to_ccvt, const Error eh)
-  {
-    return recode_codecvt_string<char, wchar_t, ccvt_type>(
-      recode_from_narrow<wide>(v, from_ccvt, wide_err_pass_thru()), to_ccvt, eh);
-  }
-
-//--------------------------------------------------------------------------------------//
-//                              detail implementation                                   //
-//--------------------------------------------------------------------------------------//
-
-  //  detail::do_recode_codecvt_string()
-  //
-  //  Overview for both overloads:
-  //
-  //    Start with an empty output string.
-  //    Until all the input has been processed:
-  //      * Convert as many characters as will fit into an output buffer.
-  //      * Append the characters in the output buffer into the output string.
-  //    Return the output string.
-
-  //  Overload for is_same<FromCharT, Codecvt::intern_type> == true_type
-  //  This overload converts from Codecvt::internT (i.e. FromCharT, typically wchar_t)
-  //  to Codecvt::externT (ToCharT, typically char) via ccvt.out()
-
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  class Error, class ToTraits, class ToAlloc, class View>
-    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-      std::true_type)
-  {
-    static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
-      "FromCharT and Codecvt::intern_type must be the same type");
-    static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
-      "ToCharT and Codecvt::extern_type must be the same type");
-    static_assert(!std::is_same<FromCharT, ToCharT>::value,
-      "FromCharT and ToCharT must not be the same type");
-
-    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
-    string_type temp(a);
-    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
-
-    //  for clarity, use the same names for ccvt.out() arguments as the standard library
-    std::mbstate_t mbstate  = std::mbstate_t();
-    const FromCharT* from = v.data();
-    const FromCharT* from_end = from + v.size();
-    const FromCharT* from_next;
-    std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
-
-    //  loop until the entire input sequence is processed by the codecvt facet 
-
-    while (from != from_end)
-    {
-      ToCharT* to = buf.data();
-      ToCharT* to_end = to + buf.size();
-      ToCharT* to_next = to;
-
-      ccvt_result
-        = ccvt.out(mbstate, from, from_end, from_next, to, to_end, to_next);
-
-      if (ccvt_result == std::codecvt_base::ok)
-      {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-        from = from_next;
-      }
-      else if (ccvt_result == std::codecvt_base::error)
-      {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-        temp.append(eh());
-        from = from_next + 1;  // bypass error
-      }
-      else  // ccvt_result == std::codecvt_base::partial
-      {
-        if (to_next == buf.data())
-        {
-          temp.append(eh());
-          from = from_end;
-        }
-        else
-        {
-          // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-          from = from_next;
-        }
-      }
-    }
-    return temp;
-  }
-
-  //  Overload for is_same<FromCharT, Codecvt::intern_type> == false_type
-  //  This overload converts from Codecvt::externT (i.e. FromCharT, typically char)
-  //  to Codecvt::internT (ToCharT, typically wchar_t) via ccvt.in()
-
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  class Error, class ToTraits, class ToAlloc, class View>
-    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-      std::false_type)
-  {
-    static_assert(std::is_same<FromCharT, typename Codecvt::extern_type>::value,
-      "FromCharT and Codecvt::extern_type must be the same type");
-    static_assert(std::is_same<ToCharT, typename Codecvt::intern_type>::value,
-      "ToCharT and Codecvt::intern_type must be the same type");
-    static_assert(!std::is_same<FromCharT, ToCharT>::value,
-      "FromCharT and ToCharT must not be the same type");
-
-    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
-    string_type temp(a);
-    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
-
-    //  for clarity, use the same names for ccvt.in() arguments as the standard library
-    std::mbstate_t mbstate  = std::mbstate_t();
-    const FromCharT* from = v.data();
-    const FromCharT* from_end = from + v.size();
-    const FromCharT* from_next;
-    std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
-
-    //  loop until the entire input sequence is processed by the codecvt facet 
-
-    while (from != from_end)
-    {
-      ToCharT* to = buf.data();
-      ToCharT* to_end = to + buf.size();
-      ToCharT* to_next = to;
-
-      ccvt_result
-        = ccvt.in(mbstate, from, from_end, from_next, to, to_end, to_next);
-
-      if (ccvt_result == std::codecvt_base::ok)
-      {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-        from = from_next;
-      }
-      else if (ccvt_result == std::codecvt_base::error)
-      {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-        temp.append(eh());
-        from = from_next + 1;  // bypass error
-      }
-      else  // ccvt_result == std::codecvt_base::partial
-      {
-        if (to_next == buf.data())
-        {
-          temp.append(eh());
-          from = from_end;
-        }
-        else
-        {
-          // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-          from = from_next;
-        }
-      }
-    }
-    return temp;
-  }
+//  //  narrow-to-UTF string-conversion convenience function
+//  template <class ToEncoding, class Error>
+//    inline std::basic_string<typename ToEncoding::value_type>
+//      recode_narrow_to_utf(boost::string_view v,
+//        const ccvt_type& ccvt, const Error eh)
+//    {
+//      // TODO: optimize away the call to recode if ToEncoding is wide
+//      return recode_utf_to_utf<ToEncoding>(
+//        recode_codecvt_string<wchar_t, char, ccvt_type>(
+//          v, ccvt, wide_err_pass_thru()), eh);
+//    }
+// 
+//  //  UTF-to-narrow string-conversion convenience functions
+//  template <class Error>
+//    inline std::string recode_utf_to_narrow(boost::string_view v,
+//      const ccvt_type& ccvt, const Error eh)
+//  {
+//    return recode_codecvt_string<char, wchar_t, ccvt_type>
+//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
+//  }
+//  template <class Error>
+//    inline std::string recode_utf_to_narrow(boost::u16string_view v,
+//      const ccvt_type& ccvt, const Error eh)
+//  {
+//    return recode_codecvt_string<char, wchar_t, ccvt_type>
+//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
+//  }
+//  template <class Error>
+//    inline std::string recode_utf_to_narrow(boost::u32string_view v,
+//      const ccvt_type& ccvt, const Error eh)
+//  {
+//    return recode_codecvt_string<char, wchar_t, ccvt_type>
+//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
+//  }
+//  template <class Error>
+//    inline std::string recode_utf_to_narrow(boost::wstring_view v,
+//      const ccvt_type& ccvt, const Error eh)
+//  {
+//    return recode_codecvt_string<char, wchar_t, ccvt_type>
+//      // wide-to-wide recode ensures well-formed UTF
+//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
+//  }
+//
+//  //  narrow-to-narrow string-conversion convenience function
+//  template <class Error>
+//    inline std::string recode_narrow_to_narrow(boost::string_view v,
+//      const ccvt_type& from_ccvt,
+//      const ccvt_type& to_ccvt, const Error eh)
+//  {
+//    return recode_codecvt_string<char, wchar_t, ccvt_type>(
+//      recode_narrow_to_utf<wide>(v, from_ccvt, wide_err_pass_thru()), to_ccvt, eh);
+//  }
+//
+////--------------------------------------------------------------------------------------//
+////                              detail implementation                                   //
+////--------------------------------------------------------------------------------------//
+//
+//  //  detail::do_recode_codecvt_string()
+//  //
+//  //  Overview for both overloads:
+//  //
+//  //    Start with an empty output string.
+//  //    Until all the input has been processed:
+//  //      * Convert as many characters as will fit into an output buffer.
+//  //      * Append the characters in the output buffer into the output string.
+//  //    Return the output string.
+//
+//  //  Overload for is_same<FromCharT, Codecvt::intern_type> == true_type
+//  //  This overload converts from Codecvt::internT (i.e. FromCharT, typically wchar_t)
+//  //  to Codecvt::externT (ToCharT, typically char) via ccvt.out()
+//
+//  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+//  class Error, class ToTraits, class ToAlloc, class View>
+//    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+//    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+//      std::true_type)
+//  {
+//    static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
+//      "FromCharT and Codecvt::intern_type must be the same type");
+//    static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
+//      "ToCharT and Codecvt::extern_type must be the same type");
+//    static_assert(!std::is_same<FromCharT, ToCharT>::value,
+//      "FromCharT and ToCharT must not be the same type");
+//
+//    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
+//    string_type temp(a);
+//    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
+//
+//    //  for clarity, use the same names for ccvt.out() arguments as the standard library
+//    std::mbstate_t mbstate  = std::mbstate_t();
+//    const FromCharT* from = v.data();
+//    const FromCharT* from_end = from + v.size();
+//    const FromCharT* from_next;
+//    std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
+//
+//    //  loop until the entire input sequence is processed by the codecvt facet 
+//
+//    while (from != from_end)
+//    {
+//      ToCharT* to = buf.data();
+//      ToCharT* to_end = to + buf.size();
+//      ToCharT* to_next = to;
+//
+//      ccvt_result
+//        = ccvt.out(mbstate, from, from_end, from_next, to, to_end, to_next);
+//
+//      if (ccvt_result == std::codecvt_base::ok)
+//      {
+//        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//        from = from_next;
+//      }
+//      else if (ccvt_result == std::codecvt_base::error)
+//      {
+//        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//        temp.append(eh());
+//        from = from_next + 1;  // bypass error
+//      }
+//      else  // ccvt_result == std::codecvt_base::partial
+//      {
+//        if (to_next == buf.data())
+//        {
+//          temp.append(eh());
+//          from = from_end;
+//        }
+//        else
+//        {
+//          // eliminate the possibility that buf does not have enough room
+//          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//          from = from_next;
+//        }
+//      }
+//    }
+//    return temp;
+//  }
+//
+//  //  Overload for is_same<FromCharT, Codecvt::intern_type> == false_type
+//  //  This overload converts from Codecvt::externT (i.e. FromCharT, typically char)
+//  //  to Codecvt::internT (ToCharT, typically wchar_t) via ccvt.in()
+//
+//  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
+//  class Error, class ToTraits, class ToAlloc, class View>
+//    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
+//    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
+//      std::false_type)
+//  {
+//    static_assert(std::is_same<FromCharT, typename Codecvt::extern_type>::value,
+//      "FromCharT and Codecvt::extern_type must be the same type");
+//    static_assert(std::is_same<ToCharT, typename Codecvt::intern_type>::value,
+//      "ToCharT and Codecvt::intern_type must be the same type");
+//    static_assert(!std::is_same<FromCharT, ToCharT>::value,
+//      "FromCharT and ToCharT must not be the same type");
+//
+//    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
+//    string_type temp(a);
+//    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
+//
+//    //  for clarity, use the same names for ccvt.in() arguments as the standard library
+//    std::mbstate_t mbstate  = std::mbstate_t();
+//    const FromCharT* from = v.data();
+//    const FromCharT* from_end = from + v.size();
+//    const FromCharT* from_next;
+//    std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
+//
+//    //  loop until the entire input sequence is processed by the codecvt facet 
+//
+//    while (from != from_end)
+//    {
+//      ToCharT* to = buf.data();
+//      ToCharT* to_end = to + buf.size();
+//      ToCharT* to_next = to;
+//
+//      ccvt_result
+//        = ccvt.in(mbstate, from, from_end, from_next, to, to_end, to_next);
+//
+//      if (ccvt_result == std::codecvt_base::ok)
+//      {
+//        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//        from = from_next;
+//      }
+//      else if (ccvt_result == std::codecvt_base::error)
+//      {
+//        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//        temp.append(eh());
+//        from = from_next + 1;  // bypass error
+//      }
+//      else  // ccvt_result == std::codecvt_base::partial
+//      {
+//        if (to_next == buf.data())
+//        {
+//          temp.append(eh());
+//          from = from_end;
+//        }
+//        else
+//        {
+//          // eliminate the possibility that buf does not have enough room
+//          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+//          from = from_next;
+//        }
+//      }
+//    }
+//    return temp;
+//  }
 
 } // namespace detail
 }  // namespace unicode
