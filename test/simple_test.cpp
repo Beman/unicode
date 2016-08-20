@@ -9,6 +9,7 @@
 #include <string>
 #include <boost/unicode/string_encoding.hpp>
 #include <boost/unicode/detail/hex_string.hpp>
+#include <boost/unicode/detail/utf8_codecvt_facet.hpp>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/detail/lightweight_main.hpp>
 #include <boost/core/lightweight_test.hpp>
@@ -17,6 +18,8 @@ using namespace boost::unicode;
 
 int cpp_main(int, char*[])
 {
+  detail::utf8_codecvt_facet ccvt(0);
+
   const std::string u8str(u8"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
   const std::u16string u16str(u"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
   const std::u32string u32str(U"ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ");
@@ -46,6 +49,12 @@ int cpp_main(int, char*[])
   sw.clear();
   sw = to_string<wide, utf8>(u8str);
   BOOST_TEST(sw == wstr);
+
+  s16.clear();
+  recode<narrow, utf16>(u8str.data(), u8str.data()+u8str.size(),
+    std::back_inserter(s16), ccvt);
+  BOOST_TEST(s16 == u16str);
+
 
    return ::boost::report_errors();
 }
