@@ -328,10 +328,28 @@ namespace unicode
     //                      recode_narrow_to_utf implementation                         //
     //----------------------------------------------------------------------------------//
     
-    // forward declare codecvt_to_string() for use by recode_narrow_to_utf()
-    template <class Error> inline
-      std::wstring codecvt_to_wstring(const char* from, const char* from_end,
-        const ccvt_type& ccvt, Error eh);
+    // forward declare functions used to implement recode to/from narrow 
+    template <class OutputIterator, class Error> inline
+      OutputIterator codecvt_narrow_to_wide(const char* from, const char* from_end,
+        OutputIterator result, const ccvt_type& ccvt, Error eh);
+    template <class OutputIterator, class Error> inline
+      OutputIterator codecvt_wide_to_narrow(const wchar_t* from, const wchar_t* from_end,
+        OutputIterator result, const ccvt_type& ccvt, Error eh);
+
+    template <class CharT> struct utf_encoding;
+    template <> struct utf_encoding<char>     { typedef utf8 tag; };
+    template <> struct utf_encoding<char16_t> { typedef utf16 tag; };
+    template <> struct utf_encoding<char32_t> { typedef utf32 tag; };
+
+    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
+    // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
+# if WCHAR_MAX >= 0x1FFFFFFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
+# elif WCHAR_MAX >= 0x1FFFu
+    template <> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
+# else
+    template <> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
+# endif
 
     //  For any conversion that uses a wide intermediary,
     //  we need a string that can never appear in valid UTF to pass the error through
@@ -345,13 +363,31 @@ namespace unicode
     struct wide_err_pass_thru {const wchar_t* operator()() const {return L"\xED\B0\80";}};
 # endif
 
+    // TODO: Both functions should have a second overload to deal with case of the utf
+    // already being wide, so no need to converting to an intermediary wstring.
+
+    // recode_utf_to_narrow
+    template <class InputIterator, class OutputIterator, class Error = ufffd<char>> inline
+    OutputIterator recode_utf_to_narrow(InputIterator first, InputIterator last,
+      OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
+    {
+       std::wstring tmp;
+       recode<typename 
+         utf_encoding<std::iterator_traits<InputIterator>::value_type>::tag, wide>(first,
+           last, std::back_inserter(tmp), wide_err_pass_thru());
+       return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
+         ccvt, eh);
+    }
+
     // recode_narrow_to_utf
     template <class ToEncoding, class InputIterator, class OutputIterator,
       class Error = ufffd<typename ToEncoding::value_type>> inline
     OutputIterator recode_narrow_to_utf(InputIterator first, InputIterator last,
       OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
     {
-      std::wstring tmp(codecvt_to_wstring(first, last, ccvt, wide_err_pass_thru()));
+      std::wstring tmp;
+      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), ccvt,
+        wide_err_pass_thru());
       return recode<wide, ToEncoding>(tmp.cbegin(), tmp.cend(), result, eh);
     }
 
@@ -452,20 +488,6 @@ namespace unicode
     //  to the final output type and there be detected as an error and then processed
     //  by the appropriate error handler for that output type.
     struct u32_err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
-
-    template <class CharT> struct utf_encoding;
-    template <> struct utf_encoding<char>     { typedef utf8 tag; };
-    template <> struct utf_encoding<char16_t> { typedef utf16 tag; };
-    template <> struct utf_encoding<char32_t> { typedef utf32 tag; };
-    // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
-    // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
-# if WCHAR_MAX >= 0x1FFFFFFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
-# elif WCHAR_MAX >= 0x1FFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
-# else
-    template <> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
-# endif
 
     //  handy constants
     constexpr char16_t high_surrogate_base = 0xD7C0u;
@@ -830,91 +852,84 @@ namespace unicode
 //  }
 
 //--------------------------------------------------------------------------------------//
-//                              detail implementation                                   //
+//                     codecvt based recoding implementation                            //
 //--------------------------------------------------------------------------------------//
 
-  //  detail::do_recode_codecvt_string()
-  //
-  //  Overview for both overloads:
-  //
-  //    Start with an empty output string.
-  //    Until all the input has been processed:
-  //      * Convert as many characters as will fit into an output buffer.
-  //      * Append the characters in the output buffer into the output string.
-  //    Return the output string.
+  //  TODO: Both functions need to protect against buffer overflow caused by excessively
+  //  long error handler returned strings. But if the only use is for pass_thru that is
+  //  not strictly needed.
 
-  //  Overload for is_same<FromCharT, Codecvt::intern_type> == true_type
-  //  This overload converts from Codecvt::internT (i.e. FromCharT, typically wchar_t)
-  //  to Codecvt::externT (ToCharT, typically char) via ccvt.out()
+  //  TODO: Combine these functions into one. The are identical except for the
+  //  ccvt.in/ccvt.out call and the easy-to-parameterize from/to character types.
 
-  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  class Error, class ToTraits, class ToAlloc, class View>
-    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-      std::true_type)
+  //  codecvt_wide-to-narrow
+  template <class OutputIterator, class Error> inline
+    //  for clarity, use the same names for ccvt.in() arguments as the standard library
+    OutputIterator codecvt_wide_to_narrow(const wchar_t* from, const wchar_t* from_end,
+      OutputIterator result, const ccvt_type& ccvt, Error eh)
   {
-    static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
-      "FromCharT and Codecvt::intern_type must be the same type");
-    static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
-      "ToCharT and Codecvt::extern_type must be the same type");
-    static_assert(!std::is_same<FromCharT, ToCharT>::value,
-      "FromCharT and ToCharT must not be the same type");
+    //static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
+    //  "FromCharT and Codecvt::intern_type must be the same type");
+    //static_assert(std::is_same<ToCharT, typename Codecvt::extern_type>::value,
+    //  "ToCharT and Codecvt::extern_type must be the same type");
+    //static_assert(!std::is_same<FromCharT, ToCharT>::value,
+    //  "FromCharT and ToCharT must not be the same type");
 
-    typedef std::basic_string<ToCharT, ToTraits, ToAlloc> string_type;
-    string_type temp(a);
-    std::array<ToCharT, 128> buf;  // TODO: increase size after preliminary testing
-
-    //  for clarity, use the same names for ccvt.out() arguments as the standard library
+    std::array<char, 128> buf;  // TODO: macro that reduces size for stress testing 
     std::mbstate_t mbstate  = std::mbstate_t();
-    const FromCharT* from = v.data();
-    const FromCharT* from_end = from + v.size();
-    const FromCharT* from_next;
+    const wchar_t* from_next;
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
 
     //  loop until the entire input sequence is processed by the codecvt facet 
 
     while (from != from_end)
     {
-      ToCharT* to = buf.data();
-      ToCharT* to_end = to + buf.size();
-      ToCharT* to_next = to;
+      char* to = buf.data();
+      char* to_end = to + buf.size();
+      char* to_next = to;
 
       ccvt_result
         = ccvt.out(mbstate, from, from_end, from_next, to, to_end, to_next);
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+        for (; to != to_next; ++to)
+          *result++ = *to;
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
-        temp.append(eh());
+        for (; to != to_next; ++to)
+          *result++ = *to;
+        for (auto it = eh(); *it != '\0'; ++it)
+          *result++ = *to;
         from = from_next + 1;  // bypass error
       }
       else  // ccvt_result == std::codecvt_base::partial
       {
         if (to_next == buf.data())
         {
-          temp.append(eh());
+          for (auto it = eh(); *it != '\0'; ++it)
+            *result++ = *to;
           from = from_end;
         }
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<typename string_type::size_type>(to_next - to));
+          for (; to != to_next; ++to)
+            *result++ = *to;
           from = from_next;
         }
       }
     }
-    return temp;
+    return result;
   }
 
-  template <class Error> inline
+  //  codecvt_narrow_to_wide
+  template <class OutputIterator, class Error> inline
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
-  std::wstring codecvt_to_wstring(const char* from, const char* from_end,
-    const ccvt_type& ccvt, Error eh)
+  OutputIterator codecvt_narrow_to_wide(const char* from, const char* from_end,
+    OutputIterator result, const ccvt_type& ccvt, Error eh)
   {
     //static_assert(std::is_same<FromCharT, typename Codecvt::extern_type>::value,
     //  "FromCharT and Codecvt::extern_type must be the same type");
@@ -923,9 +938,7 @@ namespace unicode
     //static_assert(!std::is_same<FromCharT, ToCharT>::value,
     //  "FromCharT and ToCharT must not be the same type");
 
-    std::wstring temp;
-    std::array<wchar_t, 128> buf;  // TODO: increase size after preliminary testing
-
+    std::array<wchar_t, 128> buf;  // TODO: macro that reduces size for stress testing
     std::mbstate_t mbstate  = std::mbstate_t();
     const char* from_next;
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
@@ -943,31 +956,36 @@ namespace unicode
 
       if (ccvt_result == std::codecvt_base::ok)
       {
-        temp.append(to, static_cast<std::size_t>(to_next - to));
+        for (; to != to_next; ++to)
+          *result++ = *to;
         from = from_next;
       }
       else if (ccvt_result == std::codecvt_base::error)
       {
-        temp.append(to, static_cast<std::size_t>(to_next - to));
-        temp.append(eh());
+        for (; to != to_next; ++to)
+          *result++ = *to;
+        for (auto it = eh(); *it != '\0'; ++it)
+          *result++ = *to;
         from = from_next + 1;  // bypass error
       }
       else  // ccvt_result == std::codecvt_base::partial
       {
         if (to_next == buf.data())
         {
-          temp.append(eh());
+          for (auto it = eh(); *it != '\0'; ++it)
+            *result++ = *to;
           from = from_end;
         }
         else
         {
           // eliminate the possibility that buf does not have enough room
-          temp.append(to, static_cast<std::size_t>(to_next - to));
+          for (; to != to_next; ++to)
+            *result++ = *to;
           from = from_next;
         }
       }
     }
-    return temp;
+    return result;
   }
 
 } // namespace detail

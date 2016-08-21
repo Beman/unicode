@@ -55,6 +55,11 @@ int cpp_main(int, char*[])
     std::back_inserter(s16), ccvt);
   BOOST_TEST(s16 == u16str);
 
+  s.clear();
+  recode<utf16, narrow>(u16str.data(), u16str.data()+u16str.size(),
+    std::back_inserter(s), ccvt);
+  BOOST_TEST(s == u8str);
+
 
    return ::boost::report_errors();
 }
