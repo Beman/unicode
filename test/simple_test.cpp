@@ -60,6 +60,11 @@ int cpp_main(int, char*[])
     std::back_inserter(s), ccvt);
   BOOST_TEST(s == u8str);
 
+  s.clear();
+  recode<narrow, narrow>(u8str.data(), u8str.data()+u8str.size(),
+    std::back_inserter(s), ccvt);
+  BOOST_TEST(s == u8str);
+
 
    return ::boost::report_errors();
 }

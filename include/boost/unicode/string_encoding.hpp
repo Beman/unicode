@@ -391,6 +391,18 @@ namespace unicode
       return recode<wide, ToEncoding>(tmp.cbegin(), tmp.cend(), result, eh);
     }
 
+    // recode_narrow_to_narrow
+    template <class InputIterator, class OutputIterator, class Error = ufffd<char>> inline
+    OutputIterator recode_narrow_to_narrow(InputIterator first, InputIterator last,
+      OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
+    {
+      std::wstring tmp;
+      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), ccvt,
+        wide_err_pass_thru());
+      return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
+        ccvt, eh);
+    }
+
     ////  UTF-to-narrow string-conversion convenience functions
     //template <class Error = ufffd<char>>
     //inline std::string recode_utf_to_narrow(boost::string_view v,  // v is UTF-8 encoded
