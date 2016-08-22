@@ -394,34 +394,15 @@ namespace unicode
     // recode_narrow_to_narrow
     template <class InputIterator, class OutputIterator, class Error = ufffd<char>> inline
     OutputIterator recode_narrow_to_narrow(InputIterator first, InputIterator last,
-      OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
+      OutputIterator result, const ccvt_type& from_ccvt, const ccvt_type& to_ccvt,
+      Error eh = Error())
     {
       std::wstring tmp;
-      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), ccvt,
+      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), from_ccvt,
         wide_err_pass_thru());
       return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
-        ccvt, eh);
+        to_ccvt, eh);
     }
-
-    ////  UTF-to-narrow string-conversion convenience functions
-    //template <class Error = ufffd<char>>
-    //inline std::string recode_utf_to_narrow(boost::string_view v,  // v is UTF-8 encoded
-    //  const ccvt_type& ccvt, const Error eh = Error());
-    //template <class Error = ufffd<char>>
-    //inline std::string recode_utf_to_narrow(boost::u16string_view v,
-    //  const ccvt_type& ccvt, const Error eh = Error());
-    //template <class Error = ufffd<char>>
-    //inline std::string recode_utf_to_narrow(boost::u32string_view v,
-    //  const ccvt_type& ccvt, const Error eh = Error());
-    //template <class Error = ufffd<char>>
-    //inline std::string recode_utf_to_narrow(boost::wstring_view v,
-    //  const ccvt_type& ccvt, const Error eh = Error());
-
-    ////  narrow-to-narrow string-conversion convenience function
-    //template <class Error = ufffd<char>>
-    //inline std::string recode_narrow_to_narrow(boost::string_view v,
-    //  const ccvt_type& from_ccvt,
-    //  const ccvt_type& to_ccvt, const Error eh = Error());
 
     //  recode_dispatch implementation -------------------------------------------------//
 
@@ -478,7 +459,7 @@ namespace unicode
 
   }  // namespace detail
 
-  //-------------------------- recode definition -----------------------------//
+  //------------------------------ recode definition -----------------------------------//
 
   template <class FromEncoding, class ToEncoding,
     class InputIterator, class OutputIterator, class ... T> inline
@@ -733,135 +714,6 @@ namespace unicode
       }
       return result;
     }
-
-
-    ////  dispatching tag
-    //template <class CharT> struct dispatch;
-    //template <> struct dispatch<char> { typedef utf8 tag; };
-    //template <> struct dispatch<char16_t> { typedef utf16 tag; };
-    //template <> struct dispatch<char32_t> { typedef utf32 tag; };
-    //template <> struct dispatch<wchar_t> { typedef wide tag; };
-
-  } // namespace detail
-
-  //------------------------------------------------------------------------------------//
-  //               Unicode Transformation Format (UTF) conversions                      //
-  //                              implementation                                        //
-  //------------------------------------------------------------------------------------//
-
-  //namespace detail
-  //{
-  //  //  recode_utf_to_utf()
-  //  template <class ToEncoding, class Error>
-  //  inline std::basic_string<typename ToEncoding::value_type>
-  //    recode_utf_to_utf(boost::string_view v, Error eh)
-  //  {
-  //    return recode_utf_string<typename ToEncoding::value_type, char, Error>(v, eh);
-  //  }
-
-  //  template <class ToEncoding, class Error>
-  //  inline std::basic_string<typename ToEncoding::value_type>
-  //    recode_utf_to_utf(boost::u16string_view v, Error eh)
-  //  {
-  //    return recode_utf_string<typename ToEncoding::value_type, char16_t, Error>(v, eh);
-  //  }
-
-  //  template <class ToEncoding, class Error>
-  //  inline std::basic_string<typename ToEncoding::value_type>
-  //    recode_utf_to_utf(boost::u32string_view v, Error eh)
-  //  {
-  //    return recode_utf_string<typename ToEncoding::value_type, char32_t, Error>(v, eh);
-  //  }
-
-  //  template <class ToEncoding, class Error>
-  //  inline std::basic_string<typename ToEncoding::value_type>
-  //    recode_utf_to_utf(boost::wstring_view v, Error eh)
-  //  {
-  //    return recode_utf_string<typename ToEncoding::value_type, wchar_t, Error>(v, eh);
-  //  }
-
-  //  //  do_recode_codecvt_string()
-  //  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  //    class Error, class ToTraits, class ToAlloc, class View>
-  //    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-  //    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-  //      std::true_type);
-
-  //  template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  //    class Error, class ToTraits, class ToAlloc, class View>
-  //    inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-  //    do_recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a,
-  //      std::false_type);
-
-  //}  // namespace detail
-  
-  ////  recode_codecvt_string  ---------------------------------------------------------//
-
-  //template <class ToCharT, class FromCharT, class Codecvt, class FromTraits,
-  //  class Error, class ToTraits, class ToAlloc, class View>
-  //inline std::basic_string<ToCharT, ToTraits, ToAlloc>
-  //  recode_codecvt_string(View v, const Codecvt& ccvt, Error eh, const ToAlloc& a)
-  //{
-  //  return detail::do_recode_codecvt_string<ToCharT, FromCharT, Codecvt, FromTraits, Error,
-  //    ToTraits, ToAlloc, View>(v, ccvt, eh, a,
-  //      std::is_same<FromCharT, typename Codecvt::intern_type>());  // tag dispatch
-  //}
-
-  namespace detail
-  {
-
-//  //  narrow-to-UTF string-conversion convenience function
-//  template <class ToEncoding, class Error>
-//    inline std::basic_string<typename ToEncoding::value_type>
-//      recode_narrow_to_utf(boost::string_view v,
-//        const ccvt_type& ccvt, const Error eh)
-//    {
-//      // TODO: optimize away the call to recode if ToEncoding is wide
-//      return recode_utf_to_utf<ToEncoding>(
-//        recode_codecvt_string<wchar_t, char, ccvt_type>(
-//          v, ccvt, wide_err_pass_thru()), eh);
-//    }
-// 
-//  //  UTF-to-narrow string-conversion convenience functions
-//  template <class Error>
-//    inline std::string recode_utf_to_narrow(boost::string_view v,
-//      const ccvt_type& ccvt, const Error eh)
-//  {
-//    return recode_codecvt_string<char, wchar_t, ccvt_type>
-//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-//  }
-//  template <class Error>
-//    inline std::string recode_utf_to_narrow(boost::u16string_view v,
-//      const ccvt_type& ccvt, const Error eh)
-//  {
-//    return recode_codecvt_string<char, wchar_t, ccvt_type>
-//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-//  }
-//  template <class Error>
-//    inline std::string recode_utf_to_narrow(boost::u32string_view v,
-//      const ccvt_type& ccvt, const Error eh)
-//  {
-//    return recode_codecvt_string<char, wchar_t, ccvt_type>
-//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-//  }
-//  template <class Error>
-//    inline std::string recode_utf_to_narrow(boost::wstring_view v,
-//      const ccvt_type& ccvt, const Error eh)
-//  {
-//    return recode_codecvt_string<char, wchar_t, ccvt_type>
-//      // wide-to-wide recode ensures well-formed UTF
-//      (recode_utf_to_utf<wide>(v, wide_err_pass_thru()), ccvt, eh);
-//  }
-//
-//  //  narrow-to-narrow string-conversion convenience function
-//  template <class Error>
-//    inline std::string recode_narrow_to_narrow(boost::string_view v,
-//      const ccvt_type& from_ccvt,
-//      const ccvt_type& to_ccvt, const Error eh)
-//  {
-//    return recode_codecvt_string<char, wchar_t, ccvt_type>(
-//      recode_narrow_to_utf<wide>(v, from_ccvt, wide_err_pass_thru()), to_ccvt, eh);
-//  }
 
 //--------------------------------------------------------------------------------------//
 //                     codecvt based recoding implementation                            //

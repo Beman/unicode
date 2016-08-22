@@ -65,13 +65,19 @@ namespace unicode
 {
 namespace detail
 {
+    template <class CharT> struct default_encoding;
+    template <> struct default_encoding<char>     { typedef utf8 tag; };
+    template <> struct default_encoding<char16_t> { typedef utf16 tag; };
+    template <> struct default_encoding<char32_t> { typedef utf32 tag; };
+    template <> struct default_encoding<wchar_t>  { typedef wide  tag; };
 
 template <class ToCharT, class ToTraits, class FromCharT, class FromTraits>
   inline std::basic_ostream<ToCharT, ToTraits>&
     inserter(std::basic_ostream<ToCharT, ToTraits>& os,
              boost::basic_string_view<FromCharT, FromTraits> v)
 {
-  return os << recode_utf_string<ToCharT, FromCharT>(v, ufffd<ToCharT>());
+  return os << to_string<typename default_encoding<ToCharT>::tag,
+    typename default_encoding<FromCharT>::tag>(v, ufffd<ToCharT>());
 }
 
 } // namespace detail

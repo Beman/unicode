@@ -62,7 +62,7 @@ int cpp_main(int, char*[])
 
   s.clear();
   recode<narrow, narrow>(u8str.data(), u8str.data()+u8str.size(),
-    std::back_inserter(s), ccvt);
+    std::back_inserter(s), ccvt, ccvt);
   BOOST_TEST(s == u8str);
 
 
