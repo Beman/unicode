@@ -384,7 +384,7 @@ namespace unicode
     {
        std::wstring tmp;
        recode<typename 
-         utf_encoding<std::iterator_traits<InputIterator>::value_type>::tag, wide>(first,
+         utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::tag, wide>(first,
            last, std::back_inserter(tmp), wide_err_pass_thru());
        return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
          ccvt, eh);
