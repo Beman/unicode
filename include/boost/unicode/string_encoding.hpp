@@ -67,15 +67,14 @@ namespace boost
 {
 namespace unicode
 {
-  //  encoding tags and value_types
+  //  [uni.encoding] encoding types
   struct narrow {typedef char     value_type;}; // encoding determined by codecvt facet
   struct utf8   {typedef char     value_type;}; // UTF-8 encoded
   struct utf16  {typedef char16_t value_type;}; // UTF-16 encoded
   struct utf32  {typedef char32_t value_type;}; // UTF-32 encoded
   struct wide   {typedef wchar_t  value_type;}; // UTF-8, 16, or 32, platform determined
 
-  typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
-
+  //  [uni.is_encoding] is_encoding type-trait
   template <class T> struct is_encoding { static const bool value = false; };
   template<> struct is_encoding<narrow> { static const bool value = true; };
   template<> struct is_encoding<utf8>   { static const bool value = true; };
@@ -83,17 +82,20 @@ namespace unicode
   template<> struct is_encoding<utf32>  { static const bool value = true; };
   template<> struct is_encoding<wide>   { static const bool value = true; };
 
-  //  to_string: string encoding conversion
+  //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
+  typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
+
+  //  [uni.recode] encoding conversion algorithm
+  template <class FromEncoding, class ToEncoding,
+    class InputIterator, class OutputIterator, class ... T> inline
+  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
+    const T& ... args);
+
+  //  [uni.to_string] string encoding conversion
   template <class ToEncoding, class FromEncoding, class ... T> inline
   typename boost::enable_if<is_encoding<ToEncoding>,
     typename std::basic_string<typename ToEncoding::value_type>>::type
   to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-    const T& ... args);
-
-  //  recode: encoding conversion algorithm
-  template <class FromEncoding, class ToEncoding,
-    class InputIterator, class OutputIterator, class ... T> inline
-  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
 }  // namespace unicode
