@@ -155,6 +155,12 @@ namespace unicode
     //        The appropriate overload is called by recode_dispatch()                   //
     //----------------------------------------------------------------------------------//
 
+    //  For any conversion that uses utf32 as an intermediary,
+    //  we need a value that can never appear in valid utf32 to pass the error through
+    //  to the final output type and there be detected as an error and then processed
+    //  by the appropriate error handler for that output type.
+    struct u32_err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
+
 # if WCHAR_MAX >= 0x1FFFFFFFu
 #   define BOOST_UNICODE_WIDE_UTF utf32
 # elif WCHAR_MAX >= 0x1FFFu
@@ -472,20 +478,14 @@ namespace unicode
     const T& ... args)
   {
     return detail::recode_dispatch<FromEncoding, ToEncoding>(
-      detail::dispatch<FromEncoding>::tag(),
-      detail::dispatch<ToEncoding>::tag(),
+      typename detail::dispatch<FromEncoding>::tag(),
+      typename detail::dispatch<ToEncoding>::tag(),
       first, last, result, args ...);
   }
 
   namespace detail
   {
     //  utf-to-utf conversion helpers  -------------------------------------------------//
-
-    //  For any conversion that uses utf32 as an intermediary,
-    //  we need a value that can never appear in valid utf32 to pass the error through
-    //  to the final output type and there be detected as an error and then processed
-    //  by the appropriate error handler for that output type.
-    struct u32_err_pass_thru { const char32_t* operator()() const { return U"\x110000"; } };
 
     //  handy constants
     constexpr char16_t high_surrogate_base = 0xD7C0u;
