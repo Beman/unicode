@@ -1,4 +1,4 @@
-//  boost/unicode/string_encoding.hpp  --------------------------------------------------//
+//  boost/unicode/string_encoding.hpp  -------------------------------------------------//
 
 //  © Copyright Beman Dawes 2015
 
@@ -16,7 +16,6 @@
 #include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
 #include <boost/utility/string_view.hpp> 
-#include <boost/utility/enable_if.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
 
@@ -75,12 +74,14 @@ namespace unicode
   struct wide   {typedef wchar_t  value_type;}; // UTF-8, 16, or 32, platform determined
 
   //  [uni.is_encoding] is_encoding type-trait
-  template <class T> struct is_encoding { static const bool value = false; };
-  template<> struct is_encoding<narrow> { static const bool value = true; };
-  template<> struct is_encoding<utf8>   { static const bool value = true; };
-  template<> struct is_encoding<utf16>  { static const bool value = true; };
-  template<> struct is_encoding<utf32>  { static const bool value = true; };
-  template<> struct is_encoding<wide>   { static const bool value = true; };
+  template <class T> struct is_encoding :public std::false_type {};
+  template<> struct is_encoding<narrow> : std::true_type {};
+  template<> struct is_encoding<utf8>   : std::true_type {};
+  template<> struct is_encoding<utf16>  : std::true_type {};
+  template<> struct is_encoding<utf32>  : std::true_type {};
+  template<> struct is_encoding<wide>   : std::true_type {};
+
+  template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
@@ -91,12 +92,13 @@ namespace unicode
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
-  //  [uni.to_string] string encoding conversion
-  template <class ToEncoding, class FromEncoding, class ... T> inline
-  typename boost::enable_if<is_encoding<ToEncoding>,
-    typename std::basic_string<typename ToEncoding::value_type>>::type
-  to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-    const T& ... args);
+  ////  [uni.to_string] string encoding conversion
+  //template <class ToEncoding, class FromEncoding, class ... T> inline
+  //typename std::enable_if<is_encoding_v<ToEncoding>,
+  //  std::basic_string<typename ToEncoding::value_type>>::type
+  ////std::basic_string<typename ToEncoding::value_type>
+  //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
+  //  const T& ... args);
 
 }  // namespace unicode
 }  // namespace boost
@@ -115,10 +117,11 @@ namespace unicode
    // to_string implementation ---------------------------------------------------------//
 
   template <class ToEncoding, class FromEncoding, class ... T> inline
-  typename boost::enable_if<is_encoding<ToEncoding>,
-    typename std::basic_string<typename ToEncoding::value_type>>::type
+  typename std::enable_if<is_encoding_v<ToEncoding>,
+     std::basic_string<typename ToEncoding::value_type>>::type
+  //std::basic_string<typename ToEncoding::value_type>
   to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-      const T& ... args)
+    const T& ... args)
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
