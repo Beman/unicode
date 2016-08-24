@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-07-17<!--webbot bot="Timestamp" endspan i-checksum="12469" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-08-24<!--webbot bot="Timestamp" endspan i-checksum="12528" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -465,12 +465,21 @@ wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
 
 <h1>Proposed wording</h1>
 
+<p><i><span style="background-color: #C0C0C0">This wording assumes P0417,</span></i><span style="background-color: #C0C0C0"> 
+C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
+10646 2014 instead of 1994, </span><i><span style="background-color: #C0C0C0">
+has been accepted into the C++ working paper.</span></i></p>
+
 <h2>Unicode library [ucs]</h2>
 
 <p>This sub-clause describes components that C++ programs may use to perform 
 operations on characters, strings, and other sequences of characters encoded in 
-UCS encoding 
-forms UTF-8, UTF-16, and UTF-32. [<i>Note</i>: ISO/IEC 10646 Universal Coded 
+various encoding forms. Encoding 
+forms UTF-8, UTF-16, and UTF-32 (UCS 9) are supported, as are any narrow 
+character encodings having a <code>codecvt</code> facet meeting requirements 
+described below.</p>
+
+<p>[<i>Note</i>: ISO/IEC 10646 Universal Coded 
 Character Set (UCS) is the ISO standard for
 <a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>. &mdash;<i>end note</i>]</p>
 
@@ -481,7 +490,7 @@ this product.</p>
 
 <h3>Normative references [ucs.refs]</h3>
 
-<p>A reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
+<p>Within this sub-clause, A reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
 number</i> of ISO/IEC 10646:2014 (C++ [intro.refs]).</p>
 
 <h3>Definitions&nbsp; [ucs.defs]</h3>
@@ -499,16 +508,16 @@ encoded character types</i>.</p>
 <h3>Requirements [ucs.req]</h3>
 
 <p>Class template parameters named <code>CharT</code>, <code>FromCharT</code>, 
-and <code>ToCharT</code> shall be one of the encoded character types. Function 
-templates with parameters named <code>CharT</code>, <code>FromCharT</code>, or
-<code>ToCharT</code> shall not participate in overload resolution unless they 
-are one of the encoded character types.</p>
+and <code>ToCharT</code> shall be one of the encoded character types. 
+<span style="background-color: #FFFF00">Function 
+templates with parameters named </span> <code>
+<span style="background-color: #FFFF00">CharT</span></code><span style="background-color: #FFFF00">,
+</span> <code><span style="background-color: #FFFF00">FromCharT</span></code><span style="background-color: #FFFF00">, or
+</span>
+<code><span style="background-color: #FFFF00">ToCharT</span></code><span style="background-color: #FFFF00"> shall not participate in overload resolution unless they 
+are one of the encoded character types.</span></p>
 
-<p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]). 
-[<i>Note</i>: Input sequences are treated as UTF encoded, so input sequences of
-<code>char</code>s not encoded with UTF-8 and containing non-ASCII characters 
-have a high probability of being detected as ill-formed.&nbsp; &mdash;<i>end 
-note</i>]</p>
+<p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]).</p>
 
 <p>Template parameters named <code>OutputIterator</code> shall satisfy the 
 requirements of an output iterator (C++ [output.iterators]).</p>
@@ -526,65 +535,44 @@ namespace utf {
   //  default error handler: function object returns a C-string of type
   //  ToCharT with a UTF encoded value of U+FFFD.
 
-  // [uni.err], error handling
+  // [uni.err], default error handler
   template &lt;class CharT&gt; struct ufffd;
   template &lt;&gt; struct ufffd&lt;char&gt;;
   template &lt;&gt; struct ufffd&lt;char16_t&gt;;
   template &lt;&gt; struct ufffd&lt;char32_t&gt;;
   template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
 
-  //  [uni.enc_cvt_alg], string encoding conversion algorithm
-  template &lt;class ToCharT, class InputIterator, class OutputIterator,
-    class Error = typename ufffd&lt;ToCharT&gt;&gt;
-  OutputIterator convert_utf(InputIterator first, InputIterator last, 
-                             OutputIterator result, Error eh = Error());
+  //  [uni.encoding] encoding types
+  struct narrow {typedef char     value_type;}; // codecvt determined encoding
+  struct utf8   {typedef char     value_type;}; // UTF-8 encoding
+  struct utf16  {typedef char16_t value_type;}; // UTF-16 encoding
+  struct utf32  {typedef char32_t value_type;}; // UTF-32 encoding
+  struct wide   {typedef wchar_t  value_type;}; // wide-character literal encoding [lex.ccon]
 
-  //  [uni.gen_enc_cvt], string encoding generic conversions
-  template &lt;class ToCharT, class FromCharT,
-    class FromTraits = typename char_traits&lt;FromCharT&gt;,
-    class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
-    class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = char_traits&lt;ToCharT&gt;,
-    class ToAlloc = allocator&lt;ToCharT&gt;&gt;
-  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());
-  
-  //  [uni.conv_enc_cvt], string encoding convenience conversions
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(wstring_view v, Error eh = Error());
+  // [uni.is_encoding] is_encoding type-trait
+  template &lt;class T&gt; struct is_encoding :public std::false_type {};
+  template&lt;&gt; struct is_encoding&lt;narrow&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf8&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf16&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf32&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;wide&gt; : std::true_type {};
 
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(wstring_view v, Error eh = Error());
+  template &lt;class T&gt; constexpr bool is_encoding_v = is_encoding&lt;T&gt;::value;
 
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(wstring_view v, Error eh = Error());
+  //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
+  typedef codecvt&lt;wchar_t, char, std::mbstate_t&gt; ccvt_type;
 
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(wstring_view v, Error eh = Error());
+  //  [uni.recode] encoding conversion algorithm
+  template &lt;class FromEncoding, class ToEncoding,
+    class InputIterator, class OutputIterator, class ... T&gt;
+  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
+    const T&amp; ... args);
+
+  //  [uni.to_string] string encoding conversion
+  template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
+    name basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
+        const T&amp; ... args);
 
   //  [uni.enc_err_detect], Encoding error detection
   template &lt;class InputIterator&gt;
@@ -604,35 +592,42 @@ namespace utf {
 
 <h3>UTF encoding conversion functions [uni.enc_cvt]</h3>
 
-<p>UTF conversion functions determine UCS encoding form based on character type. The 
-relationship between character type and encoding form is specified by the following 
+<p>The 
+relationship between character types, encoding types, and encodings is specified by the following 
 table:</p>
 
 <blockquote>
-<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="942">
   <tr>
-    <td colspan="2">
-    <p align="center"><b><i>UTF Conversions</i></b></td>
-      </tr>
-  <tr>
-    <td><b>Character Type</b></td>
-    <td><b>UCS Encoding Form</b></td>
+    <td width="100"><b>Character type</b></td>
+    <td width="96"><b>Encoding type</b></td>
+    <td width="712"><b>Encoding</b></td>
   </tr>
   <tr>
-    <td><code>char</code></td>
-    <td>UTF-8 (UCS 9.2)</td>
+    <td width="100"><code>char</code></td>
+    <td width="96"><code>narrow</code></td>
+    <td width="712">The encoding of narrow characters for a user-supplied facet 
+    of type <code>std::codecvt&lt;wchar_t, char, mbstate_t&gt;</code>.</td>
   </tr>
   <tr>
-    <td><code>char16_t</code></td>
-    <td>UTF-16 (UCS 9.3)</td>
+    <td width="100"><code>char</code></td>
+    <td width="96"><code>utf8</code></td>
+    <td width="712">UTF-8</td>
   </tr>
   <tr>
-    <td><code>char32_t</code></td>
-    <td>UFT-32 (UCS 9.4)</td>
+    <td width="100"><code>char16_t</code></td>
+    <td width="96"><code>utf16</code></td>
+    <td width="712">UTF-16</td>
   </tr>
   <tr>
-    <td><code>wchar_t</code></td>
-    <td>UTF-8, 16, or 32</td>
+    <td width="100"><code>char32_t</code></td>
+    <td width="96"><code>utf32</code></td>
+    <td width="712">UFT-32</td>
+  </tr>
+  <tr>
+    <td width="100"><code>wchar_t</code></td>
+    <td width="96"><code>wide</code></td>
+    <td width="712">The encoding of wide-character literals ([lex.ccon]). </td>
   </tr>
 </table>
 </blockquote>
@@ -660,7 +655,7 @@ template &lt;&gt; struct ufffd&lt;char32_t&gt;;
 template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
 
 
-<p><code>struct ufffd</code> provides the default error handler function object for conversion functions. 
+<p><code>struct ufffd</code> is the default error handler function object for conversion functions. 
 The default error 
 handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code point error marker. Each specialization shall provide a member function with the signature:</p>
 
@@ -693,12 +688,13 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
   &mdash;<i>end note</i>]</p>
 </blockquote>
 
-<h4>Encoding conversion algorithm [uni.enc_cvt_alg]</h4>
+<h4>Encoding conversion algorithm [uni.recode]</h4>
 
-<pre>template &lt;class ToCharT, class InputIterator, class OutputIterator,
-          class Error = typename ufffd&lt;ToCharT&gt;&gt;
-  OutputIterator convert_utf(InputIterator first, InputIterator last, 
-                             OutputIterator result, Error eh = Error());</pre>
+<pre>template &lt;class FromEncoding, class ToEncoding,
+  class InputIterator, class OutputIterator, class ... T&gt;
+OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
+  const T&amp; ... args);</pre>
+    
   <blockquote>
      <p><i>Effects:</i> For each minimal well-formed or ill-formed code unit 
      subsequence in the range [<code>first, last</code>):</p>
@@ -715,96 +711,116 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
        successive value of a pointer <code>p</code> to the returned string.</li>
      </ul>
      <p><i>Returns: </i><code>result</code>.</p>
-     <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
-     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]). 
-     The Unicode encoding form for <code>result</code> is determined by <code>
-     ToCharT</code> ([uni.enc_cvt]).</p>
+     <p><i>Remarks:</i>&nbsp; The requirements for the <code>args</code> 
+     parameter pack arguments are shown in the following table.</p>
+  </blockquote>
+    
+     <div align="center">
+       <center>
+
+    
+     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+       <tr>
+         <td><b><code>FromEncoding</code></b></td>
+         <td><b><code>ToEncoding</code></b></td>
+         <td>
+         <p><b>First <code>args</code> argument</b></td>
+         <td><b>Second <code>args</code> argument</b></td>
+         <td><b>Third <code>args</code> argument</b></td>
+       </tr>
+       <tr>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td>Optional error handler function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>narrow</code></td>
+         <td><code>const ccvt_type&amp; ccvt</code></td>
+         <td>Optional error handler function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>narrow</code></td>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>const ccvt_type&amp; ccvt</code></td>
+         <td>Optional error handler function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>narrow</code></td>
+         <td><code>narrow</code></td>
+         <td><code>const ccvt_type&amp; from_ccvt</code></td>
+         <td><code>const ccvt_type&amp; to_ccvt</code></td>
+         <td>Optional error handler function object [uni.err]</td>
+       </tr>
+     </table>
+       </center>
+     </div>
+     
+   <blockquote>
+    
      <p><i>Postcondition: </i>If the string returned by each call to the <code>
      eh</code> function object during the execution of the algorithm is a well 
-     formed UTF sequence, then the output sequence is a well formed UTF 
-     sequence.</p>
+     formed  sequence, then the output sequence is a well formed  sequence.</p>
+    
+    
+<p><span style="background-color: #FFFF00">[</span><i><span style="background-color: #FFFF00">Example:</span></i><span style="background-color: #FFFF00"> xxx &mdash;</span><i><span style="background-color: #FFFF00">end example</span></i><span style="background-color: #FFFF00">]</span></p>
+
+    
   </blockquote>                           
+    
+    
+<h4>String encoding conversion [uni.to_string]</h4>
 
+<pre>template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
+      const T&amp; ... args);
+</pre>
+<blockquote>
+    
+    
+<p><i>Effects:</i> Equivalent to:</p>
 
-<h4>Generic string encoding conversion functions [uni.gen_enc_cvt]</h4>
+<blockquote>
+    
+    
+<p><code>basic_string&lt;typename ToEncoding::value_type&gt; tmp;<br>
+recode&lt;FromEncoding, ToEncoding&gt;(v.cbegin(), v.cend(), <br>
+&nbsp; back_inserter(tmp), args ...);<br>
+return tmp;</code></p>
 
-<pre> template &lt;class ToCharT, class FromCharT,
-    class FromTraits = typename char_traits&lt;FromCharT&gt;,
-    class View = basic_string_view&lt;FromCharT, FromTraits&gt;,
-    class Error = ufffd&lt;ToCharT&gt;,
-    class ToTraits = char_traits&lt;ToCharT&gt;,
-    class ToAlloc = allocator&lt;ToCharT&gt;&gt;
-  basic_string&lt;ToCharT, ToTraits, ToAlloc&gt;
-    to_utf_string(View v, Error eh = Error(), const ToAlloc&amp; a = ToAlloc());</pre>
+</blockquote>
+    
+    
+<p><i>Remarks:</i> This function shall not participate in overload resolution 
+unless <code>is_encoding_v&lt;ToEncoding&gt;</code> &amp;&amp; <code>is_encoding_v&lt;FromEncoding&gt;</code> 
+is <code>true</code>.</p>
 
-  <blockquote>
-     <p><i>Returns:</i> Equivalent to:</p>
-     <blockquote>
-     <p><code>basic_string&lt;ToCharT, ToTraits, ToAlloc&gt; tmp(a);<br>
-     convert_utf&lt;ToCharT&gt;(v.cbegin(), v.cend(), back_inserter(tmp), eh);<br>
-     return tmp;</code></p>
-     </blockquote>
-  </blockquote>                           
-
-<h4>Convenience string encoding conversion functions [<a name="uni.conv_enc_cvt">uni.conv_enc_cvt</a>]</h4>
-
-<pre>template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char&gt;&gt;
-    string to_u8string(wstring_view v, Error eh = Error());
-
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char16_t&gt;&gt;
-    u16string to_u16string(wstring_view v, Error eh = Error());
-
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;char32_t&gt;&gt;
-    u32string to_u32string(wstring_view v, Error eh = Error());
-
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(u16string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(u32string_view v, Error eh = Error());
-  template &lt;class Error = ufffd&lt;wchar_t&gt;&gt;
-    wstring to_wstring(wstring_view v, Error eh = Error());</pre>
-
-  <blockquote>
-     <p><i>Returns:</i> Equivalent to: </p>
-     <blockquote>
-     <p> <code>to_utf_string&lt;<i>r_value_type</i>,
-     <i>v_value_type</i>, Error&gt;(v, eh)</code> where <i><code>r_value_type</code></i> 
-     is the <code>value_type</code> of the <code>basic_string</code> to be 
-     returned and <i>
-     <code>v_value_type</code></i> is the <code>value_type</code> of <code>v</code>.</p>
-     </blockquote>
-  </blockquote>                           
-
+</blockquote>
+    
+    
 <h4>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</h4>
 
 <pre>template &lt;class InputIterator&gt;
 Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last);</pre>
   <blockquote>
-     <p><i>Returns: </i>The first iterator <code>i</code> in the range <code>
-     [first, last)</code> for which <code>*i</code> is a minimal ill-formed code unit 
+     <p><i>Returns: </i>The first iterator <code>iter</code> in the range <code>
+     [first, last)</code> for which <code>iter</code> is the start of a minimal ill-formed code unit 
      subsequence. Returns <code>last</code> if no such iterator is found.</p>
      <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
-     last</code>) is determined by <code>InputIterator</code> value type ([uni.enc_cvt]).</p>
+     last</code>) is determined by the <code>InputIterator</code> value type ([uni.enc_cvt]).</p>
   </blockquote>                           
 
 <pre>bool is_well_formed_utf(string_view v);
