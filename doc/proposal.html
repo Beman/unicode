@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-08-24<!--webbot bot="Timestamp" endspan i-checksum="12528" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-08-25<!--webbot bot="Timestamp" endspan i-checksum="12530" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -142,12 +142,6 @@ winner &mdash; Unicode.&quot;</p>
   <li>Added <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
-  <li>
-  <p>Changed namespace from <code>unicode</code> to <code>utf</code> 
-  with the encouragement of the Oulu LEWG small group.</li>
-  <li>
-  <p>Added <i>Postcondition</i> to <code>convert_utf</code> to clarify 
-  the requirements for a well formed output sequence.</li>
   <li>
   <p>Changed to assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
   and so that becomes the base document for references.</li>
@@ -361,7 +355,7 @@ and <code>char32_t</code></b></p>
 
 
 
-<p><b>Place the proposed components in namespace <code>utf</code></b></p>
+<p><b>Place the proposed components in namespace <code>unicode</code></b></p>
 
 
 
@@ -466,32 +460,39 @@ wbuf = codecvt_to_wstring(big5buf, big5_codecvt_facet);</pre>
 <h1>Proposed wording</h1>
 
 <p><i><span style="background-color: #C0C0C0">This wording assumes P0417,</span></i><span style="background-color: #C0C0C0"> 
-C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
-10646 2014 instead of 1994, </span><i><span style="background-color: #C0C0C0">
+&quot;C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
+10646 2014 instead of 1994&quot;, </span><i><span style="background-color: #C0C0C0">
 has been accepted into the C++ working paper.</span></i></p>
 
 <h2>Unicode library [ucs]</h2>
 
 <p>This sub-clause describes components that C++ programs may use to perform 
 operations on characters, strings, and other sequences of characters encoded in 
-various encoding forms. Encoding 
-forms UTF-8, UTF-16, and UTF-32 (UCS 9) are supported, as are any narrow 
+various encoding forms. Encoding forms UTF-8, UTF-16, and UTF-32 are supported, as are  narrow 
 character encodings having a <code>codecvt</code> facet meeting requirements 
 described below.</p>
 
+<p>[<i>Note:</i> The C++ standard does not require that the encoding of <code>
+char</code>, <code>char16_t</code>, <code>char32_t</code>, and <code>wchar_t</code> 
+objects be one of the UTF encodings. The components in this sub-clause use the 
+provided types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>utf32</code>, and 
+<code>wide</code> to identify specific 
+encodings [uni.relationships]. &mdash; <i>end note</i>]</p>
+
+<h3>Normative references [ucs.refs]</h3>
+
+<p>Within this sub-clause a reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
+number</i> of ISO/IEC 10646:2014 (C++ [intro.refs]).</p>
+
 <p>[<i>Note</i>: ISO/IEC 10646 Universal Coded 
-Character Set (UCS) is the ISO standard for
-<a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>. &mdash;<i>end note</i>]</p>
+Character Set (UCS) is the ISO/IEC standard for
+<a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>. It is synchronized 
+with <i>The Unicode Standard</i> maintained by the Unicode Consortium. &mdash;<i>end note</i>]</p>
 
 <p><sup><font face="Arial">[Footnote]</font></sup> Unicode® is a registered 
 trademark of Unicode, Inc. This information is given for the convenience of 
 users of this document and does not constitute an endorsement by ISO or IEC of 
 this product.</p>
-
-<h3>Normative references [ucs.refs]</h3>
-
-<p>Within this sub-clause, A reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
-number</i> of ISO/IEC 10646:2014 (C++ [intro.refs]).</p>
 
 <h3>Definitions&nbsp; [ucs.defs]</h3>
 
@@ -507,16 +508,6 @@ encoded character types</i>.</p>
 
 <h3>Requirements [ucs.req]</h3>
 
-<p>Class template parameters named <code>CharT</code>, <code>FromCharT</code>, 
-and <code>ToCharT</code> shall be one of the encoded character types. 
-<span style="background-color: #FFFF00">Function 
-templates with parameters named </span> <code>
-<span style="background-color: #FFFF00">CharT</span></code><span style="background-color: #FFFF00">,
-</span> <code><span style="background-color: #FFFF00">FromCharT</span></code><span style="background-color: #FFFF00">, or
-</span>
-<code><span style="background-color: #FFFF00">ToCharT</span></code><span style="background-color: #FFFF00"> shall not participate in overload resolution unless they 
-are one of the encoded character types.</span></p>
-
 <p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]).</p>
 
 <p>Template parameters named <code>OutputIterator</code> shall satisfy the 
@@ -527,13 +518,7 @@ requirements of an output iterator (C++ [output.iterators]).</p>
 <pre>namespace std {
 namespace experimental {
 inline namespace fundamentals_v2 {
-namespace utf {
-
-  //  Error function objects are called with no arguments and either throw an
-  //  exception or return a const pointer to a possibly empty C-style string.
-
-  //  default error handler: function object returns a C-string of type
-  //  ToCharT with a UTF encoded value of U+FFFD.
+namespace unicode {
 
   // [uni.err], default error handler
   template &lt;class CharT&gt; struct ufffd;
@@ -550,14 +535,24 @@ namespace utf {
   struct wide   {typedef wchar_t  value_type;}; // wide-character literal encoding [lex.ccon]
 
   // [uni.is_encoding] is_encoding type-trait
-  template &lt;class T&gt; struct is_encoding :public std::false_type {};
+  template &lt;class T&gt; struct is_encoding : public std::false_type {};
   template&lt;&gt; struct is_encoding&lt;narrow&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf8&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf16&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf32&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;wide&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf8&gt;   : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf16&gt;  : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf32&gt;  : std::true_type {};
+  template&lt;&gt; struct is_encoding&lt;wide&gt;   : std::true_type {};
 
   template &lt;class T&gt; constexpr bool is_encoding_v = is_encoding&lt;T&gt;::value;
+
+  // [uni.is_encoded_character] is_encoded_character type-trait
+  template &lt;class T&gt; struct is_encoded_character   : public std::false_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char&gt;     : std::true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char16_t&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char32_t&gt; : std::true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;wchar_t&gt;  : std::true_type {};
+
+  template &lt;class T&gt; constexpr bool is_encoded_character_v
+    = is_encoded_character&lt;T&gt;::value;
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef codecvt&lt;wchar_t, char, std::mbstate_t&gt; ccvt_type;
@@ -576,21 +571,21 @@ namespace utf {
 
   //  [uni.enc_err_detect], Encoding error detection
   template &lt;class InputIterator&gt;
-    Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last);  
+    Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last) noexcept;  
   
-  bool is_well_formed_utf(string_view v);
-  bool is_well_formed_utf(u16string_view v);
-  bool is_well_formed_utf(u32string_view v);
-  bool is_well_formed_utf(wstring_view v);
+  bool is_well_formed_utf(string_view v) noexcept;
+  bool is_well_formed_utf(u16string_view v) noexcept;
+  bool is_well_formed_utf(u32string_view v) noexcept;
+  bool is_well_formed_utf(wstring_view v) noexcept;
 
-}  // namespace utf
+}  // namespace unicode
 }  // namespace fundamentals_v2
 }  // namespace experimental
 }  // namespace std</pre>
 
 
 
-<h3>UTF encoding conversion functions [uni.enc_cvt]</h3>
+<h3>Character type, encoding type, and encodings [uni.relationships]</h3>
 
 <p>The 
 relationship between character types, encoding types, and encodings is specified by the following 
@@ -606,28 +601,33 @@ table:</p>
   <tr>
     <td width="100"><code>char</code></td>
     <td width="96"><code>narrow</code></td>
-    <td width="712">The encoding of narrow characters for a user-supplied facet 
-    of type <code>std::codecvt&lt;wchar_t, char, mbstate_t&gt;</code>.</td>
+    <td width="712">The encoding of characters of type <code>char</code> for a user-supplied 
+    object 
+    of a type derived from <code>std::codecvt&lt;wchar_t, char, mbstate_t&gt;</code> 
+    which shall meet the requirements of the standard code-conversion facet
+    <code>std::codecvt&lt;Elem, char, std::mbstate_t&gt;</code>. (C++ [locale.codecvt]).
+    <i><span style="background-color: #C0C0C0">&quot;which shall meet...&quot; wording 
+    copied from C++ [conversions.string].</span></i></td>
   </tr>
   <tr>
     <td width="100"><code>char</code></td>
     <td width="96"><code>utf8</code></td>
-    <td width="712">UTF-8</td>
+    <td width="712">UTF-8 (UCS 9.2).</td>
   </tr>
   <tr>
     <td width="100"><code>char16_t</code></td>
     <td width="96"><code>utf16</code></td>
-    <td width="712">UTF-16</td>
+    <td width="712">UTF-16 (UCS 9.3).</td>
   </tr>
   <tr>
     <td width="100"><code>char32_t</code></td>
     <td width="96"><code>utf32</code></td>
-    <td width="712">UFT-32</td>
+    <td width="712">UFT-32 (UCS 9.4)</td>
   </tr>
   <tr>
     <td width="100"><code>wchar_t</code></td>
     <td width="96"><code>wide</code></td>
-    <td width="712">The encoding of wide-character literals ([lex.ccon]). </td>
+    <td width="712">The encoding of wide-character literals (C++ [lex.ccon]). </td>
   </tr>
 </table>
 </blockquote>
@@ -639,10 +639,10 @@ table:</p>
 
 
 <p>When an ill-formed code unit subsequence is detected during execution of a 
-conversion function, an <i>error handler</i> function object is invoked. Unless 
+conversion function, an <i>error handler</i> function object shall be invoked. Unless 
 the error handler throws an exception, the string returned by the error handler 
-is added to the output sequence and the ill-formed input code unit subsequence 
-is not added to the output sequence. Detection of ill-formed code unit 
+shall be added to the output sequence and the ill-formed input code unit subsequence 
+shall not be converted and added to the output sequence. Detection of ill-formed code unit 
 subsequences is required even when the input and output encodings are the same. 
 [<i>Note:</i> If the error handler function object always returns a 
 well-formed UTF character sequence, the conversions function&#39;s entire output 
@@ -667,7 +667,7 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
 </blockquote>
 
 
-<p>that returns the value indicated in the Specializations table: </p>
+<p>that returns a pointer to the value indicated in the Specializations table: </p>
 
 <blockquote>
 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
@@ -701,7 +701,8 @@ OutputIterator recode(InputIterator first, InputIterator last, OutputIterator re
      <ul>
        <li>
        <p>If the code unit subsequence is well-formed, copies the subsequence&#39;s 
-       Unicode scalar value by performing <code>*result++ = *u++</code> where u 
+       Unicode scalar value by performing <code>*result++ = *u++</code> where 
+       <code>u</code> 
        is a <code>ToCharT*</code> pointing to the code units required to 
        represent the subsequence&#39;s Unicode scalar value in the encoding form of <code>
        result</code>.</li>
@@ -811,22 +812,26 @@ is <code>true</code>.</p>
 </blockquote>
     
     
-<h4>Encoding error detection [<a name="uni.enc_err_detect">uni.enc_err_detect</a>]</h4>
+<h4>UTF encoding query [<a name="uni.enc_err_detect">uni.utf-query</a>]</h4>
+
+    
+<p>These functions determine whether or not strings and sequences consist of 
+well-formed code unit sequences (UCS 4.61). </p>
 
 <pre>template &lt;class InputIterator&gt;
-Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last);</pre>
+Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last) noexcept;</pre>
   <blockquote>
      <p><i>Returns: </i>The first iterator <code>iter</code> in the range <code>
      [first, last)</code> for which <code>iter</code> is the start of a minimal ill-formed code unit 
-     subsequence. Returns <code>last</code> if no such iterator is found.</p>
-     <p><i>Remarks:</i>&nbsp; The Unicode encoding form for the range [<code>first, 
-     last</code>) is determined by the <code>InputIterator</code> value type ([uni.enc_cvt]).</p>
+     subsequence. Returns <code>last</code> if no ill-formed code unit 
+     subsequence is found.</p>
+     <p><i>Remarks:</i>&nbsp; The specific UTF encoding form is determined by the <code>InputIterator</code> value type ([uni.relationships]).</p>
   </blockquote>                           
 
-<pre>bool is_well_formed_utf(string_view v);
-bool is_well_formed_utf(u16string_view v);
-bool is_well_formed_utf(u32string_view v);
-bool is_well_formed_utf(wstring_view v);</pre>
+<pre>bool is_well_formed_utf(string_view v) noexcept;
+bool is_well_formed_utf(u16string_view v) noexcept;
+bool is_well_formed_utf(u32string_view v) noexcept;
+bool is_well_formed_utf(wstring_view v) noexcept;</pre>
   <blockquote>
      <p><i>Returns: </i>Equivalent to <code>first_ill_formed_utf(v.begin(), v.end()) 
      == v.end()</code>.</p>
