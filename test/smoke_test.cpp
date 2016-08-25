@@ -79,6 +79,24 @@ namespace
     cout << "  inserter_test done" << endl;
   }
 
+  void type_traits_test()
+  {
+    cout << "type_traits_test" << endl;
+    BOOST_TEST(!is_encoded_character_v<int>);
+    BOOST_TEST(is_encoded_character_v<char>);
+    BOOST_TEST(is_encoded_character_v<char16_t>);
+    BOOST_TEST(is_encoded_character_v<char32_t>);
+    BOOST_TEST(is_encoded_character_v<wchar_t>);
+
+    BOOST_TEST(!is_encoding_v<char>);
+    BOOST_TEST(is_encoding_v<narrow>);
+    BOOST_TEST(is_encoding_v<wide>);
+    BOOST_TEST(is_encoding_v<utf8>);
+    BOOST_TEST(is_encoding_v<utf16>);
+    BOOST_TEST(is_encoding_v<utf32>);
+    cout << "  type_traits_test done" << endl;
+  }
+
   void codecvt_short_test()
   {
     cout << "codecvt_short_test" << endl;
@@ -321,6 +339,7 @@ int main()
   // TODO: Add test to verify InputIterators do not have to be contiguous and do not
   // have to meet any forward, bidirectional, or random access requirements.
 
+  type_traits_test();
   inserter_test();
   codecvt_short_test();
   convert_encoding_test();

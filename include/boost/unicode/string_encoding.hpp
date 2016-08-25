@@ -34,22 +34,43 @@
 //--------------------------------------------------------------------------------------//
 
 /*
-UTF-32 (D90) extract:
-* "Because surrogate code points are not included in the set of Unicode scalar values,
-   UTF-32 code units in the range U+D800..U+DFFF are ill-formed."
-* "Any UTF-32 code unit greater than U+10FFFF is ill-formed."
+ISO/IEC 10646:2014
 
-UTF-16 (D91) extract:
-* "Because surrogate code points are not Unicode scalar values, isolated UTF-16
-   code units in the range U+D800..U+DFFF are ill-formed."
-UTD-8 (D92) extract:
-* "Any UTF-8 byte sequence that does not match the patterns listed in Table 3-7 is
-   ill-formed."
-* "... “non-shortest form” byte sequences in UTF-8 ... are ill-formed ..."
-* "Because surrogate code points are not Unicode scalar values, any UTF-8 byte
-   sequence that would otherwise map to code points D800..DFFF is ill-formed."
+9.1 General
+This International Standard provides three encoding forms expressing each UCS scalar
+value in a unique sequence of one or more code units. These are named UTF-8, UTF-16,
+and UTF-32 respectively.
 
-Encoding Form Conversion (D93) extract:
+9.2 UTD-8 extract:
+
+* Because surrogate code points are not UCS scalar values, any UTF-8 sequence that would
+  otherwise map to code points D800-DFFF is ill-formed.
+
+* Any UTF-8 sequence that does not match the patterns listed in table 3 is ill-formed.
+
+* As a consequence of the well-formedness conditions specified in table 9.2, the following
+  octet values are disallowed in UTF-8: C0-C1, F5-FE.
+
+9.3 UTF-16 extract:
+
+* Because surrogate code points are not UCS scalar values, unpaired surrogate code units
+  are ill-formed.
+
+9.4 UTF-32 (UCS-4) extract:
+
+* Because surrogate code points are not UCS scalar values, UTF-32 code units in the range
+  0000 D800 - 0000 DFFF are ill-formed.
+
+The Unicode standard says "Any UTF-32 code unit greater than U+10FFFF is ill-formed."
+10646:2014 seems to rely on numerous mentions of U+10FFFF as the maximum code point.
+
+6.2 Coding of characters extract:
+
+* Each encoded character within the UCS codespace is represented by an integer between 0
+  and 10FFFF identified as a code point.
+
+Unicode Standard - Encoding Form Conversion (D93) extract:
+
 * "A conformant encoding form conversion will treat any ill-formed code unit
    sequence as an error condition. ... it will neither interpret nor emit an ill-formed
    code unit sequence. Any implementation of encoding form conversion must take this
@@ -74,7 +95,7 @@ namespace unicode
   struct wide   {typedef wchar_t  value_type;}; // UTF-8, 16, or 32, platform determined
 
   //  [uni.is_encoding] is_encoding type-trait
-  template <class T> struct is_encoding :public std::false_type {};
+  template <class T> struct is_encoding : public std::false_type {};
   template<> struct is_encoding<narrow> : std::true_type {};
   template<> struct is_encoding<utf8>   : std::true_type {};
   template<> struct is_encoding<utf16>  : std::true_type {};
@@ -82,6 +103,16 @@ namespace unicode
   template<> struct is_encoding<wide>   : std::true_type {};
 
   template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
+
+  //  [uni.is_encoded_character] is_encoded_character type-trait
+  template <class T> struct is_encoded_character   : public std::false_type {};
+  template<> struct is_encoded_character<char>     : std::true_type {};
+  template<> struct is_encoded_character<char16_t> : std::true_type {};
+  template<> struct is_encoded_character<char32_t> : std::true_type {};
+  template<> struct is_encoded_character<wchar_t>  : std::true_type {};
+
+  template <class T> constexpr bool is_encoded_character_v
+    = is_encoded_character<T>::value;
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
@@ -92,11 +123,12 @@ namespace unicode
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
+  // TODO: This declaration works fine on gcc, but fails as ambiguous (with its own
+  // definition!) on MSVC
   ////  [uni.to_string] string encoding conversion
   //template <class ToEncoding, class FromEncoding, class ... T> inline
   //typename std::enable_if<is_encoding_v<ToEncoding>,
   //  std::basic_string<typename ToEncoding::value_type>>::type
-  ////std::basic_string<typename ToEncoding::value_type>
   //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
   //  const T& ... args);
 
@@ -119,7 +151,6 @@ namespace unicode
   template <class ToEncoding, class FromEncoding, class ... T> inline
   typename std::enable_if<is_encoding_v<ToEncoding>,
      std::basic_string<typename ToEncoding::value_type>>::type
-  //std::basic_string<typename ToEncoding::value_type>
   to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
     const T& ... args)
   {
