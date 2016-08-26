@@ -532,7 +532,8 @@ namespace unicode {
   struct utf8   {typedef char     value_type;}; // UTF-8 encoding
   struct utf16  {typedef char16_t value_type;}; // UTF-16 encoding
   struct utf32  {typedef char32_t value_type;}; // UTF-32 encoding
-  struct wide   {typedef wchar_t  value_type;}; // wide-character literal encoding [lex.ccon]
+  struct wide   {typedef wchar_t  value_type;}; // wide-character literal
+                                                //   encoding [lex.ccon]
 
   // [uni.is_encoding] is_encoding type-trait
   template &lt;class T&gt; struct is_encoding : public std::false_type {};
@@ -560,23 +561,22 @@ namespace unicode {
   //  [uni.recode] encoding conversion algorithm
   template &lt;class FromEncoding, class ToEncoding,
     class InputIterator, class OutputIterator, class ... T&gt;
-  OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
-    const T&amp; ... args);
+  OutputIterator recode(InputIterator first, InputIterator last,
+                        OutputIterator result, const T&amp; ... args);
 
   //  [uni.to_string] string encoding conversion
   template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
-    name basic_string&lt;typename ToEncoding::value_type&gt;
+    basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
-        const T&amp; ... args);
+                const T&amp; ... args);
 
-  //  [uni.enc_err_detect], Encoding error detection
-  template &lt;class InputIterator&gt;
-    Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last) noexcept;  
-  
-  bool is_well_formed_utf(string_view v) noexcept;
-  bool is_well_formed_utf(u16string_view v) noexcept;
-  bool is_well_formed_utf(u32string_view v) noexcept;
-  bool is_well_formed_utf(wstring_view v) noexcept;
+  // [uni.utf-query] UTF encoding queries
+  template &lt;class Encoding, class ForwardIterator&gt; inline
+    ForwardIterator first_ill_formed(ForwardIterator first,
+      ForwardIterator last) noexcept;
+  template &lt;class Encoding&gt; inline
+    bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
+     noexcept;
 
 }  // namespace unicode
 }  // namespace fundamentals_v2
@@ -692,8 +692,8 @@ handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code p
 
 <pre>template &lt;class FromEncoding, class ToEncoding,
   class InputIterator, class OutputIterator, class ... T&gt;
-OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
-  const T&amp; ... args);</pre>
+OutputIterator recode(InputIterator first, InputIterator last,
+                      OutputIterator result, const T&amp; ... args);</pre>
     
   <blockquote>
      <p><i>Effects:</i> For each minimal well-formed or ill-formed code unit 
@@ -787,7 +787,7 @@ OutputIterator recode(InputIterator first, InputIterator last, OutputIterator re
 <pre>template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
   basic_string&lt;typename ToEncoding::value_type&gt;
     to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
-      const T&amp; ... args);
+              const T&amp; ... args);
 </pre>
 <blockquote>
     
@@ -812,29 +812,30 @@ is <code>true</code>.</p>
 </blockquote>
     
     
-<h4>UTF encoding query [<a name="uni.enc_err_detect">uni.utf-query</a>]</h4>
+<h4>UTF encoding queries [<a name="uni.enc_err_detect">uni.utf-query</a>]</h4>
 
     
-<p>These functions determine whether or not strings and sequences consist of 
+<p>These functions determine whether or not character sequences and strings consist of 
 well-formed code unit sequences (UCS 4.61). </p>
 
-<pre>template &lt;class InputIterator&gt;
-Input_Iterator first_ill_formed_utf(InputIterator first, InputIterator last) noexcept;</pre>
+<pre>template &lt;class Encoding, class ForwardIterator&gt; inline
+&nbsp; ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
+    noexcept;&nbsp;</pre>
   <blockquote>
      <p><i>Returns: </i>The first iterator <code>iter</code> in the range <code>
      [first, last)</code> for which <code>iter</code> is the start of a minimal ill-formed code unit 
      subsequence. Returns <code>last</code> if no ill-formed code unit 
      subsequence is found.</p>
-     <p><i>Remarks:</i>&nbsp; The specific UTF encoding form is determined by the <code>InputIterator</code> value type ([uni.relationships]).</p>
+     <p><i>Remarks:</i>&nbsp; The specific UTF encoding form is determined by the <code>
+     ForwardIterator</code> value type ([uni.relationships]).</p>
   </blockquote>                           
 
-<pre>bool is_well_formed_utf(string_view v) noexcept;
-bool is_well_formed_utf(u16string_view v) noexcept;
-bool is_well_formed_utf(u32string_view v) noexcept;
-bool is_well_formed_utf(wstring_view v) noexcept;</pre>
+<pre>template &lt;class Encoding&gt; inline
+&nbsp;&nbsp;bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
+&nbsp; &nbsp; noexcept;&nbsp;</pre>
   <blockquote>
-     <p><i>Returns: </i>Equivalent to <code>first_ill_formed_utf(v.begin(), v.end()) 
-     == v.end()</code>.</p>
+     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.cbegin(), v.cend()) 
+     == v.cend()</code>.</p>
   </blockquote>                           
 <hr>
 
