@@ -132,6 +132,15 @@ namespace unicode
   //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
   //  const T& ... args);
 
+  //  [uni.utf-query] UTF encoding query
+  template <class Encoding, class InputIterator> inline
+    InputIterator first_ill_formed(InputIterator first, InputIterator last)
+      BOOST_NOEXCEPT;
+
+  template <class Encoding> inline
+    bool is_well_formed(basic_string_view<typename Encoding::value_type> v)
+      BOOST_NOEXCEPT;
+
 }  // namespace unicode
 }  // namespace boost
 // <!-- end snippet -->
@@ -379,18 +388,18 @@ namespace unicode
         OutputIterator result, const ccvt_type& ccvt, Error eh);
 
     template <class CharT> struct utf_encoding;
-    template <> struct utf_encoding<char>     { typedef utf8 tag; };
-    template <> struct utf_encoding<char16_t> { typedef utf16 tag; };
-    template <> struct utf_encoding<char32_t> { typedef utf32 tag; };
+    template<> struct utf_encoding<char>     { typedef utf8 tag; };
+    template<> struct utf_encoding<char16_t> { typedef utf16 tag; };
+    template<> struct utf_encoding<char32_t> { typedef utf32 tag; };
 
     // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
     // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
 # if WCHAR_MAX >= 0x1FFFFFFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
+    template<> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
 # elif WCHAR_MAX >= 0x1FFFu
-    template <> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
+    template<> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
 # else
-    template <> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
+    template<> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
 # endif
 
     //  For any conversion that uses a wide intermediary,
@@ -887,8 +896,131 @@ namespace unicode
     }
     return result;
   }
+  template <class T> struct is_known_encoding : public std::false_type {};
+  template<> struct is_known_encoding<utf8>   : std::true_type {};
+  template<> struct is_known_encoding<utf16>  : std::true_type {};
+  template<> struct is_known_encoding<utf32>  : std::true_type {};
+  template<> struct is_known_encoding<wide>   : std::true_type {};
+
+  template <class T> constexpr bool is_known_encoding_v = is_known_encoding<T>::value;
+
+  template <class ForwardIterator>
+  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf32)
+    BOOST_NOEXCEPT
+  {
+    for (; first != last; ++first)
+    {
+      auto c = static_cast<char32_t>(*first);
+      if (c > 0x10FFFFu || (c >= 0xD800u && c < 0xE000u))
+        return first;
+    }
+    return last;
+  }
+
+  template <class ForwardIterator>
+  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf16)
+    BOOST_NOEXCEPT
+  {
+    for (; first != last; ++first)
+    {
+      auto c = static_cast<char16_t>(*first);
+      if (c >= 0xD800u && c < 0xE000u)  // surrogates must always be paired
+      {
+        auto first_code_unit = first;
+        if (++first == last
+          || ((c = static_cast<char16_t>(*first)) < 0xD800u || c > 0xDFFFu))
+          return first_code_unit;
+      }
+    }
+    return last;
+  }
+
+  template <class ForwardIterator>
+  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf8)
+    BOOST_NOEXCEPT
+  {
+    for (; first != last;) // each code point
+    {
+      auto first_code_unit = first;
+      char32_t u32 = static_cast<unsigned char>(*first++);
+
+      if (u32 <= 0x7Fu)  // 7-bit ASCII
+      {
+        //  by definition, 7-bit ASCII is valid UTF-8, so bypass further checking
+        continue;
+      }
+
+      int continues = 0;
+      bool overlong = false;
+
+      if ((u32 & 0xE0u) == 0xC0u)    // 2 byte sequence
+      {
+        u32 &= 0x1Fu;
+        continues = 1;
+        if ((u32 & 0xFEu) == 0xC0)   // overlong?
+          overlong = true;
+      }
+      else if ((u32 & 0xF0u) == 0xE0u)  // 3 byte sequence
+      {
+        u32 &= 0x0Fu;
+        continues = 2;
+        if (u32 == 0xE0u               
+          && first != last
+          && (static_cast<unsigned char>(*first) & 0xE0u) == 0x80u)  // overlong?
+          overlong = true;
+      }
+      else if ((u32 & 0xF8u) == 0xF0u)  // 4 byte sequence
+      {
+        u32 &= 0x07u;
+        continues = 3;
+        if (u32 == 0xF0u               
+          && first != last
+          && (static_cast<unsigned char>(*first) & 0xF0u) == 0x80u)  // overlong?
+          overlong = true;
+      }
+      else
+        continues = -1;  // flag as error
+
+      //  process the continuation bytes
+      //    requirement: increment past continuation bytes even if overlong 
+      for (; continues > 0
+        && first != last                                          // continuation byte
+        && (static_cast<unsigned char>(*first) & 0xC0u) == 0x80u; //   not missing
+        --continues)
+      {
+        u32 <<= 6;
+        u32 += static_cast<unsigned char>(*first++) & 0x3Fu;
+      }
+
+      if (overlong                             // overlong sequence
+        || continues != 0                      // missing continuation
+        || u32 > 0x10FFFFu                     // out-of-range
+        || (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogate (which is ill-formed UTF-8)
+        )
+      { return first_code_unit; }
+    }  // each code point
+    return last;
+  }
 
 } // namespace detail
+
+  template <class Encoding, class ForwardIterator> inline
+    ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
+    BOOST_NOEXCEPT
+  {
+    static_assert(detail::is_known_encoding_v<Encoding>,
+      "Encoding must be utf8, utf16, utf32, or wide");
+    static_assert(
+      is_encoded_character_v<typename std::iterator_traits<ForwardIterator>::value_type>,
+      "ForwardIterator value_type must be char, char16_t, char32_t, or wchar_t");
+    static_assert(std::is_same_v<typename Encoding::value_type,
+        std::iterator_traits<ForwardIterator>::value_type>,
+      "Encoding::value_type must be the same as ForwardIterator value_type");
+    return detail::first_ill_formed(first, last,
+      detail::utf_encoding<typename Encoding::value_type>::tag());
+  }
+
+
 }  // namespace unicode
 }  // namespace boost
 

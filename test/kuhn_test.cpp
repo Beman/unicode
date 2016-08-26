@@ -24,7 +24,7 @@
 using std::cout;
 using std::endl;
 #include <typeinfo>
-#include "../include/boost/unicode/string_encoding.hpp"
+#include <boost/unicode/string_encoding.hpp>
 #include <boost/unicode/detail/hex_string.hpp>
 #include <cassert>
 #include <string>

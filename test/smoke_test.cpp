@@ -41,6 +41,13 @@ namespace
   const u32string u32str(U"$€𐐷𤭢");
   const wstring     wstr(L"$€𐐷𤭢");
 
+  const string     ill_u8str
+    = {0x24,char(0xE2),char(0x82),char(0xAC),char(0xF0),char(0x90),char(0x90),char(0xB7),
+    char(0xF0),char(0xA4),char(0xAD),char(0xA2),char(0xED),char(0xA0),char(0x80)};
+  const u16string  ill_u16str(u"$€𐐷𤭢\xD800");
+  const u32string  ill_u32str(U"$€𐐷𤭢\xD800");
+  const wstring    ill_wstr(  L"$€𐐷𤭢\xD800");
+
   template <class T>
   void check_inserter(T x, const string& expected)
   {
@@ -95,6 +102,29 @@ namespace
     BOOST_TEST(is_encoding_v<utf16>);
     BOOST_TEST(is_encoding_v<utf32>);
     cout << "  type_traits_test done" << endl;
+  }
+
+  void first_ill_formed_test()
+  {
+    cout << "first_ill_formed_test" << endl;
+
+    BOOST_TEST(first_ill_formed<utf32>(u32str.cbegin(), u32str.end()) == u32str.end());
+    BOOST_TEST(first_ill_formed<utf16>(u16str.cbegin(), u16str.end()) == u16str.end());
+    BOOST_TEST(first_ill_formed<utf8>(u8str.cbegin(), u8str.end()) == u8str.end());
+    BOOST_TEST(first_ill_formed<wide>(wstr.cbegin(), wstr.end()) == wstr.end());
+
+    // TODO: Need to probe for correct result iterator being returned for each of the
+    // errors that are supposed to be being detected
+    BOOST_TEST(first_ill_formed<utf32>(ill_u32str.cbegin(), ill_u32str.end())
+      != ill_u32str.end());
+    BOOST_TEST(first_ill_formed<utf16>(ill_u16str.cbegin(), ill_u16str.end()) 
+      != ill_u16str.end());
+    BOOST_TEST(first_ill_formed<utf8>(ill_u8str.cbegin(), ill_u8str.end()) 
+      != ill_u8str.end());
+    BOOST_TEST(first_ill_formed<wide>(ill_wstr.cbegin(), ill_wstr.end()) 
+      != ill_wstr.end());
+
+    cout << "  first_ill_formed_test done" << endl;
   }
 
   void codecvt_short_test()
@@ -349,6 +379,7 @@ int main()
   to_u32string_test();
   all_utf_test();
   all_codecvt_test();
+  first_ill_formed_test();
 
   return boost::report_errors();
 }
