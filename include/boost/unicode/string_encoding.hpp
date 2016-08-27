@@ -133,8 +133,8 @@ namespace unicode
   //  const T& ... args);
 
   //  [uni.utf-query] UTF encoding query
-  template <class Encoding, class InputIterator> inline
-    InputIterator first_ill_formed(InputIterator first, InputIterator last)
+  template <class Encoding, class ForwardIterator> inline
+    ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
       BOOST_NOEXCEPT;
 
   template <class Encoding> inline
@@ -531,14 +531,6 @@ namespace unicode
     constexpr char16_t high_surrogate_base = 0xD7C0u;
     constexpr char16_t low_surrogate_base = 0xDC00u;
     constexpr char32_t ten_bit_mask = 0x3FFu;
-
-    ////  forward declare functions used to implement u32_outputer
-    //template <class ToCharT, class OutputIterator, class Error> inline
-    //  OutputIterator char32_t_to_utf32(char32_t u32, OutputIterator result, Error eh);
-    //template <class ToCharT, class OutputIterator, class Error> inline
-    //  OutputIterator char32_t_to_utf16(char32_t u32, OutputIterator result, Error eh);
-    //template <class ToCharT, class OutputIterator, class Error> inline
-    //  OutputIterator char32_t_to_utf8(char32_t u32, OutputIterator result, Error eh);
 
     //  char32_t outputers; these helpers take a single char32_t code point, and output as
     //  many code units as needed to represent the code point. OutputT may be wchar_t for
@@ -1020,6 +1012,14 @@ namespace unicode
       detail::utf_encoding<typename Encoding::value_type>::tag());
   }
 
+  template <class Encoding> inline
+    bool is_well_formed(basic_string_view<typename Encoding::value_type> v)
+    BOOST_NOEXCEPT
+  {
+    static_assert(detail::is_known_encoding_v<Encoding>,
+      "Encoding must be utf8, utf16, utf32, or wide");
+    return first_ill_formed<Encoding>(v.cbegin(), v.cend()) == v.end();
+  }
 
 }  // namespace unicode
 }  // namespace boost

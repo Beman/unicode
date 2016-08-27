@@ -127,6 +127,23 @@ namespace
     cout << "  first_ill_formed_test done" << endl;
   }
 
+  void is_well_formed_test()
+  {
+    cout << "is_well_formed_test" << endl;
+
+    BOOST_TEST(is_well_formed<utf8>(u8str));
+    BOOST_TEST(is_well_formed<utf16>(u16str));
+    BOOST_TEST(is_well_formed<utf32>(u32str));
+    BOOST_TEST(is_well_formed<wide>(wstr));
+
+    BOOST_TEST(!is_well_formed<utf8>(ill_u8str));
+    BOOST_TEST(!is_well_formed<utf16>(ill_u16str));
+    BOOST_TEST(!is_well_formed<utf32>(ill_u32str));
+    BOOST_TEST(!is_well_formed<wide>(ill_wstr));
+
+    cout << "  is_well_formed_test done" << endl;
+  }
+
   void codecvt_short_test()
   {
     cout << "codecvt_short_test" << endl;
@@ -380,6 +397,7 @@ int main()
   all_utf_test();
   all_codecvt_test();
   first_ill_formed_test();
+  is_well_formed_test();
 
   return boost::report_errors();
 }
