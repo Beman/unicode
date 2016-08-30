@@ -14,8 +14,19 @@
 using namespace boost::unicode;
 using namespace std;
 
-string get_sjis() { string s; /*load s*/ return s; }
-string get_big5() { string s; /*load s*/ return s; }
+string sjisstr() { string s; /*load s*/ return s; }
+string big5str() { string s; /*load s*/ return s; }
+
+template <class CharT> struct barf;
+template <> struct barf<char>
+  {const char* operator()() const {throw "barf"; return "";}};
+template <> struct barf<char16_t>
+  {const char16_t* operator()() const {throw "barf"; return u"";}};
+template <> struct barf<char32_t>
+  {const char32_t* operator()() const {throw "barf"; return U"";}};
+template <> struct barf<wchar_t>
+  {const wchar_t* operator()() const {throw "barf"; return L"";}};
+
 
 int main()
 {
@@ -37,17 +48,16 @@ int main()
   auto loc = std::locale();
   auto& loc_ccvt(std::use_facet<ccvt_type>(loc));
 
-  u16s = to_string<utf16, utf8>(u8str);                  // UTF-16 from UTF-8
-  ws = to_string<wide, narrow>(locstr, loc_ccvt);        // wide from narrow
-  u32s = to_string<utf32, narrow>(get_sjis(), sjis);     // UTF-32 from Shift-JIS
-  s = to_string<narrow, utf32>(u32str, big5);            // Big-5 from UTF-32
-  s = to_string<narrow, narrow>(get_big5(), big5, sjis); // Shift-JIS from Big-5
+  u16s = to_string<utf16, utf8>(u8str);                 // UTF-16 from UTF-8
+  ws = to_string<wide, narrow>(locstr, loc_ccvt);       // wide from narrow
+  u32s = to_string<utf32, narrow>(sjisstr(), sjis);     // UTF-32 from Shift-JIS
+  s = to_string<narrow, utf32>(u32str, big5);           // Big-5 from UTF-32
+  s = to_string<narrow, narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
 
   s = to_string<utf8, utf8>(u8str);  // replace ill-formed characters
                                      //   with u8"\uFFFD"
+  s = to_string<utf8, utf16>(u16str, barf<char>());  // throw if ill formed
 
-  // throw exception if any errors encountered
-  ...
-
-  ... compilation error examples
+  //u16s = to_string<utf16, narrow>(locstr);  // error; missing codecvt arg
+  //u16s = to_string<utf16, narrow>(locstr, big5, sjis);  // error; extra codecvt arg
 }
