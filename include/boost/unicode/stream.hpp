@@ -8,16 +8,13 @@
 #if !defined(BOOST_UNICODE_STREAM_HPP)
 # define BOOST_UNICODE_STREAM_HPP
 
+#include <boost/unicode/string_encoding.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/mpl/logical.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <ostream>
 #include <iterator>
-
-#if !defined(BOOST_UNICODE_ERROR_HPP)
-# include <boost/unicode/error.hpp>
-#endif
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //

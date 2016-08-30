@@ -19,10 +19,6 @@
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
 
-#if !defined(BOOST_UNICODE_ERROR_HPP)
-# include <boost/unicode/error.hpp>
-#endif
-
 // TODO: update this:
 //--------------------------------------------------------------------------------------//
 //  This header deals with both Unicode Transformation Format (UTF) encodings and       //
@@ -87,6 +83,13 @@ namespace boost
 {
 namespace unicode
 {
+  // [uni.err] default error handler
+  template <class CharT> struct ufffd;
+  template <> struct ufffd<char>;
+  template <> struct ufffd<char16_t>;
+  template <> struct ufffd<char32_t>;
+  template <> struct ufffd<wchar_t>;
+
   //  [uni.encoding] encoding types
   struct narrow {typedef char     value_type;}; // encoding determined by codecvt facet
   struct utf8   {typedef char     value_type;}; // UTF-8 encoded
@@ -995,6 +998,26 @@ namespace unicode
   }
 
 } // namespace detail
+
+  template <> struct ufffd<char>
+  {
+    constexpr const char* operator()() const noexcept { return u8"\uFFFD"; }
+  };
+
+  template <> struct ufffd<char16_t>
+  { 
+    constexpr const char16_t* operator()() const noexcept { return u"\uFFFD"; }
+  };
+
+  template <> struct ufffd<char32_t>
+  { 
+    constexpr const char32_t* operator()() const noexcept { return U"\uFFFD"; }
+  };
+
+  template <> struct ufffd<wchar_t>
+  { 
+    constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
+  };
 
   template <class Encoding, class ForwardIterator> inline
     ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
