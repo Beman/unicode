@@ -1094,7 +1094,7 @@ namespace unicode
         typename std::iterator_traits<ForwardIterator>::value_type>::value,
       "Encoding::value_type must be the same as ForwardIterator value_type");
     return detail::first_ill_formed(first, last,
-      detail::utf_encoding<typename Encoding::value_type>::tag());
+      typename detail::utf_encoding<typename Encoding::value_type>::tag());
   }
 
   template <class Encoding> inline

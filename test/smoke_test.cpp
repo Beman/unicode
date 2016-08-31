@@ -89,18 +89,18 @@ namespace
   void type_traits_test()
   {
     cout << "type_traits_test" << endl;
-    BOOST_TEST(!is_encoded_character_v<int>);
-    BOOST_TEST(is_encoded_character_v<char>);
-    BOOST_TEST(is_encoded_character_v<char16_t>);
-    BOOST_TEST(is_encoded_character_v<char32_t>);
-    BOOST_TEST(is_encoded_character_v<wchar_t>);
+    BOOST_TEST(!is_encoded_character<int>::value);
+    BOOST_TEST(is_encoded_character<char>::value);
+    BOOST_TEST(is_encoded_character<char16_t>::value);
+    BOOST_TEST(is_encoded_character<char32_t>::value);
+    BOOST_TEST(is_encoded_character<wchar_t>::value);
 
-    BOOST_TEST(!is_encoding_v<char>);
-    BOOST_TEST(is_encoding_v<narrow>);
-    BOOST_TEST(is_encoding_v<wide>);
-    BOOST_TEST(is_encoding_v<utf8>);
-    BOOST_TEST(is_encoding_v<utf16>);
-    BOOST_TEST(is_encoding_v<utf32>);
+    BOOST_TEST(!is_encoding<char>::value);
+    BOOST_TEST(is_encoding<narrow>::value);
+    BOOST_TEST(is_encoding<wide>::value);
+    BOOST_TEST(is_encoding<utf8>::value);
+    BOOST_TEST(is_encoding<utf16>::value);
+    BOOST_TEST(is_encoding<utf32>::value);
     cout << "  type_traits_test done" << endl;
   }
 
