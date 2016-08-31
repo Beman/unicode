@@ -5,6 +5,7 @@
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
+#include <iostream>
 #include <boost/unicode/string_encoding.hpp>
 #include <string>
 #include <locale>
@@ -48,15 +49,15 @@ int main()
   auto loc = std::locale();
   auto& loc_ccvt(std::use_facet<ccvt_type>(loc));
 
-  u16s = to_string<utf16, utf8>(u8str);                 // UTF-16 from UTF-8
-  ws = to_string<wide, narrow>(locstr, loc_ccvt);       // wide from narrow
-  u32s = to_string<utf32, narrow>(sjisstr(), sjis);     // UTF-32 from Shift-JIS
-  s = to_string<narrow, utf32>(u32str, big5);           // Big-5 from UTF-32
-  s = to_string<narrow, narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
+  u16s = to_string<utf16>(u8str);                 // UTF-16 from UTF-8
+  //ws = to_string<wide>(locstr, loc_ccvt);       // wide from narrow
+  //u32s = to_string<utf32>(sjisstr(), sjis);     // UTF-32 from Shift-JIS
+  //s = to_string<narrow>(u32str, big5);           // Big-5 from UTF-32
+  //s = to_string<narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
 
-  s = to_string<utf8, utf8>(u8str);  // replace ill-formed characters
-                                     //   with u8"\uFFFD"
-  s = to_string<utf8, utf16>(u16str, barf<char>());  // throw if ill formed
+  //s = to_string<utf8>(u8str);  // replace ill-formed characters
+  //                                   //   with u8"\uFFFD"
+  //s = to_string<utf8>(u16str, barf<char>());  // throw if ill formed
 
   //u16s = to_string<utf16, narrow>(locstr);  // error; missing codecvt arg
   //u16s = to_string<utf16, narrow>(locstr, big5, sjis);  // error; extra codecvt arg

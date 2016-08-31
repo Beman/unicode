@@ -77,87 +77,87 @@ namespace
       "\n  all input characters are well-formed" << endl;
     {
       std::string s;
-      s = to_string<utf8, utf8>(u8str);
+      s = to_string<utf8>(u8str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, utf16>(u16str);
+      s = to_string<utf8>(u16str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, utf32>(u32str);
+      s = to_string<utf8>(u32str);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, wide>(wstr);
+      s = to_string<utf8>(wstr);
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, narrow>(nbmp, ccvt);
+      s = to_string<utf8>(nbmp, ccvt);
       BOOST_TEST(s == u8bmp);
     }
     {
       std::string s;
-      s = to_string<narrow, utf8>(u8bmp, ccvt);
+      s = to_string<narrow>(u8bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, utf16>(u16bmp, ccvt);
+      s = to_string<narrow>(u16bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, utf32>(u32bmp, ccvt);
+      s = to_string<narrow>(u32bmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, wide>(wbmp, ccvt);
+      s = to_string<narrow>(wbmp, ccvt);
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, narrow>(nbmp, ccvt, ccvt);
+      s = to_string<narrow>(nbmp, ccvt, ccvt);
       BOOST_TEST(s == nbmp);
     }
     {
       std::u16string s;
-      s = to_string<utf16, utf8>(u8str);
+      s = to_string<utf16>(u8str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, utf16>(u16str);
+      s = to_string<utf16>(u16str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, utf32>(u32str);
+      s = to_string<utf16>(u32str);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, wide>(wstr);
+      s = to_string<utf16>(wstr);
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, narrow>(nbmp, ccvt);
+      s = to_string<utf16>(nbmp, ccvt);
       BOOST_TEST(s == u16bmp);
     }
     {
       std::u32string s;
-      s = to_string<utf32, utf8>(u8str);
+      s = to_string<utf32>(u8str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, utf16>(u16str);
+      s = to_string<utf32>(u16str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, utf32>(u32str);
+      s = to_string<utf32>(u32str);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, wide>(wstr);
+      s = to_string<utf32>(wstr);
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, narrow>(nbmp, ccvt);
+      s = to_string<utf32>(nbmp, ccvt);
       BOOST_TEST(s == u32bmp);
     }
     {
       std::wstring s;
-      s = to_string<wide, utf8>(u8str);
+      s = to_string<wide>(u8str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, utf16>(u16str);
+      s = to_string<wide>(u16str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, utf32>(u32str);
+      s = to_string<wide>(u32str);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, wide>(wstr);
+      s = to_string<wide>(wstr);
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, narrow>(nbmp, ccvt);
+      s = to_string<wide>(nbmp, ccvt);
       BOOST_TEST(s == wbmp);
     }
     cout << "  end basic_tests()" << endl;
@@ -169,91 +169,91 @@ namespace
       "\n  all input strings include ill-formed characters" << endl;
     {
       std::string s;
-      s = to_string<utf8, utf8>(ill_u8str, err8nul());
+      s = to_string<utf8>(ill_u8str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, utf16>(ill_u16str, err8nul());
+      s = to_string<utf8>(ill_u16str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, utf32>(ill_u32str, err8nul());
+      s = to_string<utf8>(ill_u32str, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, wide>(ill_wstr, err8nul());
+      s = to_string<utf8>(ill_wstr, err8nul());
       BOOST_TEST(s == u8str);
       s.clear();
-      s = to_string<utf8, narrow>(ill_nbmp, ccvt, err8nul());
+      s = to_string<utf8>(ill_nbmp, ccvt, err8nul());
       BOOST_TEST(s == u8bmp);
     }
     {
       std::string s;
-      s = to_string<narrow, utf8>(ill_u8bmp, ccvt, errnnul());
+      s = to_string<narrow>(ill_u8bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       cout << hex_string(ill_u8bmp) << endl;
       cout << hex_string(s) << endl;
       cout << hex_string(nbmp) << endl;
 
       s.clear();
-      s = to_string<narrow, utf16>(ill_u16bmp, ccvt, errnnul());
+      s = to_string<narrow>(ill_u16bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, utf32>(ill_u32bmp, ccvt, errnnul());
+      s = to_string<narrow>(ill_u32bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, wide>(ill_wbmp, ccvt, errnnul());
+      s = to_string<narrow>(ill_wbmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       s.clear();
-      s = to_string<narrow, narrow>(ill_nbmp, ccvt, ccvt, errnnul());
+      s = to_string<narrow>(ill_nbmp, ccvt, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
     }
     {
       std::u16string s;
-      s = to_string<utf16, utf8>(ill_u8str, err16nul());
+      s = to_string<utf16>(ill_u8str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, utf16>(ill_u16str, err16nul());
+      s = to_string<utf16>(ill_u16str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, utf32>(ill_u32str, err16nul());
+      s = to_string<utf16>(ill_u32str, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, wide>(ill_wstr, err16nul());
+      s = to_string<utf16>(ill_wstr, err16nul());
       BOOST_TEST(s == u16str);
       s.clear();
-      s = to_string<utf16, narrow>(ill_nbmp, ccvt, err16nul());
+      s = to_string<utf16>(ill_nbmp, ccvt, err16nul());
       BOOST_TEST(s == u16bmp);
     }
     {
       std::u32string s;
-      s = to_string<utf32, utf8>(ill_u8str, err32nul());
+      s = to_string<utf32>(ill_u8str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, utf16>(ill_u16str, err32nul());
+      s = to_string<utf32>(ill_u16str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, utf32>(ill_u32str, err32nul());
+      s = to_string<utf32>(ill_u32str, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, wide>(ill_wstr, err32nul());
+      s = to_string<utf32>(ill_wstr, err32nul());
       BOOST_TEST(s == u32str);
       s.clear();
-      s = to_string<utf32, narrow>(ill_nbmp, ccvt, err32nul());
+      s = to_string<utf32>(ill_nbmp, ccvt, err32nul());
       BOOST_TEST(s == u32bmp);
     }
     {
       std::wstring s;
-      s = to_string<wide, utf8>(ill_u8str, errwnul());
+      s = to_string<wide>(ill_u8str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, utf16>(ill_u16str, errwnul());
+      s = to_string<wide>(ill_u16str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, utf32>(ill_u32str, errwnul());
+      s = to_string<wide>(ill_u32str, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, wide>(ill_wstr, errwnul());
+      s = to_string<wide>(ill_wstr, errwnul());
       BOOST_TEST(s == wstr);
       s.clear();
-      s = to_string<wide, narrow>(ill_nbmp, ccvt, errwnul());
+      s = to_string<wide>(ill_nbmp, ccvt, errwnul());
       BOOST_TEST(s == wbmp);
     }
     cout << "  end user_supplied_error_handler_tests()" << endl;

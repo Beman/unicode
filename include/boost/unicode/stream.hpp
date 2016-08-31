@@ -73,8 +73,7 @@ template <class ToCharT, class ToTraits, class FromCharT, class FromTraits>
     inserter(std::basic_ostream<ToCharT, ToTraits>& os,
              boost::basic_string_view<FromCharT, FromTraits> v)
 {
-  return os << to_string<typename default_encoding<ToCharT>::tag,
-    typename default_encoding<FromCharT>::tag>(v, ufffd<ToCharT>());
+  return os << to_string<typename default_encoding<ToCharT>::tag>(v, ufffd<ToCharT>());
 }
 
 } // namespace detail

@@ -35,7 +35,7 @@ int cpp_main(int, char*[])
   BOOST_TEST(s32 == u32str);
 
   s.clear();
-  s = to_string<utf8, wide>(wstr);
+  s = to_string<utf8>(wstr);
   BOOST_TEST(s == u8str);
 
   s.clear();
@@ -43,11 +43,11 @@ int cpp_main(int, char*[])
   BOOST_TEST(s == u8str);
 
   s.clear();
-  s = to_string<utf8, wide>(wstr);
+  s = to_string<utf8>(wstr);
   BOOST_TEST(s == u8str);
 
   sw.clear();
-  sw = to_string<wide, utf8>(u8str);
+  sw = to_string<wide>(u8str);
   BOOST_TEST(sw == wstr);
 
   s16.clear();

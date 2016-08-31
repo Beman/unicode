@@ -160,14 +160,73 @@ namespace unicode
 {
    // to_string implementation ---------------------------------------------------------//
 
-  template <class ToEncoding, class FromEncoding, class ... T> inline
-  typename std::enable_if<is_encoding_v<ToEncoding>,
-     std::basic_string<typename ToEncoding::value_type>>::type
-  to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-    const T& ... args)
+  //template <class ToEncoding, class FromEncoding, class ... T> inline
+  //typename std::enable_if<is_encoding_v<ToEncoding>,
+  //   std::basic_string<typename ToEncoding::value_type>>::type
+  //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
+  //  const T& ... args)
+  //{
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+  //    std::back_inserter(tmp), args ...);
+  //  return tmp;
+  //}
+
+  namespace detail
+  {
+    constexpr int ccvt_count() { return 0; }
+
+    template <class T, class ...Pack>
+    constexpr int ccvt_count(const T&, const Pack&... args)
+    {
+      return std::is_base_of<boost::unicode::ccvt_type, T>::value
+        ? 1 + ccvt_count(args...)
+        : 0;
+    }
+  }
+ 
+  template <class ToEncoding, class ...T> inline
+    typename std::enable_if<is_encoding_v<ToEncoding>,
+      std::basic_string<typename ToEncoding::value_type>>::type
+  to_string(boost::string_view v, const T& ... args)
+  {
+    std::cout << detail::ccvt_count(args...) << std::endl;
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<typename std::conditional<
+      (detail::ccvt_count(args...) == 1 && !std::is_same<ToEncoding, narrow>::value)
+      || detail::ccvt_count(args...) == 2,
+        narrow, utf8>::type,
+      ToEncoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp), args...);
+    return tmp;
+  }
+
+  template <class ToEncoding, class ... T> inline
+   std::basic_string<typename ToEncoding::value_type>
+     to_string(boost::u16string_view v, const T& ... args)
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+    recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp), args ...);
+    return tmp;
+  }
+
+  template <class ToEncoding, class ... T> inline
+   std::basic_string<typename ToEncoding::value_type>
+     to_string(boost::u32string_view v, const T& ... args)
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
+      std::back_inserter(tmp), args ...);
+    return tmp;
+  }
+
+  template <class ToEncoding, class ... T> inline
+   std::basic_string<typename ToEncoding::value_type>
+     to_string(boost::wstring_view v, const T& ... args)
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<wide, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
     return tmp;
   }
@@ -1001,22 +1060,22 @@ namespace unicode
 
   template <> struct ufffd<char>
   {
-    constexpr char* operator()() const noexcept { return u8"\uFFFD"; }
+    constexpr const char* operator()() const noexcept { return u8"\uFFFD"; }
   };
 
   template <> struct ufffd<char16_t>
   { 
-    constexpr char16_t* operator()() const noexcept { return u"\uFFFD"; }
+    constexpr const char16_t* operator()() const noexcept { return u"\uFFFD"; }
   };
 
   template <> struct ufffd<char32_t>
   { 
-    constexpr char32_t* operator()() const noexcept { return U"\uFFFD"; }
+    constexpr const char32_t* operator()() const noexcept { return U"\uFFFD"; }
   };
 
   template <> struct ufffd<wchar_t>
   { 
-    constexpr wchar_t* operator()() const noexcept { return L"\uFFFD"; }
+    constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
   };
 
   template <class Encoding, class ForwardIterator> inline
@@ -1028,8 +1087,8 @@ namespace unicode
     static_assert(
       is_encoded_character_v<typename std::iterator_traits<ForwardIterator>::value_type>,
       "ForwardIterator value_type must be char, char16_t, char32_t, or wchar_t");
-    static_assert(std::is_same_v<typename Encoding::value_type,
-        std::iterator_traits<ForwardIterator>::value_type>,
+    static_assert(std::is_same<typename Encoding::value_type,
+        typename std::iterator_traits<ForwardIterator>::value_type>::value,
       "Encoding::value_type must be the same as ForwardIterator value_type");
     return detail::first_ill_formed(first, last,
       detail::utf_encoding<typename Encoding::value_type>::tag());
