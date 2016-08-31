@@ -105,7 +105,8 @@ namespace unicode
   template<> struct is_encoding<utf32>  : std::true_type {};
   template<> struct is_encoding<wide>   : std::true_type {};
 
-  template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
+  //  TODO: variable templates only available with -std=c++14  
+  //template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
 
   //  [uni.is_encoded_character] is_encoded_character type-trait
   template <class T> struct is_encoded_character   : public std::false_type {};
@@ -114,8 +115,9 @@ namespace unicode
   template<> struct is_encoded_character<char32_t> : std::true_type {};
   template<> struct is_encoded_character<wchar_t>  : std::true_type {};
 
-  template <class T> constexpr bool is_encoded_character_v
-    = is_encoded_character<T>::value;
+  //  TODO: variable templates only available with -std=c++14  
+  //template <class T> constexpr bool is_encoded_character_v
+  //  = is_encoded_character<T>::value;
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
@@ -130,7 +132,7 @@ namespace unicode
   // definition!) on MSVC
   ////  [uni.to_string] string encoding conversion
   //template <class ToEncoding, class FromEncoding, class ... T> inline
-  //typename std::enable_if<is_encoding_v<ToEncoding>,
+  //typename std::enable_if<is_encoding<ToEncoding>::value,
   //  std::basic_string<typename ToEncoding::value_type>>::type
   //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
   //  const T& ... args);
@@ -161,7 +163,7 @@ namespace unicode
    // to_string implementation ---------------------------------------------------------//
 
   //template <class ToEncoding, class FromEncoding, class ... T> inline
-  //typename std::enable_if<is_encoding_v<ToEncoding>,
+  //typename std::enable_if<is_encoding<ToEncoding>::value,
   //   std::basic_string<typename ToEncoding::value_type>>::type
   //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
   //  const T& ... args)
@@ -186,11 +188,11 @@ namespace unicode
   }
  
   template <class ToEncoding, class ...T> inline
-    typename std::enable_if<is_encoding_v<ToEncoding>,
+    typename std::enable_if<is_encoding<ToEncoding>::value,
       std::basic_string<typename ToEncoding::value_type>>::type
   to_string(boost::string_view v, const T& ... args)
   {
-    std::cout << detail::ccvt_count(args...) << std::endl;
+//    std::cout << detail::ccvt_count(args...) << std::endl;
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<typename std::conditional<
       (detail::ccvt_count(args...) == 1 && !std::is_same<ToEncoding, narrow>::value)
@@ -956,7 +958,8 @@ namespace unicode
   template<> struct is_known_encoding<utf32>  : std::true_type {};
   template<> struct is_known_encoding<wide>   : std::true_type {};
 
-  template <class T> constexpr bool is_known_encoding_v = is_known_encoding<T>::value;
+  //  TODO: variable templates only available with -std=c++14  
+  //template <class T> constexpr bool is_known_encoding_v = is_known_encoding<T>::value;
 
   template <class ForwardIterator>
   ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf32)
@@ -1082,10 +1085,10 @@ namespace unicode
     ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
     BOOST_NOEXCEPT
   {
-    static_assert(detail::is_known_encoding_v<Encoding>,
+    static_assert(detail::is_known_encoding<Encoding>::value,
       "Encoding must be utf8, utf16, utf32, or wide");
-    static_assert(
-      is_encoded_character_v<typename std::iterator_traits<ForwardIterator>::value_type>,
+    static_assert(is_encoded_character
+        <typename std::iterator_traits<ForwardIterator>::value_type>::value,
       "ForwardIterator value_type must be char, char16_t, char32_t, or wchar_t");
     static_assert(std::is_same<typename Encoding::value_type,
         typename std::iterator_traits<ForwardIterator>::value_type>::value,
@@ -1098,7 +1101,7 @@ namespace unicode
     bool is_well_formed(basic_string_view<typename Encoding::value_type> v)
     BOOST_NOEXCEPT
   {
-    static_assert(detail::is_known_encoding_v<Encoding>,
+    static_assert(detail::is_known_encoding<Encoding>::value,
       "Encoding must be utf8, utf16, utf32, or wide");
     return first_ill_formed<Encoding>(v.cbegin(), v.cend()) == v.end();
   }
