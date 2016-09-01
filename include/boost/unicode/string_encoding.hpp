@@ -130,21 +130,17 @@ namespace unicode
 
   //  [uni.to_string] string encoding conversion
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::string_view v, const Pack& ... args);
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::string_view v, const Pack& ... args);
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::u16string_view v, const Pack& ... args);
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::u16string_view v, const Pack& ... args);
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::u32string_view v, const Pack& ... args);
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::u32string_view v, const Pack& ... args);
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::wstring_view v, const Pack& ... args);
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::wstring_view v, const Pack& ... args);
 
   //  [uni.utf-query] UTF encoding query
   template <class Encoding, class ForwardIterator> inline
@@ -183,10 +179,11 @@ namespace unicode
   }
  
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-  to_string(boost::string_view v, const Pack& ... args)
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::string_view v, const Pack& ... args)
   {
+    static_assert(is_encoding<ToEncoding>::value,
+      "ToEncoding must be utf8, utf16, utf32, or wide");
     static_assert(detail::ccvt_count<Pack...>() >= 0,
       "Yuck!");  // fails if expression did not evaluate to a constant
     //std::cout << detail::ccvt_count<Pack...>() << std::endl;
@@ -201,10 +198,11 @@ namespace unicode
   }
 
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::u16string_view v, const Pack& ... args)
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::u16string_view v, const Pack& ... args)
   {
+    static_assert(is_encoding<ToEncoding>::value,
+      "ToEncoding must be utf8, utf16, utf32, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -212,10 +210,11 @@ namespace unicode
   }
 
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::u32string_view v, const Pack& ... args)
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::u32string_view v, const Pack& ... args)
   {
+    static_assert(is_encoding<ToEncoding>::value,
+      "ToEncoding must be utf8, utf16, utf32, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -223,10 +222,11 @@ namespace unicode
   }
 
   template <class ToEncoding, class ...Pack> inline
-    typename std::enable_if<is_encoding<ToEncoding>::value,
-      std::basic_string<typename ToEncoding::value_type>>::type
-    to_string(boost::wstring_view v, const Pack& ... args)
+    std::basic_string<typename ToEncoding::value_type>
+      to_string(boost::wstring_view v, const Pack& ... args)
   {
+    static_assert(is_encoding<ToEncoding>::value,
+      "ToEncoding must be utf8, utf16, utf32, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<wide, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -581,6 +581,10 @@ namespace unicode
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args)
   {
+    static_assert(is_encoding<FromEncoding>::value,
+      "FromEncoding must be utf8, utf16, utf32, or wide");
+    static_assert(is_encoding<ToEncoding>::value,
+      "ToEncoding must be utf8, utf16, utf32, or wide");
     return detail::recode_dispatch<FromEncoding, ToEncoding>(
       typename detail::dispatch<FromEncoding>::tag(),
       typename detail::dispatch<ToEncoding>::tag(),
