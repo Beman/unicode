@@ -41,13 +41,13 @@ namespace
   {
     cout << "UTF-32 to UTF-8 round trip test" << endl;
     cout << "  " << all_valid_utf32.size() << " code points will be tested" << endl;
-    BOOST_TEST((to_string<utf32, utf8>(to_string<utf8, utf32>(all_valid_utf32)))
+    BOOST_TEST((to_string<utf32>(to_string<utf8>(all_valid_utf32)))
       == all_valid_utf32);
     cout << "  UTF-32 to UTF-8 round trip test complete" << endl;
  
     cout << "UTF-32 to UTF-16 round trip test" << endl;
     cout << "  " << all_valid_utf32.size() << " code points will be tested" << endl;
-    BOOST_TEST((to_string<utf32, utf16>(to_string<utf16, utf32>(all_valid_utf32)))
+    BOOST_TEST((to_string<utf32>(to_string<utf16>(all_valid_utf32)))
       == all_valid_utf32);
     cout << "  UTF-32 to UTF-16 round trip test complete" << endl;
   }

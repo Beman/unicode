@@ -176,27 +176,27 @@ namespace unicode
 
   namespace detail
   {
-    constexpr int ccvt_count() { return 0; }
-
-    template <class T, class ...Pack>
-    constexpr int ccvt_count(const T&, const Pack&... args)
+    template <class T = long, class ...Pack>
+    constexpr int ccvt_count()
     {
       return std::is_base_of<boost::unicode::ccvt_type, T>::value
-        ? 1 + ccvt_count(args...)
+        ? 1 + ccvt_count<Pack...>()
         : 0;
     }
   }
  
-  template <class ToEncoding, class ...T> inline
+  template <class ToEncoding, class ...Pack> inline
     typename std::enable_if<is_encoding<ToEncoding>::value,
       std::basic_string<typename ToEncoding::value_type>>::type
-  to_string(boost::string_view v, const T& ... args)
+  to_string(boost::string_view v, const Pack& ... args)
   {
-//    std::cout << detail::ccvt_count(args...) << std::endl;
+    static_assert(detail::ccvt_count<Pack...>() >= 0,
+      "Yuck!");  // fails if expression did not evaluate to a constant
+    //std::cout << detail::ccvt_count<Pack...>() << std::endl;
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<typename std::conditional<
-      (detail::ccvt_count(args...) == 1 && !std::is_same<ToEncoding, narrow>::value)
-      || detail::ccvt_count(args...) == 2,
+      (detail::ccvt_count<Pack...>() == 1 && !std::is_same<ToEncoding, narrow>::value)
+      || detail::ccvt_count<Pack...>() == 2,
         narrow, utf8>::type,
       ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args...);
