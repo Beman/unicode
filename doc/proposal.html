@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-08-30<!--webbot bot="Timestamp" endspan i-checksum="12521" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-01<!--webbot bot="Timestamp" endspan i-checksum="12584" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -723,10 +723,18 @@ namespace unicode {
                         OutputIterator result, const T&amp; ... args);
 
   //  [uni.to_string] string encoding conversion
-  template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
-    basic_string&lt;typename ToEncoding::value_type&gt;
-      to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
-                const T&amp; ... args);
+  template &lt;class ToEncoding, class ...Pack&gt; inline
+    std::basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(boost::string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding, class ...Pack&gt; inline
+    std::basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(boost::u16string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding, class ...Pack&gt; inline
+    std::basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(boost::u32string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding, class ...Pack&gt; inline
+    std::basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(boost::wstring_view v, const Pack&amp; ... args);
 
   // [uni.utf-query] UTF encoding queries
   template &lt;class Encoding, class ForwardIterator&gt; inline
@@ -940,10 +948,18 @@ OutputIterator recode(InputIterator first, InputIterator last,
     
 <h4>String encoding conversion [uni.to_string]</h4>
 
-<pre>template &lt;class ToEncoding, class FromEncoding, class ... T&gt;
-  basic_string&lt;typename ToEncoding::value_type&gt;
-    to_string(basic_string_view&lt;typename FromEncoding::value_type&gt; v,
-              const T&amp; ... args);
+<pre>template &lt;class ToEncoding, class ...Pack&gt; inline
+  std::basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(boost::string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; inline
+  std::basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(boost::u16string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; inline
+  std::basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(boost::u32string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; inline
+  std::basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(boost::wstring_view v, const Pack&amp; ... args);
 </pre>
 <blockquote>
     
@@ -954,17 +970,26 @@ OutputIterator recode(InputIterator first, InputIterator last,
     
     
 <p><code>basic_string&lt;typename ToEncoding::value_type&gt; tmp;<br>
-recode&lt;FromEncoding, ToEncoding&gt;(v.cbegin(), v.cend(), <br>
+recode&lt;<b><i>FromEncoding</i></b>, ToEncoding&gt;(v.cbegin(), v.cend(), <br>
 &nbsp; back_inserter(tmp), args ...);<br>
 return tmp;</code></p>
 
+    
+<p dir="ltr">For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
+narrow</code> if there are two function arguments convertible to <code>ccvt_type</code>, 
+and if there is one argument convertible to <code>ccvt_type</code> and <code>
+ToEncoding</code> is not <code>
+narrow</code>.</p>
+
+    
+<p>For the second, third, and fourth overloads, <code><b><i>FromEncoding</i></b></code> is <code>utf16</code>, <code>
+utf32</code>, and <code>wide</code>, 
+respectively.</p>
+
+    
 </blockquote>
     
     
-<p><i>Remarks:</i> This function shall not participate in overload resolution 
-unless <code>is_encoding_v&lt;ToEncoding&gt;</code> &amp;&amp; <code>is_encoding_v&lt;FromEncoding&gt;</code> 
-is <code>true</code>.</p>
-
 </blockquote>
     
     

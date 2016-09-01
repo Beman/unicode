@@ -183,7 +183,7 @@ namespace unicode
       to_string(boost::string_view v, const Pack& ... args)
   {
     static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, or wide");
+      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     static_assert(detail::ccvt_count<Pack...>() >= 0,
       "Yuck!");  // fails if expression did not evaluate to a constant
     //std::cout << detail::ccvt_count<Pack...>() << std::endl;
@@ -202,7 +202,7 @@ namespace unicode
       to_string(boost::u16string_view v, const Pack& ... args)
   {
     static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, or wide");
+      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -214,7 +214,7 @@ namespace unicode
       to_string(boost::u32string_view v, const Pack& ... args)
   {
     static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, or wide");
+      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -226,7 +226,7 @@ namespace unicode
       to_string(boost::wstring_view v, const Pack& ... args)
   {
     static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, or wide");
+      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<wide, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -582,9 +582,9 @@ namespace unicode
     const T& ... args)
   {
     static_assert(is_encoding<FromEncoding>::value,
-      "FromEncoding must be utf8, utf16, utf32, or wide");
+      "FromEncoding must be utf8, utf16, utf32, narrow, or wide");
     static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, or wide");
+      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     return detail::recode_dispatch<FromEncoding, ToEncoding>(
       typename detail::dispatch<FromEncoding>::tag(),
       typename detail::dispatch<ToEncoding>::tag(),
