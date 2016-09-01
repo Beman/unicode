@@ -128,14 +128,23 @@ namespace unicode
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
-  // TODO: This declaration works fine on gcc, but fails as ambiguous (with its own
-  // definition!) on MSVC
-  ////  [uni.to_string] string encoding conversion
-  //template <class ToEncoding, class FromEncoding, class ... T> inline
-  //typename std::enable_if<is_encoding<ToEncoding>::value,
-  //  std::basic_string<typename ToEncoding::value_type>>::type
-  //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-  //  const T& ... args);
+  //  [uni.to_string] string encoding conversion
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::string_view v, const Pack& ... args);
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::u16string_view v, const Pack& ... args);
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::u32string_view v, const Pack& ... args);
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::wstring_view v, const Pack& ... args);
 
   //  [uni.utf-query] UTF encoding query
   template <class Encoding, class ForwardIterator> inline
@@ -160,19 +169,7 @@ namespace boost
 {
 namespace unicode
 {
-   // to_string implementation ---------------------------------------------------------//
-
-  //template <class ToEncoding, class FromEncoding, class ... T> inline
-  //typename std::enable_if<is_encoding<ToEncoding>::value,
-  //   std::basic_string<typename ToEncoding::value_type>>::type
-  //to_string(boost::basic_string_view<typename FromEncoding::value_type> v,
-  //  const T& ... args)
-  //{
-  //  std::basic_string<typename ToEncoding::value_type> tmp;
-  //  recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
-  //    std::back_inserter(tmp), args ...);
-  //  return tmp;
-  //}
+  // to_string implementation ---------------------------------------------------------//
 
   namespace detail
   {
@@ -203,9 +200,10 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding, class ... T> inline
-   std::basic_string<typename ToEncoding::value_type>
-     to_string(boost::u16string_view v, const T& ... args)
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::u16string_view v, const Pack& ... args)
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
@@ -213,9 +211,10 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding, class ... T> inline
-   std::basic_string<typename ToEncoding::value_type>
-     to_string(boost::u32string_view v, const T& ... args)
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::u32string_view v, const Pack& ... args)
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
@@ -223,9 +222,10 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding, class ... T> inline
-   std::basic_string<typename ToEncoding::value_type>
-     to_string(boost::wstring_view v, const T& ... args)
+  template <class ToEncoding, class ...Pack> inline
+    typename std::enable_if<is_encoding<ToEncoding>::value,
+      std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::wstring_view v, const Pack& ... args)
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<wide, ToEncoding>(v.cbegin(), v.cend(),
