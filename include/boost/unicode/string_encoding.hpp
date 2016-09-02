@@ -184,8 +184,8 @@ namespace unicode
   {
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
-    static_assert(detail::ccvt_count<Pack...>() >= 0,
-      "Yuck!");  // fails if expression did not evaluate to a constant
+    //static_assert(detail::ccvt_count<Pack...>() >= 0,
+    //  "Yuck!");  // fails if expression did not evaluate to a constant
     //std::cout << detail::ccvt_count<Pack...>() << std::endl;
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<typename std::conditional<
@@ -203,6 +203,13 @@ namespace unicode
   {
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() < 2,
+          "Multiple codecvt_type arguments are not allowed");
+    static_assert(std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -215,6 +222,13 @@ namespace unicode
   {
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() < 2,
+          "Multiple codecvt_type arguments are not allowed");
+    static_assert(std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -227,6 +241,13 @@ namespace unicode
   {
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() < 2,
+          "Multiple codecvt_type arguments are not allowed");
+    static_assert(std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<wide, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);

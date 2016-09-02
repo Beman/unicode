@@ -18,17 +18,6 @@ using namespace std;
 string sjisstr() { string s; /*load s*/ return s; }
 string big5str() { string s; /*load s*/ return s; }
 
-template <class CharT> struct barf;
-template <> struct barf<char>
-  {const char* operator()() const {throw "barf"; return "";}};
-template <> struct barf<char16_t>
-  {const char16_t* operator()() const {throw "barf"; return u"";}};
-template <> struct barf<char32_t>
-  {const char32_t* operator()() const {throw "barf"; return U"";}};
-template <> struct barf<wchar_t>
-  {const wchar_t* operator()() const {throw "barf"; return L"";}};
-
-
 int main()
 {
   
@@ -38,27 +27,26 @@ int main()
   u32string u32str(U"abc123$€𐐷𤭢...");  // UTF-32 encoding
   wstring     wstr(L"abc123$€𐐷𤭢...");  // implementation defined wide encoding
 
-  string  s;
-  wstring ws;
-  u16string u16s;
-  u32string u32s;
-
   stdext::cvt::codecvt_big5<wchar_t> big5;  // vendor supplied Big-5 facet
   stdext::cvt::codecvt_sjis<wchar_t> sjis;  // vendor supplied Shift-JIS facet
 
   auto loc = std::locale();
   auto& loc_ccvt(std::use_facet<ccvt_type>(loc));
 
-  u16s = to_string<utf16>(u8str);                 // UTF-16 from UTF-8
-  //ws = to_string<wide>(locstr, loc_ccvt);       // wide from narrow
-  //u32s = to_string<utf32>(sjisstr(), sjis);     // UTF-32 from Shift-JIS
-  //s = to_string<narrow>(u32str, big5);           // Big-5 from UTF-32
-  //s = to_string<narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
+  u16string s1 = to_string<utf16>(u8str);                  // UTF-16 from UTF-8
+  wstring   s2 = to_string<wide>(locstr, loc_ccvt);        // wide from narrow
+  u32string s3 = to_string<utf32>(sjisstr(), sjis);        // UTF-32 from Shift-JIS
+  string    s4 = to_string<narrow>(u32str, big5);          // Big-5 from UTF-32
+  string    s5 = to_string<narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
 
-  //s = to_string<utf8>(u8str);  // replace ill-formed characters
-  //                                   //   with u8"\uFFFD"
-  //s = to_string<utf8>(u16str, barf<char>());  // throw if ill formed
-
-  //u16s = to_string<utf16, narrow>(locstr);  // error; missing codecvt arg
-  //u16s = to_string<utf16, narrow>(locstr, big5, sjis);  // error; extra codecvt arg
+  string s6 = to_string<utf8>(u8str);          // replace errors with u8"\uFFFD"
+  string s7 = 
+    to_string<utf8>(u16str, []() {return "?";});      // replace errors with '?'
+  string s8 = 
+    to_string<utf8>(wstr, []() {throw "barf"; return "";}); // throw on error
+  
+  string s9 = to_string<narrow>(u16str, big5); // OK
+  //string s10 = to_string<utf8>(u16str, big5); // error: ccvt_type arg not allowed
+  //string s11 = to_string<narrow>(u16str);    // error: ccvt_type arg required
+  //string s12 = to_string<narrow>(u16str, big5, big5); // error: >1 ccvt_type arg
 }
