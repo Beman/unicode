@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-02<!--webbot bot="Timestamp" endspan i-checksum="12586" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-03<!--webbot bot="Timestamp" endspan i-checksum="12588" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -228,7 +228,7 @@ encodings</b></p>
 
 
 
-<p><b>Build in support for existing narrow/wide codecvt facets</b></p>
+<p><b>Build in support for existing narrow to/from wide codecvt facets</b></p>
 <ul>
   <li>Allows this brand-new library to immediately support non-UTF encodings 
   without having to repeat two decades of codecvt facet development.</li>
@@ -407,7 +407,8 @@ of these needs may appear in the same application. For example:</p>
 <p><b>Base conformance and definitions on ISO/IEC 10646:2014</b></p>
 <ul>
   <li>Rewriting specifications that are already covered by another standard, 
-  and then trying to keep that wording in sync as the other standard evolves is the path 
+  and then trying to keep that wording in sync as the other standard evolves, is 
+  a path 
   to insanity.</li>
 </ul>
 <p><b>Use variadic templates to minimize the interface surface area</b></p>
@@ -463,159 +464,10 @@ cout << str16 << '\n';  // automatic conversion to UTF-8</pre>
   function objects. Ck WP for the form.</li>
 </ul>
 
-<h2>Character encoding in the C++ standard</h2>
-<p>The following extracts are from N4606.</p>
-<p>Here is how we know that type <code>char</code> supports UTF-8 encoded 
-characters, even though narrow character encoding may be something other than 
-UTF-8:</p>
-<blockquote>
-  <p><font face="Times New Roman">A byte is at least large enough to contain any 
-  member of the basic execution character set (2.3) and the eight-bit code units 
-  of the Unicode UTF-8 encoding form... (</font>[intro.memory]
-  <font face="Times New Roman">¶ 1)</font></p>
-  <p><font FACE="LMRoman10-Regular" SIZE="2">An ordinary character literal that 
-  contains a single </font><font FACE="LMRoman10-Italic" SIZE="2"><i>c-char </i>
-  </font><font FACE="LMRoman10-Regular" SIZE="2">representable in the execution 
-  character set has type </font><font FACE="LMMono10-Regular" SIZE="2">char</font><font FACE="LMRoman10-Regular" SIZE="2">, 
-  with value equal to the numerical value of the encoding of the </font>
-  <font FACE="LMRoman10-Italic" SIZE="2"><i>c-char </i></font>
-  <font FACE="LMRoman10-Regular" SIZE="2">in the execution character set. </font>
-  <font face="Times New Roman">([lex.ccon] ¶ 2)</font></p>
-  <p><font FACE="LMRoman10-Regular" SIZE="2">The value of a UTF-8 character 
-  literal is equal to its ISO 10646 code point value, provided that the code 
-  point value is representable with a single UTF-8 code unit (that is, provided 
-  it is in the C0 Controls and Basic Latin Unicode block).</font><font face="Times New Roman"> 
-  ([lex.ccon] ¶ 3) </font></p>
-  <p><font face="Times New Roman">For a UTF-8 string literal, each successive 
-  element of the object representation (3.9) has the value of the corresponding 
-  code unit of the UTF-8 encoding of the string. ([lex.string] ¶ 9)</font></p>
-</blockquote>
-<p>Here is how we know that type <code>char16_t</code> supports UTF-16 encoded 
-characters and <code>char16_t</code> literals are encoded in UTF-16:</p>
-<blockquote>
-  <p><font face="Times New Roman">The value of a char16_t literal containing a 
-  single c-char is equal to its ISO 10646 code point value, provided that the 
-  code point is representable with a single 16-bit code unit. (That is, provided 
-  it is a basic multi-lingual plane code point.)&nbsp; ([lex.ccon] ¶ 4) </font>
-  </p>
-  <p><font face="Times New Roman">A char16_t string literal has type “array of n 
-  const char16_t”, where n is the size of the string as defined below; it is 
-  initialized with the given characters. A single c-char may produce more than 
-  one char16_t character in the form of surrogate pairs.&nbsp; ([lex.string] ¶ 
-  10)</font></p>
-  <font FACE="LMRoman10-Regular" SIZE="2">
-  <p ALIGN="LEFT">Within </font><font FACE="LMMono10-Regular" SIZE="2">char32_t
-  </font><font FACE="LMRoman10-Regular" SIZE="2">and </font>
-  <font FACE="LMMono10-Regular" SIZE="2">char16_t </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">literals, any</font><font FACE="LMRoman10-Italic" SIZE="2"><i> 
-  universal-character-name</i></font><font FACE="LMRoman10-Regular" SIZE="2">s 
-  shall be within the range </font><font FACE="LMMono10-Regular" SIZE="2">0x0
-  </font><font FACE="LMRoman10-Regular" SIZE="2">to </font>
-  <font FACE="LMMono10-Regular" SIZE="2">0x10FFFF</font><font FACE="LMRoman10-Regular" SIZE="2">.
-  </font><font face="Times New Roman">([lex.string] ¶ 15)</font></p>
-</blockquote>
-<font FACE="LMRoman10-Regular" SIZE="2">
-<p ALIGN="LEFT">Here is how we know that type <code>char32_t</code> supports 
-UTF-32 encoded characters and <code>char32_t</code> literals are encoded in 
-UTF-32:</p>
-<blockquote>
-  <p ALIGN="LEFT">The value of a </font><font FACE="LMMono10-Regular" SIZE="2">
-  char32_t </font><font FACE="LMRoman10-Regular" SIZE="2">literal containing a 
-  single </font><font FACE="LMRoman10-Italic" SIZE="2"><i>c-char </i></font>
-  <font FACE="LMRoman10-Regular" SIZE="2">is equal to its ISO 10646 code point 
-  value.</font><font face="Times New Roman">&nbsp; ([lex.ccon] ¶ 5) </font></p>
-  <p ALIGN="LEFT"><font face="Times New Roman">A char32_t string literal has 
-  type “array of n const char32_t”, where n is the size of the string as defined 
-  below; it is initialized with the given characters. ([lex.string] ¶ 11)</font></p>
-  <p ALIGN="LEFT"><font FACE="LMRoman10-Regular" SIZE="2">Within </font>
-  <font FACE="LMMono10-Regular" SIZE="2">char32_t </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">and </font>
-  <font FACE="LMMono10-Regular" SIZE="2">char16_t </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">literals, any</font><font FACE="LMRoman10-Italic" SIZE="2"><i> 
-  universal-character-name</i></font><font FACE="LMRoman10-Regular" SIZE="2">s 
-  shall be within the range </font><font FACE="LMMono10-Regular" SIZE="2">0x0
-  </font><font FACE="LMRoman10-Regular" SIZE="2">to </font>
-  <font FACE="LMMono10-Regular" SIZE="2">0x10FFFF</font><font FACE="LMRoman10-Regular" SIZE="2">.
-  </font><font face="Times New Roman">([lex.string] ¶ 15)</font></p>
-</blockquote>
-<p>Here is how we know that type <font face="Times New Roman">wchar_t</font> 
-supports the <font FACE="LMRoman10-Regular" SIZE="2">ISO/IEC 10646 (i.e. 
-Unicode) character set</font>, even though the encoding may be implementation 
-defined:</p>
-<blockquote>
-  <p>Type wchar_t is a distinct type whose values can represent distinct codes 
-  for all members of the largest extended character set specified among the 
-  <b>supported locales</b> (22.3.1). ([basic.fundamental]<font face="Times New Roman"> 
-  ¶ 5</font>) </p>
-  <p><i><span style="background-color: #00CC66">Presumably the supported locales 
-  include locales that can use the [locale.stdcvt] facets. These facets have </span></i>
-  <code><span style="background-color: #00CC66">Maxcode</span><span style="background-color: #00CC66"> 
-  = 0x10ffff</span></code><i><span style="background-color: #00CC66"> as a 
-  default, while </span></i><font face="Times New Roman">
-  <span style="background-color: #00CC66">¶ 3.2 specifies that &quot;Maxcode is the 
-  largest wide-character code that the facet will read or write without 
-  reporting a conversion error&quot;.</span></font></p>
-  <p><font face="Times New Roman">A wide-character literal has type wchar_t. The 
-  value of a wide-character literal containing a single c-char has value equal 
-  to the numerical value of the encoding of the c-char in the execution 
-  wide-character set, unless the c-char has no representation in the execution 
-  wide-character set, in which case the value is implementation-defined. [ Note: 
-  The type wchar_t is able to represent all members of the execution 
-  wide-character set (see 3.9.1). —end note ]&nbsp; ([lex.ccon] ¶ 6)</font></p>
-  <p><font face="Times New Roman">The value of a character literal is 
-  implementation-defined if it falls outside of the implementation-defined range 
-  defined for char (for literals with no prefix) or wchar_t (for literals 
-  prefixed by L). ([lex.ccon] ¶ 8)</font></p>
-  <font FACE="LMRoman10-Regular" SIZE="2">
-  <p ALIGN="LEFT">A </font><font FACE="LMRoman10-Italic" SIZE="2"><i>
-  universal-character-name </i></font><font FACE="LMRoman10-Regular" SIZE="2">is 
-  translated to the encoding, in the appropriate execution character set, of the 
-  character named. If there is no such encoding, the </font>
-  <font FACE="LMRoman10-Italic" SIZE="2"><i>universal-character-name </i></font>
-  <font FACE="LMRoman10-Regular" SIZE="2">is translated to an 
-  implementation-defined encoding.</font><font face="Times New Roman"> ([lex.ccon] 
-  ¶ 9)&nbsp; </font></p>
-  <p><font face="Times New Roman">A string-literal that begins with L, such as 
-  L&quot;asdf&quot;, is a wide string literal. A wide string literal has type “array of n 
-  const wchar_t”, where n is the size of the string as defined below; it is 
-  initialized with the given characters. ([lex.string] ¶ 12)</font></p>
-  <font FACE="LMRoman10-Regular" SIZE="2">
-  <p ALIGN="LEFT">The size of a </font><font FACE="LMMono10-Regular" SIZE="2">
-  char32_t </font><font FACE="LMRoman10-Regular" SIZE="2">or wide string literal 
-  is the total number of escape sequences, </font>
-  <font FACE="LMRoman10-Italic" SIZE="2"><i>universal-character-name</i></font><font FACE="LMRoman10-Regular" SIZE="2">s, 
-  and other characters, plus one for the terminating </font>
-  <font FACE="LMMono10-Regular" SIZE="2">U’\0’ </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">or </font>
-  <font FACE="LMMono10-Regular" SIZE="2">L’\0’</font><font FACE="LMRoman10-Regular" SIZE="2">.
-  </font><font face="Times New Roman">([lex.string] ¶ 15)</font></p>
-  <font FACE="LMMono10-Regular" SIZE="2">
-  <p ALIGN="LEFT">__STDC_ISO_10646__ </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">&nbsp; An integer literal of the form
-  </font><font FACE="LMMono10-Regular" SIZE="2">yyyymmL </font>
-  <font FACE="LMRoman10-Regular" SIZE="2">(for example, </font>
-  <font FACE="LMMono10-Regular" SIZE="2">199712L</font><font FACE="LMRoman10-Regular" SIZE="2">). 
-  If this symbol is defined, then every character in the Unicode required set, 
-  when stored in an object of type </font>
-  <font FACE="LMMono10-Regular" SIZE="2">wchar_t</font><font FACE="LMRoman10-Regular" SIZE="2">, 
-  has the same value as the short identifier of that character. The </font>
-  <font FACE="LMRoman10-Italic" SIZE="2"><i>Unicode required set </i></font>
-  <font FACE="LMRoman10-Regular" SIZE="2">consists of all the characters that 
-  are defined by ISO/IEC 10646, along with all amendments and technical 
-  corrigenda as of the specified year and month.&nbsp; ([cpp.predefined]</font><font face="Times New Roman"> 
-  ¶ 2</font><font FACE="LMRoman10-Regular" SIZE="2">) <i>&nbsp;In other words, 
-  if defined </i>
-</font>
-
-  <font FACE="LMMono10-Regular" SIZE="2">
-  __STDC_ISO_10646__ <i>tells us that wchar_t is UTF-32 encoded.</i></font></p>
-</blockquote>
-
 <h1>Proposed wording</h1>
 
-<p><i><span style="background-color: #C0C0C0">This wording assumes P0417,</span></i><span style="background-color: #C0C0C0"> 
-&quot;C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
-10646 2014 instead of 1994&quot;, </span><i><span style="background-color: #C0C0C0">
+<p><i><span style="background-color: #C0C0C0">This wording assumes P0417</span></i><span style="background-color: #C0C0C0"> C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
+10646 2014 instead of 1994 </span><i><span style="background-color: #C0C0C0">
 has been accepted into the C++ working paper.</span></i></p>
 
 <h2>Unicode library [ucs]</h2>
@@ -712,13 +564,13 @@ namespace unicode {
   template &lt;&gt; struct ufffd&lt;char32_t&gt;;
   template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
 
-  //  [uni.recode] encoding conversion algorithm
+  // [uni.recode] encoding conversion algorithm
   template &lt;class FromEncoding, class ToEncoding,
     class InputIterator, class OutputIterator, class ... T&gt;
   OutputIterator recode(InputIterator first, InputIterator last,
                         OutputIterator result, const T&amp; ... args);
 
-  //  [uni.to_string] string encoding conversion
+  // [uni.to_string] string encoding conversion
   template &lt;class ToEncoding, class ...Pack&gt; inline
     std::basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(boost::string_view v, const Pack&amp; ... args);
