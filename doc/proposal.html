@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-01<!--webbot bot="Timestamp" endspan i-checksum="12584" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-02<!--webbot bot="Timestamp" endspan i-checksum="12586" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -96,20 +96,16 @@ requested by Unicode experts.</p>
 
 
   <p><b>Problem: </b>Given a third-party function <code>f()</code> that returns a UTF-8 
-  encoded <code>std::string</code> from a database, and a function <code>g()</code> 
-  from a different third-party that expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
+  encoded <code>std::string</code> from a database, and a different 
+  third-party&#39;s function <code>g()</code> expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
   call g()</code> with <code>f()</code> in a way that converts the string types 
   and encodings, and handles errors according to the best practices documented in 
-  the Unicode standard.</p>
+  the ISO/IEC 10646 and Unicode standards.</p>
   <p><b>Using the proposal:</b></p>
   <blockquote>
   <p>
-  <code>string u8str(f());</code>
   <code>
-  &nbsp;// get a string that happens to be UTF-8 encoded<br>
-  ...<br>
-  g(<a href="#uni.conv_enc_cvt">to_u16string</a>(u8str)); // call a function 
-  that requires UTF-16</code></p>
+  to_string&lt;utf16&gt;(s);</code></p>
   </blockquote>
 <p><b>Without the proposal, using only the standard library:</b> This might not 
 be too difficult using a third-party library, but is surprisingly difficult 
@@ -678,13 +674,6 @@ namespace experimental {
 inline namespace fundamentals_v2 {
 namespace unicode {
 
-  // [uni.err] default error handler
-  template &lt;class CharT&gt; struct ufffd;
-  template &lt;&gt; struct ufffd&lt;char&gt;;
-  template &lt;&gt; struct ufffd&lt;char16_t&gt;;
-  template &lt;&gt; struct ufffd&lt;char32_t&gt;;
-  template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
-
   //  [uni.encoding] encoding types
   struct narrow {typedef char     value_type;}; // codecvt determined encoding
   struct utf8   {typedef char     value_type;}; // UTF-8 encoding
@@ -713,8 +702,15 @@ namespace unicode {
   template &lt;class T&gt; constexpr bool is_encoded_character_v
     = is_encoded_character&lt;T&gt;::value;
 
-  //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
+  // [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef codecvt&lt;wchar_t, char, std::mbstate_t&gt; ccvt_type;
+
+  // [uni.err] default error handler
+  template &lt;class CharT&gt; struct ufffd;
+  template &lt;&gt; struct ufffd&lt;char&gt;;
+  template &lt;&gt; struct ufffd&lt;char16_t&gt;;
+  template &lt;&gt; struct ufffd&lt;char32_t&gt;;
+  template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
 
   //  [uni.recode] encoding conversion algorithm
   template &lt;class FromEncoding, class ToEncoding,
@@ -757,46 +753,41 @@ namespace unicode {
 relationship between character types, encoding types, and encodings is specified by the following 
 table:</p>
 
-<blockquote>
-<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="942">
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
   <tr>
-    <td width="100"><b>Character type</b></td>
-    <td width="96"><b>Encoding type</b></td>
-    <td width="712"><b>Encoding</b></td>
+    <td><b>Character type</b></td>
+    <td><b>Encoding type</b></td>
+    <td><b>Encoding</b></td>
   </tr>
   <tr>
-    <td width="100"><code>char</code></td>
-    <td width="96"><code>narrow</code></td>
-    <td width="712">The encoding of characters of type <code>char</code> for a user-supplied 
+    <td rowspan="2"><code>char</code></td>
+    <td><code>narrow</code></td>
+    <td>The encoding of characters of type <code>char</code> for a user-supplied 
     object 
     of a type derived from <code>std::codecvt&lt;wchar_t, char, mbstate_t&gt;</code> 
     which shall meet the requirements of the standard code-conversion facet
-    <code>std::codecvt&lt;Elem, char, std::mbstate_t&gt;</code>. (C++ [locale.codecvt]).
-    <i><span style="background-color: #C0C0C0">&quot;which shall meet...&quot; wording 
-    copied from C++ [conversions.string].</span></i></td>
+    <code>std::codecvt&lt;Elem, char, std::mbstate_t&gt;</code>. (C++ [locale.codecvt]).</td>
   </tr>
   <tr>
-    <td width="100"><code>char</code></td>
-    <td width="96"><code>utf8</code></td>
-    <td width="712">UTF-8 (UCS 9.2).</td>
+    <td><code>utf8</code></td>
+    <td>UTF-8 (UCS 9.2).</td>
   </tr>
   <tr>
-    <td width="100"><code>char16_t</code></td>
-    <td width="96"><code>utf16</code></td>
-    <td width="712">UTF-16 (UCS 9.3).</td>
+    <td><code>char16_t</code></td>
+    <td><code>utf16</code></td>
+    <td>UTF-16 (UCS 9.3).</td>
   </tr>
   <tr>
-    <td width="100"><code>char32_t</code></td>
-    <td width="96"><code>utf32</code></td>
-    <td width="712">UFT-32 (UCS 9.4)</td>
+    <td><code>char32_t</code></td>
+    <td><code>utf32</code></td>
+    <td>UFT-32 (UCS 9.4)</td>
   </tr>
   <tr>
-    <td width="100"><code>wchar_t</code></td>
-    <td width="96"><code>wide</code></td>
-    <td width="712">The encoding of wide-character literals (C++ [lex.ccon]). </td>
+    <td><code>wchar_t</code></td>
+    <td><code>wide</code></td>
+    <td>The implementation defined encoding of wide-character literals (C++ [lex.ccon]). </td>
   </tr>
 </table>
-</blockquote>
 
 
 
@@ -940,9 +931,6 @@ OutputIterator recode(InputIterator first, InputIterator last,
      formed  sequence, then the output sequence is a well formed  sequence.</p>
     
     
-<p><span style="background-color: #FFFF00">[</span><i><span style="background-color: #FFFF00">Example:</span></i><span style="background-color: #FFFF00"> xxx &mdash;</span><i><span style="background-color: #FFFF00">end example</span></i><span style="background-color: #FFFF00">]</span></p>
-
-    
   </blockquote>                           
     
     
@@ -977,9 +965,11 @@ return tmp;</code></p>
     
 <p dir="ltr">For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
 narrow</code> if there are two function arguments convertible to <code>ccvt_type</code>, 
+and <code><b><i>FromEncoding</i></b></code> is <code>
+narrow</code> 
 and if there is one argument convertible to <code>ccvt_type</code> and <code>
 ToEncoding</code> is not <code>
-narrow</code>.</p>
+narrow</code>. Otherwise <code><b><i>FromEncoding</i></b></code> is <code>utf8.</code></p>
 
     
 <p>For the second, third, and fourth overloads, <code><b><i>FromEncoding</i></b></code> is <code>utf16</code>, <code>
@@ -992,6 +982,60 @@ respectively.</p>
     
 </blockquote>
     
+    
+<p>[<i><a name="uni.to_string.example">Example</a>:</i></p>
+
+    
+<pre>#include &lt;boost/unicode/string_encoding.hpp&gt;
+#include &lt;string&gt;
+#include &lt;locale&gt;
+#include &lt;cvt/big5&gt;  // vendor supplied
+#include &lt;cvt/sjis&gt;  // vendor supplied
+
+using namespace boost::unicode;
+using namespace std;
+
+string sjisstr() { string s; /*load s*/ return s; }
+string big5str() { string s; /*load s*/ return s; }
+
+int main()
+{
+  string     locstr(&quot;abc123...&quot;);       // narrow encoding known to std::locale()
+  string     u8str(u8&quot;abc123$€𐐷𤭢...&quot;); // UTF-8 encoded
+  u16string u16str(u&quot;abc123$€𐐷𤭢...&quot;);  // UTF-16 encoded
+  u32string u32str(U&quot;abc123$€𐐷𤭢...&quot;);  // UTF-32 encoding
+  wstring     wstr(L&quot;abc123$€𐐷𤭢...&quot;);  // implementation defined wide encoding
+
+  stdext::cvt::codecvt_big5&lt;wchar_t&gt; big5;  // vendor supplied Big-5 facet
+  stdext::cvt::codecvt_sjis&lt;wchar_t&gt; sjis;  // vendor supplied Shift-JIS facet
+
+  auto loc = std::locale();
+  auto&amp; loc_ccvt(std::use_facet&lt;ccvt_type&gt;(loc));
+
+  u16string s1 = to_string&lt;utf16&gt;(u8str);                // UTF-16 from UTF-8
+  wstring   s2 = to_string&lt;wide&gt;(locstr, loc_ccvt);      // wide from narrow
+  u32string s3 = to_string&lt;utf32&gt;(sjisstr(), sjis);      // UTF-32 from Shift-JIS
+  string  s4 = to_string&lt;narrow&gt;(u32str, big5);          // Big-5 from UTF-32
+  string  s5 = to_string&lt;narrow&gt;(big5str(), big5, sjis); // Shift-JIS from Big-5
+
+  string s6 = to_string&lt;utf8&gt;(u8str);  // replace errors with u8&quot;\uFFFD&quot;
+  string s7 = to_string&lt;utf8&gt;(u16str,  
+    [](){return &quot;?&quot;;});                // replace errors with &#39;?&#39;
+  string s8 = to_string&lt;utf8&gt;(wstr,    
+    [](){throw &quot;barf&quot;; return &quot;&quot;;});   // throw on error
+
+  string s9 = to_string&lt;narrow&gt;(u16str, big5);// OK
+  string s10 = to_string&lt;utf8&gt;(u16str, big5); // error: ccvt_type arg not allowed
+  string s11 = to_string&lt;narrow&gt;(u16str);     // error: ccvt_type arg required
+  string s12 = to_string&lt;narrow&gt;(u16str, big5, big5); // error: &gt;1 ccvt_type arg
+  wstring s13 = to_string&lt;wide&gt;(locstr, big5, big5);  // error: &gt;1 ccvt_type arg
+  string  s14 = to_string&lt;narrow&gt;(locstr);    // error: ccvt_type arg required
+}
+</pre>
+
+    
+<p>&mdash; <i>end example</i>]</p>
+
     
 <h4>UTF encoding queries [<a name="uni.enc_err_detect">uni.utf-query</a>]</h4>
 

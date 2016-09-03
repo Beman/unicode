@@ -83,13 +83,6 @@ namespace boost
 {
 namespace unicode
 {
-  // [uni.err] default error handler
-  template <class CharT> struct ufffd;
-  template <> struct ufffd<char>;
-  template <> struct ufffd<char16_t>;
-  template <> struct ufffd<char32_t>;
-  template <> struct ufffd<wchar_t>;
-
   //  [uni.encoding] encoding types
   struct narrow {typedef char     value_type;}; // encoding determined by codecvt facet
   struct utf8   {typedef char     value_type;}; // UTF-8 encoded
@@ -105,8 +98,9 @@ namespace unicode
   template<> struct is_encoding<utf32>  : std::true_type {};
   template<> struct is_encoding<wide>   : std::true_type {};
 
-  //  TODO: variable templates only available with -std=c++14  
-  //template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
+# ifndef BOOST_NO_CXX14_VARIABLE_TEMPLATES
+  template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
+# endif
 
   //  [uni.is_encoded_character] is_encoded_character type-trait
   template <class T> struct is_encoded_character   : public std::false_type {};
@@ -115,12 +109,20 @@ namespace unicode
   template<> struct is_encoded_character<char32_t> : std::true_type {};
   template<> struct is_encoded_character<wchar_t>  : std::true_type {};
 
-  //  TODO: variable templates only available with -std=c++14  
-  //template <class T> constexpr bool is_encoded_character_v
-  //  = is_encoded_character<T>::value;
+# ifndef BOOST_NO_CXX14_VARIABLE_TEMPLATES
+  template <class T> constexpr bool is_encoded_character_v
+    = is_encoded_character<T>::value;
+# endif
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
   typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
+
+  // [uni.err] default error handler
+  template <class CharT> struct ufffd;
+  template <> struct ufffd<char>;
+  template <> struct ufffd<char16_t>;
+  template <> struct ufffd<char32_t>;
+  template <> struct ufffd<wchar_t>;
 
   //  [uni.recode] encoding conversion algorithm
   template <class FromEncoding, class ToEncoding,
@@ -187,12 +189,22 @@ namespace unicode
     //static_assert(detail::ccvt_count<Pack...>() >= 0,
     //  "Yuck!");  // fails if expression did not evaluate to a constant
     //std::cout << detail::ccvt_count<Pack...>() << std::endl;
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<typename std::conditional<
+
+    static_assert(!std::is_same<ToEncoding, narrow>::value
+      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
+    static_assert((!std::is_same<ToEncoding, narrow>::value
+        || detail::ccvt_count<Pack...>() <= 2)
+      && (std::is_same<ToEncoding, narrow>::value
+        || detail::ccvt_count<Pack...>() <= 1),
+      "Too many ccvt_type arguments");
+
+    using FromEncoding = std::conditional<
       (detail::ccvt_count<Pack...>() == 1 && !std::is_same<ToEncoding, narrow>::value)
       || detail::ccvt_count<Pack...>() == 2,
-        narrow, utf8>::type,
-      ToEncoding>(v.cbegin(), v.cend(),
+      narrow, utf8>::type;
+
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args...);
     return tmp;
   }
@@ -204,12 +216,12 @@ namespace unicode
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
     static_assert(!std::is_same<ToEncoding, narrow>::value
       || detail::ccvt_count<Pack...>() < 2,
-          "Multiple codecvt_type arguments are not allowed");
+          "Multiple ccvt_type arguments are not allowed");
     static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
+      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -223,12 +235,12 @@ namespace unicode
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
     static_assert(!std::is_same<ToEncoding, narrow>::value
       || detail::ccvt_count<Pack...>() < 2,
-          "Multiple codecvt_type arguments are not allowed");
+          "Multiple ccvt_type arguments are not allowed");
     static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
+      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
@@ -242,12 +254,12 @@ namespace unicode
     static_assert(is_encoding<ToEncoding>::value,
       "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
     static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A codecvt_type argument is required");
+      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
     static_assert(!std::is_same<ToEncoding, narrow>::value
       || detail::ccvt_count<Pack...>() < 2,
-          "Multiple codecvt_type arguments are not allowed");
+          "Multiple ccvt_type arguments are not allowed");
     static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A codecvt_type argument is not allowed");
+      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<wide, ToEncoding>(v.cbegin(), v.cend(),
       std::back_inserter(tmp), args ...);
