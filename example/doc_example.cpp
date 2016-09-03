@@ -38,13 +38,13 @@ int main()
   string    s5 = to_string<narrow>(big5str(), big5, sjis); // Shift-JIS from Big-5
 
   string s6 = to_string<utf8>(u8str);  // replace errors with u8"\uFFFD"
-  string s7 = to_string<utf8>(u16str, []() {return "?";});  // replace errors with '?'
+  string s7 = to_string(u16str, []() {return "?";});  // replace errors with '?'
   string s8 = to_string<utf8>(wstr, []() {throw "barf"; return "";});  // throw on error
   
   string s9 = to_string<narrow>(u16str, big5); // OK
-  string s10 = to_string<utf8>(u16str, big5);  // error: ccvt_type arg not allowed
-  string s11 = to_string<narrow>(u16str);      // error: ccvt_type arg required
-  string s12 = to_string<narrow>(u16str, big5, big5); // error: >1 ccvt_type arg
-  wstring s13 = to_string<wide>(locstr, big5, big5); // error: >1 ccvt_type arg
-  string  s14 = to_string<narrow>(locstr);  // error: ccvt_type arg required
+  //string s10 = to_string<utf8>(u16str, big5);  // error: ccvt_type arg not allowed
+  //string s11 = to_string<narrow>(u16str);      // error: ccvt_type arg required
+  //string s12 = to_string<narrow>(u16str, big5, big5); // error: >1 ccvt_type arg
+  //wstring s13 = to_string<wide>(locstr, big5, big5); // error: >1 ccvt_type arg
+  //string  s14 = to_string<narrow>(locstr);  // error: ccvt_type arg required
 }

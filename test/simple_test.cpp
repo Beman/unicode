@@ -39,6 +39,10 @@ int cpp_main(int, char*[])
   BOOST_TEST(s == u8str);
 
   s.clear();
+  s = to_string(wstr);
+  BOOST_TEST(s == u8str);
+
+  s.clear();
   recode<wide, utf8>(wstr.cbegin(), wstr.cend(), std::back_inserter(s));
   BOOST_TEST(s == u8str);
 

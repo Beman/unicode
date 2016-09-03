@@ -186,6 +186,23 @@ namespace
     }
     {
       std::string s;
+      s = to_string(ill_u8str, err8nul());
+      BOOST_TEST(s == u8str);
+      s.clear();
+      s = to_string(ill_u16str, err8nul());
+      BOOST_TEST(s == u8str);
+      s.clear();
+      s = to_string(ill_u32str, err8nul());
+      BOOST_TEST(s == u8str);
+      s.clear();
+      s = to_string(ill_wstr, err8nul());
+      BOOST_TEST(s == u8str);
+      s.clear();
+      s = to_string(ill_nbmp, ccvt, err8nul());
+      BOOST_TEST(s == u8bmp);
+    }
+    {
+      std::string s;
       s = to_string<narrow>(ill_u8bmp, ccvt, errnnul());
       BOOST_TEST(s == nbmp);
       cout << hex_string(ill_u8bmp) << endl;

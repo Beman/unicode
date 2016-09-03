@@ -571,24 +571,24 @@ namespace unicode {
                         OutputIterator result, const T&amp; ... args);
 
   // [uni.to_string] string encoding conversion
-  template &lt;class ToEncoding, class ...Pack&gt; inline
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
     std::basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(boost::string_view v, const Pack&amp; ... args);
-  template &lt;class ToEncoding, class ...Pack&gt; inline
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
     std::basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(boost::u16string_view v, const Pack&amp; ... args);
-  template &lt;class ToEncoding, class ...Pack&gt; inline
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
     std::basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(boost::u32string_view v, const Pack&amp; ... args);
-  template &lt;class ToEncoding, class ...Pack&gt; inline
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
     std::basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(boost::wstring_view v, const Pack&amp; ... args);
 
   // [uni.utf-query] UTF encoding queries
-  template &lt;class Encoding, class ForwardIterator&gt; inline
+  template &lt;class Encoding, class ForwardIterator&gt;
     ForwardIterator first_ill_formed(ForwardIterator first,
       ForwardIterator last) noexcept;
-  template &lt;class Encoding&gt; inline
+  template &lt;class Encoding&gt;
     bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
      noexcept;
 
@@ -788,16 +788,16 @@ OutputIterator recode(InputIterator first, InputIterator last,
     
 <h4>String encoding conversion [uni.to_string]</h4>
 
-<pre>template &lt;class ToEncoding, class ...Pack&gt; inline
+<pre>template &lt;class ToEncoding, class ...Pack&gt; 
   std::basic_string&lt;typename ToEncoding::value_type&gt;
     to_string(boost::string_view v, const Pack&amp; ... args);
-template &lt;class ToEncoding, class ...Pack&gt; inline
+template &lt;class ToEncoding, class ...Pack&gt; 
   std::basic_string&lt;typename ToEncoding::value_type&gt;
     to_string(boost::u16string_view v, const Pack&amp; ... args);
-template &lt;class ToEncoding, class ...Pack&gt; inline
+template &lt;class ToEncoding, class ...Pack&gt; 
   std::basic_string&lt;typename ToEncoding::value_type&gt;
     to_string(boost::u32string_view v, const Pack&amp; ... args);
-template &lt;class ToEncoding, class ...Pack&gt; inline
+template &lt;class ToEncoding, class ...Pack&gt; 
   std::basic_string&lt;typename ToEncoding::value_type&gt;
     to_string(boost::wstring_view v, const Pack&amp; ... args);
 </pre>
@@ -871,10 +871,8 @@ int main()
   string  s5 = to_string&lt;narrow&gt;(big5str(), big5, sjis); // Shift-JIS from Big-5
 
   string s6 = to_string&lt;utf8&gt;(u8str);  // replace errors with u8&quot;\uFFFD&quot;
-  string s7 = to_string&lt;utf8&gt;(u16str,  
-    [](){return &quot;?&quot;;});                // replace errors with &#39;?&#39;
-  string s8 = to_string&lt;utf8&gt;(wstr,    
-    [](){throw &quot;barf&quot;; return &quot;&quot;;});   // throw on error
+  string s7 = to_string(u16str, []() {return &quot;?&quot;;});  // replace errors with &#39;?&#39;
+  string s8 = to_string(wstr, []() {throw &quot;barf&quot;; return &quot;&quot;;}); // throw on error
 
   string s9 = to_string&lt;narrow&gt;(u16str, big5);// OK
   string s10 = to_string&lt;utf8&gt;(u16str, big5); // error: ccvt_type arg not allowed
@@ -895,7 +893,7 @@ int main()
 <p>These functions determine whether or not character sequences and strings consist of 
 well-formed code unit sequences (UCS 4.61). </p>
 
-<pre>template &lt;class Encoding, class ForwardIterator&gt; inline
+<pre>template &lt;class Encoding, class ForwardIterator&gt; 
 &nbsp; ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
     noexcept;&nbsp;</pre>
   <blockquote>
@@ -907,7 +905,7 @@ well-formed code unit sequences (UCS 4.61). </p>
      ForwardIterator</code> value type ([uni.relationships]).</p>
   </blockquote>                           
 
-<pre>template &lt;class Encoding&gt; inline
+<pre>template &lt;class Encoding&gt; 
 &nbsp;&nbsp;bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
 &nbsp; &nbsp; noexcept;&nbsp;</pre>
   <blockquote>

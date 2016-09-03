@@ -131,16 +131,16 @@ namespace unicode
     const T& ... args);
 
   //  [uni.to_string] string encoding conversion
-  template <class ToEncoding, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack> inline
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::string_view v, const Pack& ... args);
-  template <class ToEncoding, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack> inline
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::u16string_view v, const Pack& ... args);
-  template <class ToEncoding, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack> inline
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::u32string_view v, const Pack& ... args);
-  template <class ToEncoding, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack> inline
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::wstring_view v, const Pack& ... args);
 
