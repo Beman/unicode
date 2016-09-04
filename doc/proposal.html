@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-03<!--webbot bot="Timestamp" endspan i-checksum="12588" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-04<!--webbot bot="Timestamp" endspan i-checksum="12590" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -53,9 +53,15 @@ Transformation Form (UTF) and wide character encodings is built-in, while narrow
 character encodings are supported via traditional codecvt facets. Pure addition to the standard library. 
 No changes to the 
 core language or existing standard library components. Breaks no existing code 
-or ABI. Proposed wording 
+or ABI. <a href="#Proposed-wording">Proposed wording</a> 
 provided. Specified in accordance with ISO/IEC 10646 and the Unicode Standard. Has been implemented. Suitable for 
 either a library TS or the standard itself.</p>
+
+
+
+<p  style="margin-left:20%; margin-right:20%;">
+<a href="#Major-interface-revision">Major interface revision</a>: R1 adds important functionality 
+yet markedly reduces interface size. </p>
 
 
 
@@ -147,6 +153,27 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <ul>
+  <li><p><a name="Major-interface-revision">Major interface revision</a>: Experimental use of the R0 interface exposed serious issues:</p>
+
+
+
+    <ul>
+      <li>Users who need UTF-based encoding conversion also often need encoding 
+      conversion and visa versa. Yet R0 did not provided codecvt-based 
+      conversion.</li>
+      <li>The R0 interface had 18 signatures spread over three levels of 
+      functionality, and that was very confusing. Adding codecvt-based 
+      conversion would have doubled the number of signatures further increasing 
+      user confusion.</li>
+    </ul>
+
+
+
+<p>The R1 interface provides both UTF-based and codecvt-based encoding 
+conversion, yet consists of only two functions; a <code>recode</code> algorithm 
+with a single signature and a <code>to_string</code> convenience function with 
+four overloads.<br>
+&nbsp;</p></li>
   <li>Added <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
@@ -201,7 +228,7 @@ proposal.</p>
 
 
 
-<p><b>Limit this proposal to encoding conversion and other simple functionality</b></p>
+<p><b>Limit this proposal to encoding conversion and other encoding-related functionality</b></p>
 
 
 
@@ -241,85 +268,17 @@ encodings</b></p>
 
 
 
-<p>Differing user needs is the primary motivation for providing two levels of 
-functionality. Meshing well with existing standard library components such as 
-STL algorithms and the <code>to_string</code> family of functions is an additional 
-benefit.</p>
+<p>The <code>recode</code> function provides a recoding conversion 
+algorithm. It operates on an input sequence and produces an output sequence, so 
+provides STL-like functionality to meet generic needs.</p>
 
 
 
-<ul>
-  <li>Provide high-level convenience encoding conversion functions that handle 
-everyday string interoperability needs. Keep the interfaces simple. Example 
-  of use:</li>
-</ul>
-
-
-
-<blockquote>
-
-
-
-<blockquote>
-
-
-
-<p><code>string u8str = u16str;</code></p>
-
-
-
-</blockquote>
-
-
-
-</blockquote>
-
-
-
-<ul>
-  <li>Provide mid-level generic string conversion functions to support those 
-  requiring generic string interoperability needs. Example of use:</li>
-</ul>
-
-
-
-<blockquote>
-
-
-
-<blockquote>
-
-
-
-<p><i><code>To Be supplied</code></i></p>
-
-
-
-</blockquote>
-
-
-
-</blockquote>
-
-
-
-<ul>
-  <li>Provide a low-level encoding conversion algorithm patterned after existing standard 
-library algorithms. Useful for users needing to perform encoding conversions on 
-sequences of characters. Provides the underlying UTF encoding conversions for 
-  the other functions. Example of use:</li>
-</ul>
-<blockquote>
-
-
-
-<blockquote>
-
-
-
-<p><i><code>To Be supplied</code></i></p>
-</blockquote>
-</blockquote>
+<p>The <code>to_string</code> function templates provide convenient encoding 
+conversion for <code>string_view</code>, <code>u16string_view</code>, <code>
+u32string_view</code>, and <code>wstring_view</code> arguments, and are intended 
+to complement the existing standard library <code>to_string</code> family of 
+functions.</p>
 
 
 
@@ -357,7 +316,7 @@ sequences of characters. Provides the underlying UTF encoding conversions for
   <li>Avoids possibly expensive hidden automatic encoding conversions in 
   unexpected places.</li>
   <li>Avoids the need to change existing standard library components.</li>
-  <li>Meshes well with the other <code>to_string</code> functions already in the 
+  <li>Builds on the other STL algorithms and the <code>to_string</code> functions already in the 
   standard library.</li>
 </ul>
 
@@ -368,7 +327,8 @@ sequences of characters. Provides the underlying UTF encoding conversions for
 
 
 <ul>
-  <li>Emphasizes that these functions assume <code>
+  <li>
+  <p>Emphasizes that these functions assume <code>
   char</code> strings use a Unicode encoding.</li>
   <li>Signals that the committee cares about Unicode, but doesn&#39;t want to force 
   it on users who prefer other encodings.</li>
@@ -404,6 +364,15 @@ of these needs may appear in the same application. For example:</p>
 
   </li>
 </ul>
+<p><b>Provide types <code>narrow</code>, <code>utf8</code>, <code>
+utf16</code>, <code>utf32</code>, and <code>wide</code> to identify encodings</b></p>
+<ul>
+  <li>
+  <p>String <code>value_type</code> alone is insufficient because in 
+  the case of <code>char</code> it is ambiguous.</li>
+  <li>
+  <p>The resulting user code more explicit and so easier to read. </li>
+</ul>
 <p><b>Base conformance and definitions on ISO/IEC 10646:2014</b></p>
 <ul>
   <li>Rewriting specifications that are already covered by another standard, 
@@ -411,7 +380,7 @@ of these needs may appear in the same application. For example:</p>
   a path 
   to insanity.</li>
 </ul>
-<p><b>Use variadic templates to minimize the interface surface area</b></p>
+<p><b>Use variadic templates to minimize interface surface area</b></p>
 <ul>
   <li>Converting between each two pairs of five encodings (narrow, UTF-8, 
   UTF-16, UTF-32, wide) results in twenty-five possible conversion functions. 
@@ -423,48 +392,8 @@ of these needs may appear in the same application. For example:</p>
   interface to two functions - one conversion algorithm and one <code>to_string</code> 
   convenience function. </li>
 </ul>
-<h2>Questions for the Library Evolution Working Group</h2>
-<ul>
-  <li>The specification for the <code>to_*string</code> convenience functions 
-  could be reduced from 16 signatures to four signatures by changing the 
-  argument types to SOURCE, and then specifying SOURCE as being any one of the 
-  four current argument types. The implementors could comply by 
-  supplying the full 16 signatures or by clever template metaprogramming. In other words, a less signatures versus 
-  more complex wording tradeoff. Does the LEWG/LWG have a strong preference 
-  either way?<br>
-&nbsp;</li>
-  <li>Should a second error handler that throws an exception be provided? 
-  Although the <code>ufffd</code> error handler is clearly the best default,  applications that work with supposedly well-formed UTF encodings 
-  may want an exception thrown if an ill-formed encoding is encountered.<br>
-&nbsp;</li>
-  <li>Should a new exception type such as <code>encoding_error</code> be provided?<br>
-&nbsp;</li>
-  <li>The Boost version will supply stream inserters and perhaps 
-  extractors that perform encoding conversion. Would LEWG/LWG like to see a 
-  similar proposal?</li>
-</ul>
-<blockquote>
-  <blockquote>
-<pre>#include &lt;boost/unicode/stream.hpp&gt;
-u16string str16(u&quot;☺☺☺&quot;);
-...
-cout << str16 << '\n';  // automatic conversion to UTF-8</pre>
-  </blockquote>
-</blockquote>
-<h2>To do</h2>
-<ul>
-  <li>Add arguments to error handler function objects:<ul>
-    <li>The location of the error in the input sequence. Probably the iterator of 
-  the point where the error was detected.</li>
-    <li>The specifics of the error. Probably an error type enum for the specific 
-  encoding form errors called out by the Unicode Standard.</li>
-  </ul>
-  </li>
-  <li>Add Requirements sub-section that spells out the requirements on Error 
-  function objects. Ck WP for the form.</li>
-</ul>
 
-<h1>Proposed wording</h1>
+<h1><a name="Proposed-wording">Proposed wording</a></h1>
 
 <p><i><span style="background-color: #C0C0C0">This wording assumes P0417</span></i><span style="background-color: #C0C0C0"> C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
 10646 2014 instead of 1994 </span><i><span style="background-color: #C0C0C0">
@@ -815,7 +744,7 @@ recode&lt;<b><i>FromEncoding</i></b>, ToEncoding&gt;(v.cbegin(), v.cend(), <br>
 return tmp;</code></p>
 
     
-<p dir="ltr">For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
+<p>For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
 narrow</code> if there are two function arguments convertible to <code>ccvt_type</code>, 
 and <code><b><i>FromEncoding</i></b></code> is <code>
 narrow</code> 
