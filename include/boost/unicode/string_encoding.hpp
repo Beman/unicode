@@ -1,6 +1,6 @@
-//  boost/unicode/string_encoding.hpp  -------------------------------------------------//
+﻿//  boost/unicode/string_encoding.hpp  -------------------------------------------------//
 
-//  � Copyright Beman Dawes 2015
+//  © Copyright Beman Dawes 2015
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
@@ -167,7 +167,7 @@ namespace boost
 {
 namespace unicode
 {
-  // to_string implementation ---------------------------------------------------------//
+  // to_string implementation ----------------------------------------------------------//
 
   namespace detail
   {
@@ -198,7 +198,7 @@ namespace unicode
         || detail::ccvt_count<Pack...>() <= 1),
       "Too many ccvt_type arguments");
 
-    using FromEncoding = std::conditional<
+    using FromEncoding = typename std::conditional<
       (detail::ccvt_count<Pack...>() == 1 && !std::is_same<ToEncoding, narrow>::value)
       || detail::ccvt_count<Pack...>() == 2,
       narrow, utf8>::type;

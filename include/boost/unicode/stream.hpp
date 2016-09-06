@@ -1,6 +1,6 @@
-//  boost/unicode/stream.hpp  ----------------------------------------------------------//
+﻿//  boost/unicode/stream.hpp  ----------------------------------------------------------//
 
-//  � Copyright Beman Dawes 2011, 2016
+//  © Copyright Beman Dawes 2011, 2016
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
