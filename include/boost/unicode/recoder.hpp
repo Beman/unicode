@@ -99,7 +99,7 @@ namespace unicode
     BOOST_ASSERT((reinterpret_cast<const char*>(last) - inbuf) >= 0);
     std::size_t inbytesleft = static_cast<std::size_t>(reinterpret_cast<const char*>(last) - inbuf);
 
-    std::array<char, 8> buf;  // TODO: macro that reduces size for stress testing
+    std::array<char, 128> buf;  // TODO: macro that reduces size for stress testing
 
     char* outbuf; 
     std::size_t outbytesleft;
@@ -120,7 +120,7 @@ namespace unicode
 
       if (inbytesleft == 0)           // success; the input string has been converted
       {
-        for (auto cur = buf.data(); cur <= outbuf; cur += sizeof(ToCharT))
+        for (auto cur = buf.data(); cur != outbuf; cur += sizeof(ToCharT))
           *result++ = *reinterpret_cast<ToCharT*>(cur);
       }
       //else if (ccvt_result == std::codecvt_base::error)
