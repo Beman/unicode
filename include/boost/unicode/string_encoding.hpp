@@ -26,7 +26,7 @@
 //  of types char16_t, char32_t, and wchar_t are UTF encoded. Strings and sequences of  //
 //  type char are either UTF or narrow encoded. Narrow encoded strings and sequences    //
 //  have an associated codecvt argument that determines the specific narrow encoding,   //
-//  such as Big5, Shift-JIS, EBCIDIC, or even UTF-8.                                                     //
+//  such as Big5, Shift-JIS, EBCIDIC, or even UTF-8.                                    //
 //--------------------------------------------------------------------------------------//
 
 /*

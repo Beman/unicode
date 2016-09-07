@@ -22,4 +22,5 @@ project
          [ run kuhn_test.cpp ]
          [ run round_trip_test.cpp : : : <variant>release ]
          [ run simple_test.cpp ]
+         [ run recoder_test.cpp ]
        ;
