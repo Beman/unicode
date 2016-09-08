@@ -904,7 +904,7 @@ namespace unicode
         for (; to != to_next; ++to)
           *result++ = *to;
         for (auto it = eh(); *it != '\0'; ++it)
-          *result++ = *to;
+          *result++ = *it;
         from = from_next + 1;  // bypass error
       }
       else  // ccvt_result == std::codecvt_base::partial
@@ -912,7 +912,7 @@ namespace unicode
         if (to_next == buf.data())
         {
           for (auto it = eh(); *it != '\0'; ++it)
-            *result++ = *to;
+            *result++ = *it;
           from = from_end;
         }
         else
@@ -967,7 +967,7 @@ namespace unicode
         for (; to != to_next; ++to)
           *result++ = *to;
         for (auto it = eh(); *it != '\0'; ++it)
-          *result++ = *to;
+          *result++ = *it;
         from = from_next + 1;  // bypass error
       }
       else  // ccvt_result == std::codecvt_base::partial
@@ -975,7 +975,7 @@ namespace unicode
         if (to_next == buf.data())
         {
           for (auto it = eh(); *it != '\0'; ++it)
-            *result++ = *to;
+            *result++ = *it;
           from = from_end;
         }
         else
