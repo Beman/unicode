@@ -1,6 +1,6 @@
-//  boost/unicode/detail/hex_string.hpp  -----------------------------------------------//
+ï»¿//  boost/unicode/detail/hex_string.hpp  -----------------------------------------------//
 
-//  © Copyright Beman Dawes 2015
+//  ï¿½ Copyright Beman Dawes 2015
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
