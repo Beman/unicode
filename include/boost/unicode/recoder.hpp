@@ -42,6 +42,11 @@ namespace unicode
     template <class OutputIterator, class Error = ufffd<ToCharT>>
     OutputIterator recode(const FromCharT* first, const FromCharT* last,
       OutputIterator result, Error eh = Error());
+    // Note: The POSIX spec says "If iconv() encounters a character in the input buffer
+    // that is valid, but for which an identical character does not exist in the target
+    // codeset, iconv() performs an implementation-dependent conversion on this
+    // character." So the eh argument is only applied when an input sub-sequence is
+    // invalid (i.e. ill-formed) for the input encoding.
 
   private:  // exposition only
 
@@ -91,6 +96,9 @@ namespace unicode
   OutputIterator recoder<FromCharT, ToCharT>::recode(
     const FromCharT* first, const FromCharT* last, OutputIterator result, Error eh)
   {
+    BOOST_ASSERT(cd_ != (iconv_t)-1);  // recoder construction failed,
+                                       //   yet recode has been called
+
     //  The POSIX iconv declaration being adapted to is:
     //    size_t iconv(iconv_t cd, const char **inbuf, size_t *inbytesleft,
     //      char **outbuf, size_t *outbytesleft);
@@ -105,48 +113,50 @@ namespace unicode
     std::size_t outbytesleft;
     std::size_t iconv_result;
 
-    // TODO: initialization call to iconv()
+    // put the conversion descriptor cd_ into its initial shift state
+    //outbuf = buf.data();
+    //outbytesleft = buf.size();
+    //iconv(cd_, 0, 0, &outbuf, &outbytesleft);
 
     //  loop until the entire input sequence is processed by the codecvt facet 
 
     while (inbytesleft !=0)
     {
-      outbuf = buf.data();
-      outbytesleft = buf.size();
-
-      BOOST_ASSERT_MSG(cd_ != (iconv_t)-1, "recoder::recode logic error");
 
       iconv_result = iconv(cd_, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
 
-      if (inbytesleft == 0)           // success; the input string has been converted
+      int saved_errno = errno;  // save errno in case *result++ resets it
+
+      // output the buffer contents, if any
+      for (auto it = buf.data(); it != outbuf; it += sizeof(ToCharT))
+        *result++ = *reinterpret_cast<ToCharT*>(it);
+
+      if (iconv_result != -1u)   // success; no error reported
       {
-        for (auto cur = buf.data(); cur != outbuf; cur += sizeof(ToCharT))
-          *result++ = *reinterpret_cast<ToCharT*>(cur);
+        BOOST_ASSERT(inbytesleft == 0);  // there was no error, so the entire input
+                                         //   sequence should have been converted
+        return result;
       }
-      //else if (ccvt_result == std::codecvt_base::error)
-      //{
-      //  for (; to != to_next; ++to)
-      //    *result++ = *to;
-      //  for (auto it = eh(); *it != '\0'; ++it)
-      //    *result++ = *to;
-      //  from = from_next + 1;  // bypass error
-      //}
-      //else  // ccvt_result == std::codecvt_base::partial
-      //{
-      //  if (to_next == buf.data())
-      //  {
-      //    for (auto it = eh(); *it != '\0'; ++it)
-      //      *result++ = *to;
-      //    from = from_end;
-      //  }
-      //  else
-      //  {
-      //    // eliminate the possibility that buf does not have enough room
-      //    for (; to != to_next; ++to)
-      //      *result++ = *to;
-      //    from = from_next;
-      //  }
-      //}
+
+      outbuf = buf.data();
+      outbytesleft = buf.size();
+      
+      if (saved_errno == E2BIG)  // E2BIG: lack of space in the output buffer
+        continue;
+
+      if (saved_errno == EILSEQ || saved_errno == EINVAL)
+        // EILSEQ: input byte that does not belong to the input codeset
+        // EINVAL: incomplete character or shift sequence at end of the input
+      {
+        BOOST_ASSERT(saved_errno == EILSEQ
+          || inbytesleft == 0); // verify POSIX spec understood
+        for (auto it = eh(); *it != '\0'; ++it)  // output the error message
+          *result++ = *it;
+      }
+      else  // some totally unexpected error, so bail out
+      {
+        throw std::system_error(saved_errno, std::system_category(), "recoder::recode");
+      }
     }
     return result;
   }
