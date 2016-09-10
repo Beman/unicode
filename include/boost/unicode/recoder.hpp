@@ -7,7 +7,8 @@
 
 //--------------------------------------------------------------------------------------//
 //                                                                                      //
-//  Adapter to turn the POSIX iconv.h interface into an STL-like algoithm interface     //
+//                  ***** WARNING - EXPERIMENTAL - UNDOCUMENTED *****                   //
+//    Adapter to turn the POSIX iconv.h interface into an STL-like algoithm interface   //
 //                                                                                      //
 //--------------------------------------------------------------------------------------//
 
@@ -26,6 +27,8 @@ namespace boost
 {
 namespace unicode
 {
+
+  //  ***** WARNING - EXPERIMENTAL - UNDOCUMENTED *****
 
   template <class FromCharT, class ToCharT>
   class recoder
