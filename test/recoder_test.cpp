@@ -53,9 +53,13 @@ namespace
   {
     int n = 0;
     cout << "ill_formed_utf8_source test" << endl;
+
     // test well-formed cases first to ensure these still work
+    BOOST_TEST((to_u32string("") == U""));
+    cout << "  test " << ++n << " complete" << endl;
     BOOST_TEST((to_u32string(u8str) == u32str));
     cout << "  test " << ++n << " complete" << endl;
+    
     // ditto with user supplied error handler
     BOOST_TEST((to_u32string(u8str, err32()) == u32str));
     cout << "  test " << ++n << " complete" << endl;
@@ -78,7 +82,7 @@ namespace
 
 int main()
 {
-
+  cout << "BOOST_UNICODE_BUFFER_SIZE=" << BOOST_UNICODE_BUFFER_SIZE << endl;
   std::u32string tmp;
   std::string test(u8"abc");
   std::u32string expected(U"abc");

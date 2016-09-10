@@ -75,6 +75,10 @@ Unicode Standard - Encoding Form Conversion (D93) extract:
    code unit sequences."
 */
 
+#ifndef BOOST_UNICODE_BUFFER_SIZE
+# define BOOST_UNICODE_BUFFER_SIZE 128
+#endif
+
 //--------------------------------------------------------------------------------------//
 //                                     Synopsis                                         //
 //--------------------------------------------------------------------------------------//
@@ -877,7 +881,7 @@ namespace unicode
     //static_assert(!std::is_same<FromCharT, ToCharT>::value,
     //  "FromCharT and ToCharT must not be the same type");
 
-    std::array<char, 128> buf;  // TODO: macro that reduces size for stress testing 
+    std::array<char, BOOST_UNICODE_BUFFER_SIZE> buf;
     std::mbstate_t mbstate  = std::mbstate_t();
     const wchar_t* from_next;
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
@@ -940,7 +944,7 @@ namespace unicode
     //static_assert(!std::is_same<FromCharT, ToCharT>::value,
     //  "FromCharT and ToCharT must not be the same type");
 
-    std::array<wchar_t, 128> buf;  // TODO: macro that reduces size for stress testing
+    std::array<wchar_t, BOOST_UNICODE_BUFFER_SIZE> buf;
     std::mbstate_t mbstate  = std::mbstate_t();
     const char* from_next;
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;

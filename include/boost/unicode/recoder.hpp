@@ -109,7 +109,7 @@ namespace unicode
     std::size_t inbytesleft
       = static_cast<std::size_t>(reinterpret_cast<const char*>(last) - inbuf);
 
-    std::array<char, 128> buf;  // TODO: macro that reduces size for stress testing
+    std::array<char, BOOST_UNICODE_BUFFER_SIZE> buf;
 
     char* outbuf; 
     std::size_t outbytesleft;
@@ -129,14 +129,14 @@ namespace unicode
       outbuf = buf.data();
       outbytesleft = buf.size();
 
-      std::cout << "\nbefore iconv(), inbytesleft=" << inbytesleft
-        << ", outbytesleft=" << outbytesleft << std::endl;
+      //std::cout << "\nbefore iconv(), inbytesleft=" << inbytesleft
+      //  << ", outbytesleft=" << outbytesleft << std::endl;
 
       iconv_result = iconv(cd_, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
 
-      std::cout << "after iconv(), inbytesleft=" << inbytesleft
-        << ", outbytesleft=" << outbytesleft
-        << ", return=" << iconv_result << ", errno=" << errno << std::endl;
+      //std::cout << "after iconv(), inbytesleft=" << inbytesleft
+      //  << ", outbytesleft=" << outbytesleft
+      //  << ", return=" << iconv_result << ", errno=" << errno << std::endl;
 
       int saved_errno = errno;  // save errno in case *result++ resets it
       auto out_it = buf.data(); // get ready to output buffer contents
