@@ -69,6 +69,8 @@ namespace
     cout << "  test " << ++n << " complete" << endl;
     BOOST_TEST((to_u32string("\xed\xa0\x80", err32()) == U"*ill*"));
     cout << "  test " << ++n << " complete" << endl;
+    BOOST_TEST((to_u32string("\xed\xa0\x80OK", err32()) == U"*ill*OK"));
+    cout << "  test " << ++n << " complete" << endl;
     BOOST_TEST((to_u32string("\xed\xa0\x80", err32nul()) == U""));
     cout << "  test " << ++n << " complete" << endl;
 
