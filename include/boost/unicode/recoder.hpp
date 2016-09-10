@@ -15,6 +15,7 @@
 #define BOOST_UNICODE_RECODER_HPP
 
 #include <boost/unicode/string_encoding.hpp>
+#include <type_traits>
 #include <iconv.h>
 #include <boost/assert.hpp>
 
@@ -72,14 +73,14 @@ namespace unicode
     : from_name_(from_name), to_name_(to_name), cd_(iconv_open(
         to_name.c_str(), from_name.c_str()))
   {
-    if (cd_ == (iconv_t)-1)
+    if (cd_ == iconv_t(-1))
       throw "open barf with errno " + std::to_string(errno);
   }
 
   template <class FromCharT, class ToCharT>
   recoder<FromCharT, ToCharT>::~recoder()
   {
-    if (cd_ != (iconv_t)-1)
+    if (cd_ != iconv_t(-1))
       iconv_close(cd_);
   }
 
@@ -96,7 +97,7 @@ namespace unicode
   OutputIterator recoder<FromCharT, ToCharT>::recode(
     const FromCharT* first, const FromCharT* last, OutputIterator result, Error eh)
   {
-    BOOST_ASSERT(cd_ != (iconv_t)-1);  // recoder construction failed,
+    BOOST_ASSERT(cd_ != iconv_t(-1));  // recoder construction failed,
                                        //   yet recode has been called
 
     //  The POSIX iconv declaration being adapted to is:
@@ -105,54 +106,81 @@ namespace unicode
     
     char* inbuf = const_cast<char*>(reinterpret_cast<const char*>(first));
     BOOST_ASSERT((reinterpret_cast<const char*>(last) - inbuf) >= 0);
-    std::size_t inbytesleft = static_cast<std::size_t>(reinterpret_cast<const char*>(last) - inbuf);
+    std::size_t inbytesleft
+      = static_cast<std::size_t>(reinterpret_cast<const char*>(last) - inbuf);
 
     std::array<char, 128> buf;  // TODO: macro that reduces size for stress testing
 
     char* outbuf; 
     std::size_t outbytesleft;
     std::size_t iconv_result;
+    bool first_output_code_point = true;
 
+    // TODO:
     // put the conversion descriptor cd_ into its initial shift state
     //outbuf = buf.data();
     //outbytesleft = buf.size();
     //iconv(cd_, 0, 0, &outbuf, &outbytesleft);
 
-    //  loop until the entire input sequence is processed by the codecvt facet 
+    //  loop until the entire input sequence is processed by iconv() 
 
     while (inbytesleft !=0)
     {
+      outbuf = buf.data();
+      outbytesleft = buf.size();
+
+      std::cout << "\nbefore iconv(), inbytesleft=" << inbytesleft
+        << ", outbytesleft=" << outbytesleft << std::endl;
 
       iconv_result = iconv(cd_, &inbuf, &inbytesleft, &outbuf, &outbytesleft);
 
+      std::cout << "after iconv(), inbytesleft=" << inbytesleft
+        << ", outbytesleft=" << outbytesleft
+        << ", return=" << iconv_result << ", errno=" << errno << std::endl;
+
       int saved_errno = errno;  // save errno in case *result++ resets it
+      auto out_it = buf.data(); // get ready to output buffer contents
+
+      // ignore leading char16_t or char32_t byte order marker (BOM) gratuitously 
+      // inserted by libstdc++
+      if (first_output_code_point
+        && (std::is_same<ToCharT, char32_t>::value
+          || std::is_same<ToCharT, char16_t>::value)
+        && outbytesleft <= (buf.size()- sizeof(ToCharT))
+        && *reinterpret_cast<ToCharT*>(buf.data()) == 0xFEFF  
+         )
+      {
+        first_output_code_point = false;
+        out_it += sizeof(ToCharT);
+        outbytesleft -= sizeof(ToCharT);
+      }
 
       // output the buffer contents, if any
-      for (auto it = buf.data(); it != outbuf; it += sizeof(ToCharT))
-        *result++ = *reinterpret_cast<ToCharT*>(it);
+      for (; out_it != outbuf; out_it += sizeof(ToCharT))
+        *result++ = *reinterpret_cast<ToCharT*>(out_it);
 
-      if (iconv_result != -1u)   // success; no error reported
+      if (iconv_result != std::size_t(-1))   // success; no error reported
       {
         BOOST_ASSERT(inbytesleft == 0);  // there was no error, so the entire input
                                          //   sequence should have been converted
         return result;
       }
-
-      outbuf = buf.data();
-      outbytesleft = buf.size();
       
       if (saved_errno == E2BIG)  // E2BIG: lack of space in the output buffer
         continue;
 
-      if (saved_errno == EILSEQ || saved_errno == EINVAL)
-        // EILSEQ: input byte that does not belong to the input codeset
-        // EINVAL: incomplete character or shift sequence at end of the input
+      if (saved_errno == EILSEQ // EILSEQ: invalid multibyte sequence in the input
+          || saved_errno == EINVAL)
       {
-        BOOST_ASSERT(saved_errno == EILSEQ
-          || inbytesleft == 0); // verify POSIX spec understood
-        for (auto it = eh(); *it != '\0'; ++it)  // output the error message
+        for (auto it = eh(); *it != '\0'; ++it)  // output any error message
           *result++ = *it;
+         if (inbytesleft <= sizeof(FromCharT))
+          break;
+        // move forward one code-unit  
+        inbuf += sizeof(FromCharT);
+        inbytesleft -= sizeof(FromCharT);
       }
+      
       else  // some totally unexpected error, so bail out
       {
         throw std::system_error(saved_errno, std::system_category(), "recoder::recode");

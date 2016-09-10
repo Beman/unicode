@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <boost/unicode/recoder.hpp>
 #include <iterator>
+#include <system_error>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
 #include <boost/core/lightweight_test.hpp>
 #include <boost/unicode/detail/hex_string.hpp>
@@ -16,8 +17,7 @@ using std::endl;
 namespace
 {
   
-  // TODO: discard the BOM being added by iconv(), then switch "UTF-32LE" back to "UTF-32"
-  boost::unicode::recoder<char, char32_t> rcdr_8_32("UTF-8", "UTF-32LE");
+  boost::unicode::recoder<char, char32_t> rcdr_8_32("UTF-8", "UTF-32");
 
   template <class Error = boost::unicode::ufffd<char32_t>>
   u32string to_u32string(boost::string_view v, Error eh = Error())
@@ -51,19 +51,27 @@ namespace
 
   void ill_formed_utf8_source()
   {
+    int n = 0;
     cout << "ill_formed_utf8_source test" << endl;
     // test well-formed cases first to ensure these still work
     BOOST_TEST((to_u32string(u8str) == u32str));
+    cout << "  test " << ++n << " complete" << endl;
     // ditto with user supplied error handler
     BOOST_TEST((to_u32string(u8str, err32()) == u32str));
+    cout << "  test " << ++n << " complete" << endl;
 
     BOOST_TEST((to_u32string("\xed\xa0\x80") == U"\uFFFD"));
+    cout << hex_string(to_u32string("\xed\xa0\x80")) << endl;
+    cout << "  test " << ++n << " complete" << endl;
     BOOST_TEST((to_u32string("\xed\xa0\x80", err32()) == U"*ill*"));
+    cout << "  test " << ++n << " complete" << endl;
     BOOST_TEST((to_u32string("\xed\xa0\x80", err32nul()) == U""));
+    cout << "  test " << ++n << " complete" << endl;
 
     BOOST_TEST((to_u32string(ill_u8str, err32nul()) == u32str));
     //cout << hex_string(ill_u8str) << endl;
     //cout << hex_string(to_string<utf32, err32nul>(ill_u8str)) << endl;
+    cout << "  test " << ++n << " complete" << endl;
     cout << "  ill_formed_utf8_source test done" << endl;
   }
 }
@@ -93,7 +101,7 @@ int main()
   std::cout << "result:" << hex_string(tmp) << std::endl;
   std::cout << "expect:" << hex_string(u32str) << std::endl;
 
-  void ill_formed_utf8_source();
+  ill_formed_utf8_source();
 
   return boost::report_errors();
 }
