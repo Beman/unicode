@@ -143,16 +143,17 @@ namespace unicode
 
       // ignore leading char16_t or char32_t byte order marker (BOM) gratuitously 
       // inserted by libstdc++
-      if (first_output_code_point
-        && (std::is_same<ToCharT, char32_t>::value
-          || std::is_same<ToCharT, char16_t>::value)
-        && outbytesleft <= (buf.size()- sizeof(ToCharT))
-        && *reinterpret_cast<ToCharT*>(buf.data()) == 0xFEFF  
-         )
+      if (first_output_code_point)
       {
         first_output_code_point = false;
-        out_it += sizeof(ToCharT);
-        outbytesleft -= sizeof(ToCharT);
+        if ((std::is_same<ToCharT, char32_t>::value
+              || std::is_same<ToCharT, char16_t>::value)
+            && outbytesleft <= (buf.size()- sizeof(ToCharT))
+            && *reinterpret_cast<ToCharT*>(buf.data()) == 0xFEFF)
+        {
+          out_it += sizeof(ToCharT);
+          outbytesleft -= sizeof(ToCharT);
+        }
       }
 
       // output the buffer contents, if any
