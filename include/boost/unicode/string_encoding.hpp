@@ -153,9 +153,10 @@ namespace unicode
     ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
       BOOST_NOEXCEPT;
 
-  template <class Encoding> inline
-    bool is_well_formed(basic_string_view<typename Encoding::value_type> v)
-      BOOST_NOEXCEPT;
+  bool is_well_formed(boost::string_view v) BOOST_NOEXCEPT;
+  bool is_well_formed(boost::u16string_view v) BOOST_NOEXCEPT;
+  bool is_well_formed(boost::u32string_view v) BOOST_NOEXCEPT;
+  bool is_well_formed(boost::wstring_view v) BOOST_NOEXCEPT;
 
 }  // namespace unicode
 }  // namespace boost
@@ -1138,15 +1139,22 @@ namespace unicode
       typename detail::utf_encoding<typename Encoding::value_type>::tag());
   }
 
-  template <class Encoding> inline
-    bool is_well_formed(basic_string_view<typename Encoding::value_type> v)
-    BOOST_NOEXCEPT
+  inline bool is_well_formed(boost::string_view v) BOOST_NOEXCEPT
   {
-    static_assert(detail::is_known_encoding<Encoding>::value,
-      "Encoding must be utf8, utf16, utf32, or wide");
-    return first_ill_formed<Encoding>(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed<utf8>(v.cbegin(), v.cend()) == v.end();
   }
-
+  inline bool is_well_formed(boost::u16string_view v) BOOST_NOEXCEPT
+  {
+    return first_ill_formed<utf16>(v.cbegin(), v.cend()) == v.end();
+  }
+  inline bool is_well_formed(boost::u32string_view v) BOOST_NOEXCEPT
+  {
+    return first_ill_formed<utf32>(v.cbegin(), v.cend()) == v.end();
+  }
+  inline bool is_well_formed(boost::wstring_view v) BOOST_NOEXCEPT
+  {
+    return first_ill_formed<wide>(v.cbegin(), v.cend()) == v.end();
+  }
 }  // namespace unicode
 }  // namespace boost
 

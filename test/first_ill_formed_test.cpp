@@ -60,7 +60,7 @@ namespace
         str.append(&tmp.c_[2], 2);
       else
         str.append(&tmp.c_[3], 1);
-      if (!boost::unicode::is_well_formed<utf8>(str))
+      if (!boost::unicode::is_well_formed(str))
         ++ill_formed_count;
     }
 

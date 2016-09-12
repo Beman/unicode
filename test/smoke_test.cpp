@@ -131,15 +131,15 @@ namespace
   {
     cout << "is_well_formed_test" << endl;
 
-    BOOST_TEST(is_well_formed<utf8>(u8str));
-    BOOST_TEST(is_well_formed<utf16>(u16str));
-    BOOST_TEST(is_well_formed<utf32>(u32str));
-    BOOST_TEST(is_well_formed<wide>(wstr));
+    BOOST_TEST(is_well_formed(u8str));
+    BOOST_TEST(is_well_formed(u16str));
+    BOOST_TEST(is_well_formed(u32str));
+    BOOST_TEST(is_well_formed(wstr));
 
-    BOOST_TEST(!is_well_formed<utf8>(ill_u8str));
-    BOOST_TEST(!is_well_formed<utf16>(ill_u16str));
-    BOOST_TEST(!is_well_formed<utf32>(ill_u32str));
-    BOOST_TEST(!is_well_formed<wide>(ill_wstr));
+    BOOST_TEST(!is_well_formed(ill_u8str));
+    BOOST_TEST(!is_well_formed(ill_u16str));
+    BOOST_TEST(!is_well_formed(ill_u32str));
+    BOOST_TEST(!is_well_formed(ill_wstr));
 
     cout << "  is_well_formed_test done" << endl;
   }
