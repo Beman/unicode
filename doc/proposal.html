@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-04<!--webbot bot="Timestamp" endspan i-checksum="12590" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-12<!--webbot bot="Timestamp" endspan i-checksum="12587" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -71,10 +71,10 @@ yet markedly reduces interface size. </p>
 
 <p>C++ types <code>char</code>, <code>char16_t</code>, 
 and
-<code>char32_t</code> support character and string literals encoded in 
-Unicode Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Additional 
-narrow character encodings are supported by the standard library&#39;s codecvt 
-facets via&nbsp;conversion to type <code>wchar_t</code> wide character encoding.</p>
+<code>char32_t</code> support character and string literals encoded in Unicode 
+Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Additional narrow 
+character encodings are supported by the standard library&#39;s codecvt facets 
+via&nbsp;conversion to a wide character encoding.</p>
 
 
 
@@ -158,7 +158,8 @@ winner &mdash; Unicode.&quot;</p>
 
 
     <ul>
-      <li>Users who need UTF-based encoding conversion also often need encoding 
+      <li>Users who need UTF-based encoding conversion also often need 
+      codecvt-based encoding 
       conversion and visa versa. Yet R0 did not provided codecvt-based 
       conversion.</li>
       <li>The R0 interface had 18 signatures spread over three levels of 
@@ -174,7 +175,7 @@ conversion, yet consists of only two functions; a <code>recode</code> algorithm
 with a single signature and a <code>to_string</code> convenience function with 
 four overloads.<br>
 &nbsp;</p></li>
-  <li>Added <i><a href="#uni.enc_err_detect">Encoding error detection</a></i> 
+  <li>Added <a href="#uni.utf-query">UTF encoding query</a> 
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
   <li>
@@ -464,27 +465,27 @@ namespace unicode {
                                                 //   encoding [lex.ccon]
 
   // [uni.is_encoding] is_encoding type-trait
-  template &lt;class T&gt; struct is_encoding : public std::false_type {};
-  template&lt;&gt; struct is_encoding&lt;narrow&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf8&gt;   : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf16&gt;  : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;utf32&gt;  : std::true_type {};
-  template&lt;&gt; struct is_encoding&lt;wide&gt;   : std::true_type {};
+  template &lt;class T&gt; struct is_encoding : public false_type {};
+  template&lt;&gt; struct is_encoding&lt;narrow&gt; : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf8&gt;   : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf16&gt;  : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf32&gt;  : true_type {};
+  template&lt;&gt; struct is_encoding&lt;wide&gt;   : true_type {};
 
   template &lt;class T&gt; constexpr bool is_encoding_v = is_encoding&lt;T&gt;::value;
 
   // [uni.is_encoded_character] is_encoded_character type-trait
-  template &lt;class T&gt; struct is_encoded_character   : public std::false_type {};
-  template&lt;&gt; struct is_encoded_character&lt;char&gt;     : std::true_type {};
-  template&lt;&gt; struct is_encoded_character&lt;char16_t&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoded_character&lt;char32_t&gt; : std::true_type {};
-  template&lt;&gt; struct is_encoded_character&lt;wchar_t&gt;  : std::true_type {};
+  template &lt;class T&gt; struct is_encoded_character   : public false_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char&gt;     : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char16_t&gt; : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char32_t&gt; : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;wchar_t&gt;  : true_type {};
 
   template &lt;class T&gt; constexpr bool is_encoded_character_v
     = is_encoded_character&lt;T&gt;::value;
 
   // [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  typedef codecvt&lt;wchar_t, char, std::mbstate_t&gt; ccvt_type;
+  typedef codecvt&lt;wchar_t, char, mbstate_t&gt; ccvt_type;
 
   // [uni.err] default error handler
   template &lt;class CharT&gt; struct ufffd;
@@ -501,25 +502,27 @@ namespace unicode {
 
   // [uni.to_string] string encoding conversion
   template &lt;class ToEncoding = utf8, class ...Pack&gt;
-    std::basic_string&lt;typename ToEncoding::value_type&gt;
-      to_string(boost::string_view v, const Pack&amp; ... args);
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(string_view v, const Pack&amp; ... args);
   template &lt;class ToEncoding = utf8, class ...Pack&gt;
-    std::basic_string&lt;typename ToEncoding::value_type&gt;
-      to_string(boost::u16string_view v, const Pack&amp; ... args);
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(u16string_view v, const Pack&amp; ... args);
   template &lt;class ToEncoding = utf8, class ...Pack&gt;
-    std::basic_string&lt;typename ToEncoding::value_type&gt;
-      to_string(boost::u32string_view v, const Pack&amp; ... args);
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(u32string_view v, const Pack&amp; ... args);
   template &lt;class ToEncoding = utf8, class ...Pack&gt;
-    std::basic_string&lt;typename ToEncoding::value_type&gt;
-      to_string(boost::wstring_view v, const Pack&amp; ... args);
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(wstring_view v, const Pack&amp; ... args);
 
   // [uni.utf-query] UTF encoding queries
-  template &lt;class Encoding, class ForwardIterator&gt;
+  template &lt;class ForwardIterator&gt;
     ForwardIterator first_ill_formed(ForwardIterator first,
       ForwardIterator last) noexcept;
-  template &lt;class Encoding&gt;
-    bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
-     noexcept;
+
+  bool is_well_formed(string_view v) noexcept;
+  bool is_well_formed(u16string_view v) noexcept;
+  bool is_well_formed(u32string_view v) noexcept;
+  bool is_well_formed(wstring_view v) noexcept;
 
 }  // namespace unicode
 }  // namespace fundamentals_v2
@@ -718,17 +721,17 @@ OutputIterator recode(InputIterator first, InputIterator last,
 <h4>String encoding conversion [uni.to_string]</h4>
 
 <pre>template &lt;class ToEncoding, class ...Pack&gt; 
-  std::basic_string&lt;typename ToEncoding::value_type&gt;
-    to_string(boost::string_view v, const Pack&amp; ... args);
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(string_view v, const Pack&amp; ... args);
 template &lt;class ToEncoding, class ...Pack&gt; 
-  std::basic_string&lt;typename ToEncoding::value_type&gt;
-    to_string(boost::u16string_view v, const Pack&amp; ... args);
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(u16string_view v, const Pack&amp; ... args);
 template &lt;class ToEncoding, class ...Pack&gt; 
-  std::basic_string&lt;typename ToEncoding::value_type&gt;
-    to_string(boost::u32string_view v, const Pack&amp; ... args);
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(u32string_view v, const Pack&amp; ... args);
 template &lt;class ToEncoding, class ...Pack&gt; 
-  std::basic_string&lt;typename ToEncoding::value_type&gt;
-    to_string(boost::wstring_view v, const Pack&amp; ... args);
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(wstring_view v, const Pack&amp; ... args);
 </pre>
 <blockquote>
     
@@ -767,13 +770,13 @@ respectively.</p>
 <p>[<i><a name="uni.to_string.example">Example</a>:</i></p>
 
     
-<pre>#include &lt;boost/unicode/string_encoding.hpp&gt;
+<pre>#include &lt;string_encoding&gt;
 #include &lt;string&gt;
 #include &lt;locale&gt;
 #include &lt;cvt/big5&gt;  // vendor supplied
 #include &lt;cvt/sjis&gt;  // vendor supplied
 
-using namespace boost::unicode;
+using namespace std::unicode;
 using namespace std;
 
 string sjisstr() { string s; /*load s*/ return s; }
@@ -816,27 +819,29 @@ int main()
 <p>&mdash; <i>end example</i>]</p>
 
     
-<h4>UTF encoding queries [<a name="uni.enc_err_detect">uni.utf-query</a>]</h4>
+<h4>UTF encoding queries [<a name="uni.utf-query">uni.utf-query</a>]</h4>
 
     
 <p>These functions determine whether or not character sequences and strings consist of 
-well-formed code unit sequences (UCS 4.61). </p>
+well-formed UTF code unit sequences (UCS 4.61). </p>
 
-<pre>template &lt;class Encoding, class ForwardIterator&gt; 
+<pre>template &lt;class ForwardIterator&gt; 
 &nbsp; ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
     noexcept;&nbsp;</pre>
   <blockquote>
      <p><i>Returns: </i>The first iterator <code>iter</code> in the range <code>
-     [first, last)</code> for which <code>iter</code> points to the start of a minimal ill-formed code unit 
+     [first, last)</code> for which <code>iter</code> points to the start of a minimal ill-formed 
+     UTF code unit 
      subsequence. Returns <code>last</code> if no ill-formed code unit 
      subsequence is found.</p>
      <p><i>Remarks:</i>&nbsp; The specific UTF encoding form is determined by the <code>
      ForwardIterator</code> value type ([uni.relationships]).</p>
   </blockquote>                           
 
-<pre>template &lt;class Encoding&gt; 
-&nbsp;&nbsp;bool is_well_formed(basic_string_view&lt;typename Encoding::value_type&gt; v)
-&nbsp; &nbsp; noexcept;&nbsp;</pre>
+<pre>bool is_well_formed(string_view v) noexcept;
+bool is_well_formed(u16string_view v) noexcept;
+bool is_well_formed(u32string_view v) noexcept;
+bool is_well_formed(wstring_view v) noexcept;&nbsp;</pre>
   <blockquote>
      <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.cbegin(), v.cend()) 
      == v.cend()</code>.</p>
