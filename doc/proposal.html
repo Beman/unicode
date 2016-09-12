@@ -457,11 +457,11 @@ inline namespace fundamentals_v2 {
 namespace unicode {
 
   //  [uni.encoding] encoding types
-  struct narrow {typedef char     value_type;}; // codecvt determined encoding
-  struct utf8   {typedef char     value_type;}; // UTF-8 encoding
-  struct utf16  {typedef char16_t value_type;}; // UTF-16 encoding
-  struct utf32  {typedef char32_t value_type;}; // UTF-32 encoding
-  struct wide   {typedef wchar_t  value_type;}; // wide-character literal
+  struct narrow {using value_type = char;};     // codecvt determined encoding
+  struct utf8   {using value_type = char;};     // UTF-8 encoding
+  struct utf16  {using value_type = char16_t;}; // UTF-16 encoding
+  struct utf32  {using value_type = char32_t;}; // UTF-32 encoding
+  struct wide   {using value_type = wchar_t;};  // wide-character literal
                                                 //   encoding [lex.ccon]
 
   // [uni.is_encoding] is_encoding type-trait
@@ -485,7 +485,7 @@ namespace unicode {
     = is_encoded_character&lt;T&gt;::value;
 
   // [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  typedef codecvt&lt;wchar_t, char, mbstate_t&gt; ccvt_type;
+  using ccvt_type = codecvt&lt;wchar_t, char, mbstate_t&gt;;
 
   // [uni.err] default error handler
   template &lt;class CharT&gt; struct ufffd;

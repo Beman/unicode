@@ -88,11 +88,11 @@ namespace boost
 namespace unicode
 {
   //  [uni.encoding] encoding types
-  struct narrow {typedef char     value_type;}; // encoding determined by codecvt facet
-  struct utf8   {typedef char     value_type;}; // UTF-8 encoded
-  struct utf16  {typedef char16_t value_type;}; // UTF-16 encoded
-  struct utf32  {typedef char32_t value_type;}; // UTF-32 encoded
-  struct wide   {typedef wchar_t  value_type;}; // UTF-8, 16, or 32, platform determined
+  struct narrow {using value_type = char    ; }; // encoding determined by codecvt facet
+  struct utf8   {using value_type = char    ; }; // UTF-8 encoded
+  struct utf16  {using value_type = char16_t; }; // UTF-16 encoded
+  struct utf32  {using value_type = char32_t; }; // UTF-32 encoded
+  struct wide   {using value_type = wchar_t ; }; // UTF-8, 16, or 32, platform determined
 
   //  [uni.is_encoding] is_encoding type-trait
   template <class T> struct is_encoding : public std::false_type {};
@@ -119,7 +119,7 @@ namespace unicode
 # endif
 
   //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  typedef std::codecvt<wchar_t, char, std::mbstate_t> ccvt_type;
+  using ccvt_type = std::codecvt<wchar_t, char, std::mbstate_t>;
 
   // [uni.err] default error handler
   template <class CharT> struct ufffd;
@@ -490,18 +490,18 @@ namespace unicode
         OutputIterator result, const ccvt_type& ccvt, Error eh);
 
     template <class CharT> struct utf_encoding;
-    template<> struct utf_encoding<char>     { typedef utf8 tag; };
-    template<> struct utf_encoding<char16_t> { typedef utf16 tag; };
-    template<> struct utf_encoding<char32_t> { typedef utf32 tag; };
+    template<> struct utf_encoding<char>     { using tag = utf8; };
+    template<> struct utf_encoding<char16_t> { using tag = utf16; };
+    template<> struct utf_encoding<char32_t> { using tag = utf32; };
 
     // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
     // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
 # if WCHAR_MAX >= 0x1FFFFFFFu
-    template<> struct utf_encoding<wchar_t>  { typedef utf32 tag; };
+    template<> struct utf_encoding<wchar_t>  { using tag = utf32; };
 # elif WCHAR_MAX >= 0x1FFFu
-    template<> struct utf_encoding<wchar_t>  { typedef utf16 tag; };
+    template<> struct utf_encoding<wchar_t>  { using tag = utf16; };
 # else
-    template<> struct utf_encoding<wchar_t>  { typedef utf8 tag; };
+    template<> struct utf_encoding<wchar_t>  { using tag = utf8; };
 # endif
 
     //  For any conversion that uses a wide intermediary,
@@ -604,11 +604,11 @@ namespace unicode
     }
 
     template <class Encoding> struct dispatch;
-    template<> struct dispatch<narrow> { typedef narrow_tag tag; };
-    template<> struct dispatch<utf8> { typedef utf_tag tag; };
-    template<> struct dispatch<utf16> { typedef utf_tag tag; };
-    template<> struct dispatch<utf32> { typedef utf_tag tag; };
-    template<> struct dispatch<wide> { typedef utf_tag tag; };
+    template<> struct dispatch<narrow> { using tag = narrow_tag; };
+    template<> struct dispatch<utf8>   { using tag = utf_tag; };
+    template<> struct dispatch<utf16>  { using tag = utf_tag; };
+    template<> struct dispatch<utf32>  { using tag = utf_tag; };
+    template<> struct dispatch<wide>   { using tag = utf_tag; };
 
   }  // namespace detail
 
@@ -748,7 +748,7 @@ namespace unicode
     OutputIterator utf8_to_char32_t(InputIterator first, InputIterator last,
       OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      typedef typename utf_encoding<ToCharT>::tag encoding_tag;
+      using encoding_tag = utf_encoding<ToCharT>::tag;
 
       for (; first != last;)
       {
@@ -824,7 +824,7 @@ namespace unicode
       OutputIterator utf16_to_char32_t(InputIterator first, InputIterator last,
         OutputIterator result, U32Error u32_eh, OutError out_eh)
     {
-      typedef typename utf_encoding<ToCharT>::tag encoding_tag;
+      using encoding_tag = utf_encoding<ToCharT>::tag;
 
       for (; first != last;)
       {
