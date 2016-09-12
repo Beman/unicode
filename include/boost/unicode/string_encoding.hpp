@@ -148,8 +148,8 @@ namespace unicode
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::wstring_view v, const Pack& ... args);
 
-  //  [uni.utf-query] UTF encoding query
-  template <class Encoding, class ForwardIterator> inline
+  //  [uni.utf-query] UTF encoding queries
+  template <class ForwardIterator>
     ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
       BOOST_NOEXCEPT;
 
@@ -1123,37 +1123,33 @@ namespace unicode
     constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
   };
 
-  template <class Encoding, class ForwardIterator> inline
+  template <class ForwardIterator> inline
     ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
     BOOST_NOEXCEPT
   {
-    static_assert(detail::is_known_encoding<Encoding>::value,
-      "Encoding must be utf8, utf16, utf32, or wide");
     static_assert(is_encoded_character
         <typename std::iterator_traits<ForwardIterator>::value_type>::value,
       "ForwardIterator value_type must be char, char16_t, char32_t, or wchar_t");
-    static_assert(std::is_same<typename Encoding::value_type,
-        typename std::iterator_traits<ForwardIterator>::value_type>::value,
-      "Encoding::value_type must be the same as ForwardIterator value_type");
     return detail::first_ill_formed(first, last,
-      typename detail::utf_encoding<typename Encoding::value_type>::tag());
+      typename detail::utf_encoding
+        <typename std::iterator_traits<ForwardIterator>::value_type>::tag());
   }
 
   inline bool is_well_formed(boost::string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed<utf8>(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
   }
   inline bool is_well_formed(boost::u16string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed<utf16>(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
   }
   inline bool is_well_formed(boost::u32string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed<utf32>(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
   }
   inline bool is_well_formed(boost::wstring_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed<wide>(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
   }
 }  // namespace unicode
 }  // namespace boost

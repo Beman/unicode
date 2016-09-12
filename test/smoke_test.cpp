@@ -108,20 +108,20 @@ namespace
   {
     cout << "first_ill_formed_test" << endl;
 
-    BOOST_TEST(first_ill_formed<utf32>(u32str.cbegin(), u32str.end()) == u32str.end());
-    BOOST_TEST(first_ill_formed<utf16>(u16str.cbegin(), u16str.end()) == u16str.end());
-    BOOST_TEST(first_ill_formed<utf8>(u8str.cbegin(), u8str.end()) == u8str.end());
-    BOOST_TEST(first_ill_formed<wide>(wstr.cbegin(), wstr.end()) == wstr.end());
+    BOOST_TEST(first_ill_formed(u32str.cbegin(), u32str.end()) == u32str.end());
+    BOOST_TEST(first_ill_formed(u16str.cbegin(), u16str.end()) == u16str.end());
+    BOOST_TEST(first_ill_formed(u8str.cbegin(), u8str.end()) == u8str.end());
+    BOOST_TEST(first_ill_formed(wstr.cbegin(), wstr.end()) == wstr.end());
 
     // TODO: Need to probe for correct result iterator being returned for each of the
     // errors that are supposed to be being detected
-    BOOST_TEST(first_ill_formed<utf32>(ill_u32str.cbegin(), ill_u32str.end())
+    BOOST_TEST(first_ill_formed(ill_u32str.cbegin(), ill_u32str.end())
       != ill_u32str.end());
-    BOOST_TEST(first_ill_formed<utf16>(ill_u16str.cbegin(), ill_u16str.end()) 
+    BOOST_TEST(first_ill_formed(ill_u16str.cbegin(), ill_u16str.end()) 
       != ill_u16str.end());
-    BOOST_TEST(first_ill_formed<utf8>(ill_u8str.cbegin(), ill_u8str.end()) 
+    BOOST_TEST(first_ill_formed(ill_u8str.cbegin(), ill_u8str.end()) 
       != ill_u8str.end());
-    BOOST_TEST(first_ill_formed<wide>(ill_wstr.cbegin(), ill_wstr.end()) 
+    BOOST_TEST(first_ill_formed(ill_wstr.cbegin(), ill_wstr.end()) 
       != ill_wstr.end());
 
     cout << "  first_ill_formed_test done" << endl;
