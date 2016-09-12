@@ -130,21 +130,21 @@ namespace unicode
 
   //  [uni.recode] encoding conversion algorithm
   template <class FromEncoding, class ToEncoding,
-    class InputIterator, class OutputIterator, class ... T> inline
+    class InputIterator, class OutputIterator, class ... T>
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
   //  [uni.to_string] string encoding conversion
-  template <class ToEncoding = utf8, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack>
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack>
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::u16string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack>
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::u32string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack> inline
+  template <class ToEncoding = utf8, class ...Pack>
     std::basic_string<typename ToEncoding::value_type>
       to_string(boost::wstring_view v, const Pack& ... args);
 
