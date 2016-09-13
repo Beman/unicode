@@ -118,8 +118,8 @@ namespace unicode
     = is_encoded_character<T>::value;
 # endif
 
-  //  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  using ccvt_type = std::codecvt<wchar_t, char, std::mbstate_t>;
+  ////  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
+  //using ccvt_type = std::codecvt<wchar_t, char, std::mbstate_t>;
 
   // [uni.err] default error handler
   template <class CharT> struct ufffd;
@@ -130,6 +130,7 @@ namespace unicode
 
   //  [uni.recode] encoding conversion algorithm
   template <class FromEncoding, class ToEncoding,
+    class CodecvtWideT = char32_t,
     class InputIterator, class OutputIterator, class ... T>
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
