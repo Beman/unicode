@@ -118,8 +118,9 @@ namespace unicode
     = is_encoded_character<T>::value;
 # endif
 
-  ////  [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  //using ccvt_type = std::codecvt<wchar_t, char, std::mbstate_t>;
+  //  [uni.codecvt.facet] to/from narrow codecvt facet types 
+  using wccvt_t = std::codecvt<wchar_t, char, std::mbstate_t>;
+  using u32ccvt_t = std::codecvt<char32_t, char, std::mbstate_t>;
 
   // [uni.err] default error handler
   template <class CharT> struct ufffd;
@@ -129,9 +130,8 @@ namespace unicode
   template <> struct ufffd<wchar_t>;
 
   //  [uni.recode] encoding conversion algorithm
-  template <class FromEncoding, class ToEncoding,
-    class CodecvtWideT = char32_t,
-    class InputIterator, class OutputIterator, class ... T>
+  template <class FromEncoding, class ToEncoding, class InputIterator,
+    class OutputIterator, class ... T>
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
@@ -180,7 +180,8 @@ namespace unicode
     template <class T = long, class ...Pack>
     constexpr int ccvt_count()
     {
-      return std::is_base_of<boost::unicode::ccvt_type, T>::value
+      return (std::is_base_of<boost::unicode::wccvt_t, T>::value
+        || std::is_base_of<boost::unicode::u32ccvt_t, T>::value)
         ? 1 + ccvt_count<Pack...>()
         : 0;
     }
@@ -479,15 +480,15 @@ namespace unicode
     }
 
     //----------------------------------------------------------------------------------//
-    //                      recode_narrow_to_utf implementation                         //
+    //                             codecvt implementation                               //
     //----------------------------------------------------------------------------------//
     
     // forward declare functions used to implement recode to/from narrow 
-    template <class OutputIterator, class Error> inline
-      OutputIterator codecvt_narrow_to_wide(const char* from, const char* from_end,
+    template <class ToCharT, class OutputIterator, class Error> inline
+      OutputIterator codecvt_narrow_to_utf(const char* from, const char* from_end,
         OutputIterator result, const ccvt_type& ccvt, Error eh);
-    template <class OutputIterator, class Error> inline
-      OutputIterator codecvt_wide_to_narrow(const wchar_t* from, const wchar_t* from_end,
+    template <class FromCharT, class OutputIterator, class Error> inline
+      OutputIterator codecvt_utf_to_narrow(const wchar_t* from, const wchar_t* from_end,
         OutputIterator result, const ccvt_type& ccvt, Error eh);
 
     template <class CharT> struct utf_encoding;
@@ -504,6 +505,14 @@ namespace unicode
 # else
     template<> struct utf_encoding<wchar_t>  { using tag = utf8; };
 # endif
+
+    template <class CharT> struct encoding;
+    template<> struct encoding<char32_t> { using type = utf32; };
+    template<> struct encoding<wchar_t>  { using type = wide; };
+
+    template <class T> struct is_ccvt   : public std::false_type {};
+    template<> struct is_ccvt<std::co>     : std::true_type {};
+    template<> struct is_ccvt<char16_t> : std::true_type {};
 
     //  For any conversion that uses a wide intermediary,
     //  we need a string that can never appear in valid UTF to pass the error through
@@ -525,24 +534,29 @@ namespace unicode
     OutputIterator recode_utf_to_narrow(InputIterator first, InputIterator last,
       OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
     {
-       std::wstring tmp;
-       recode<typename 
+       
+      std::basic_string<typename ToEncoding::value_type> tmp;
+      recode<typename 
          utf_encoding<typename std::iterator_traits<InputIterator>::value_type>::tag, wide>(first,
            last, std::back_inserter(tmp), wide_err_pass_thru());
-       return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
-         ccvt, eh);
+      return codecvt_utf_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
+        ccvt, eh);
     }
 
     // recode_narrow_to_utf
     template <class ToEncoding, class InputIterator, class OutputIterator,
+      class Codecvt,
       class Error = ufffd<typename ToEncoding::value_type>> inline
     OutputIterator recode_narrow_to_utf(InputIterator first, InputIterator last,
-      OutputIterator result, const ccvt_type& ccvt, Error eh = Error())
+      OutputIterator result, const Codecvt& ccvt, Error eh = Error())
     {
-      std::wstring tmp;
-      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), ccvt,
-        wide_err_pass_thru());
-      return recode<wide, ToEncoding>(tmp.cbegin(), tmp.cend(), result, eh);
+      static_assert(is_ccvt<Codecvt>::value,
+        "ccvt argument must be derived from std::codecvt<wchar_t...> or <char32_t...>");
+      std::basic_string<typename Codecvt::intern_type> tmp;
+      codecvt_narrow_to_utf<typename Codecvt::intern_type>(first, last,
+        std::back_inserter(tmp), ccvt, wide_err_pass_thru());
+      return recode<typename encoding<typename Codecvt::intern_type>::type,
+        ToEncoding>(tmp.cbegin(), tmp.cend(), result, eh);
     }
 
     // recode_narrow_to_narrow
@@ -552,9 +566,9 @@ namespace unicode
       Error eh = Error())
     {
       std::wstring tmp;
-      codecvt_narrow_to_wide(first, last, std::back_inserter(tmp), from_ccvt,
+      codecvt_narrow_to_utf(first, last, std::back_inserter(tmp), from_ccvt,
         wide_err_pass_thru());
-      return codecvt_wide_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
+      return codecvt_utf_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
         to_ccvt, eh);
     }
 
@@ -583,6 +597,7 @@ namespace unicode
         InputIterator last, OutputIterator result, const T& ... args)
     {
       static_assert(sizeof...(args) <= 2, "too many arguments");
+      static_assert(sizeof...(args) > 0, "ccvt argument required");
       return recode_narrow_to_utf<ToEncoding>(first, last, result, args ...);
     }
 
@@ -592,6 +607,7 @@ namespace unicode
         InputIterator last, OutputIterator result, const T& ... args)
     {
       static_assert(sizeof...(args) <= 2, "too many arguments");
+      static_assert(sizeof...(args) > 0, "codecvt argument required");
       return recode_utf_to_narrow(first, last, result, args ...);
     }
 
@@ -601,6 +617,7 @@ namespace unicode
         InputIterator last, OutputIterator result, const T& ... args)
     {
       static_assert(sizeof...(args) <= 3, "too many arguments");
+      static_assert(sizeof...(args) > 1, "two codecvt arguments required");
       return recode_narrow_to_narrow(first, last, result, args ...);
     }
 
@@ -870,11 +887,12 @@ namespace unicode
   //  TODO: Combine these functions into one. The are identical except for the
   //  ccvt.in/ccvt.out call and the easy-to-parameterize from/to character types.
 
-  //  codecvt_wide-to-narrow
-  template <class OutputIterator, class Error> inline
+  //  codecvt_utf_to_narrow
+  template <class FromCharT, class OutputIterator, class Error> inline
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
-    OutputIterator codecvt_wide_to_narrow(const wchar_t* from, const wchar_t* from_end,
-      OutputIterator result, const ccvt_type& ccvt, Error eh)
+    OutputIterator codecvt_utf_to_narrow(const FromCharT* from, const FromCharT* from_end,
+      OutputIterator result, const std::codecvt<FromCharT, char, std::mbstate_t>& ccvt,
+      Error eh)
   {
     //static_assert(std::is_same<FromCharT, typename Codecvt::intern_type>::value,
     //  "FromCharT and Codecvt::intern_type must be the same type");
@@ -885,7 +903,7 @@ namespace unicode
 
     std::array<char, BOOST_UNICODE_BUFFER_SIZE> buf;
     std::mbstate_t mbstate  = std::mbstate_t();
-    const wchar_t* from_next;
+    const FromCharT* from_next;
     std::codecvt_base::result ccvt_result = std::codecvt_base::ok;
 
     //  loop until the entire input sequence is processed by the codecvt facet 
@@ -933,11 +951,11 @@ namespace unicode
     return result;
   }
 
-  //  codecvt_narrow_to_wide
-  template <class OutputIterator, class Error> inline
+  //  codecvt_narrow_to_utf
+  template <class ToCharT, class OutputIterator, class Error> inline
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
-  OutputIterator codecvt_narrow_to_wide(const char* from, const char* from_end,
-    OutputIterator result, const ccvt_type& ccvt, Error eh)
+  OutputIterator codecvt_narrow_to_utf(const char* from, const char* from_end,
+    OutputIterator result, const std::codecvt<ToCharT, char, std::mbstate_t>& ccvt, Error eh)
   {
     //static_assert(std::is_same<FromCharT, typename Codecvt::extern_type>::value,
     //  "FromCharT and Codecvt::extern_type must be the same type");
@@ -955,9 +973,9 @@ namespace unicode
 
     while (from != from_end)
     {
-      wchar_t* to = buf.data();
-      wchar_t* to_end = to + buf.size();
-      wchar_t* to_next = to;
+      ToCharT* to = buf.data();
+      ToCharT* to_end = to + buf.size();
+      ToCharT* to_next = to;
 
       ccvt_result
         = ccvt.in(mbstate, from, from_end, from_next, to, to_end, to_next);
