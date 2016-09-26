@@ -13,6 +13,7 @@
 #include <locale>
 #include <array>
 #include <type_traits>
+#include <cstdint>
 #include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
 #include <boost/utility/string_view.hpp> 
@@ -118,10 +119,6 @@ namespace unicode
     = is_encoded_character<T>::value;
 # endif
 
-  //  [uni.codecvt.facet] to/from narrow codecvt facet types 
-  using wccvt_t = std::codecvt<wchar_t, char, std::mbstate_t>;
-  using u32ccvt_t = std::codecvt<char32_t, char, std::mbstate_t>;
-
   // [uni.err] default error handler
   template <class CharT> struct ufffd;
   template <> struct ufffd<char>;
@@ -177,11 +174,16 @@ namespace unicode
 
   namespace detail
   {
+    using wccvt_t = std::codecvt<wchar_t, char, std::mbstate_t>;
+    using u32ccvt_t = std::codecvt<char32_t, char, std::mbstate_t>;
+    using ul32ccvt_t = std::codecvt<uint_least32_t, char, std::mbstate_t>;
+
     template <class T = long, class ...Pack>
     constexpr int ccvt_count()
     {
-      return (std::is_base_of<boost::unicode::wccvt_t, T>::value
-        || std::is_base_of<boost::unicode::u32ccvt_t, T>::value)
+      return (std::is_base_of<wccvt_t, T>::value
+        || std::is_base_of<u32ccvt_t, T>::value
+        || std::is_base_of<ul32ccvt_t, T>::value)
         ? 1 + ccvt_count<Pack...>()
         : 0;
     }
@@ -497,6 +499,9 @@ namespace unicode
     template<> struct utf_encoding<char16_t> { using tag = utf16; };
     template<> struct utf_encoding<char32_t> { using tag = utf32; };
 
+    //  Microsoft 14.0 codecvt facets don't always work for char32_t so workaround:
+    template<> struct utf_encoding<uint_least32_t> { using tag = utf32; };
+
     // It remains to be seen if WCHAR_MAX is a sufficient heuristic for determining the
     // encoding of wchar_t. The values below work for Windows and Ubuntu Linux.
 # if WCHAR_MAX >= 0x1FFFFFFFu
@@ -509,13 +514,15 @@ namespace unicode
 
     template <class CharT> struct encoding;
     template<> struct encoding<char32_t> { using type = utf32; };
+    template<> struct encoding<uint_least32_t> { using type = utf32; };
     template<> struct encoding<wchar_t>  { using type = wide; };
 
     template <class T>
     constexpr bool is_ccvt()
     {
-      return std::is_base_of<boost::unicode::wccvt_t, T>::value
-        || std::is_base_of<boost::unicode::u32ccvt_t, T>::value;
+      return std::is_base_of<wccvt_t, T>::value
+        || std::is_base_of<u32ccvt_t, T>::value
+        || std::is_base_of<ul32ccvt_t, T>::value;
     }
 
     //  For any conversion that uses a wide intermediary,
