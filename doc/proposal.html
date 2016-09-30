@@ -23,13 +23,13 @@ body
 <body>
 <table>
 <tr>
-  <td align="left">Doc. no.:</td>
+  <td align="left">oc. no.:</td>
   <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R1</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-12<!--webbot bot="Timestamp" endspan i-checksum="12587" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-27<!--webbot bot="Timestamp" endspan i-checksum="12598" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -61,7 +61,7 @@ either a library TS or the standard itself.</p>
 
 <p  style="margin-left:20%; margin-right:20%;">
 <a href="#Major-interface-revision">Major interface revision</a>: R1 adds important functionality 
-yet markedly reduces interface size. </p>
+yet reduces interface size. </p>
 
 
 
@@ -179,8 +179,8 @@ four overloads.<br>
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
   <li>
-  <p>Changed to assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
-  and so that becomes the base document for references.</li>
+  <p>Now assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
+  and so that will be the base document for references.</li>
 </ul>
 
 
@@ -394,6 +394,16 @@ utf16</code>, <code>utf32</code>, and <code>wide</code> to identify encodings</b
   convenience function. </li>
 </ul>
 
+<h2>To Do</h2>
+
+<ul>
+  <li>Pass to the error handling function object the range of the minimal 
+  ill-formed code unit sequence and also an error enum identifying the error 
+  specifics. Use case (which would also make a good example): when recoding &quot;Kr<font face="Arial">ü</font>gler&quot; to 
+  ASCII, output &quot;Kruegler&quot;. See <a href="https://en.wikipedia.org/wiki/%C3%9C">
+  en.wikipedia.org/wiki/Ü</a></li>
+</ul>
+
 <h1><a name="Proposed-wording">Proposed wording</a></h1>
 
 <p><i><span style="background-color: #C0C0C0">This wording assumes P0417</span></i><span style="background-color: #C0C0C0"> C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
@@ -484,9 +494,6 @@ namespace unicode {
   template &lt;class T&gt; constexpr bool is_encoded_character_v
     = is_encoded_character&lt;T&gt;::value;
 
-  // [uni.codecvt.facet] wide to/from narrow codecvt facet type 
-  using ccvt_type = codecvt&lt;wchar_t, char, mbstate_t&gt;;
-
   // [uni.err] default error handler
   template &lt;class CharT&gt; struct ufffd;
   template &lt;&gt; struct ufffd&lt;char&gt;;
@@ -531,13 +538,16 @@ namespace unicode {
 
 
 
-<h3>Character type, encoding type, and encodings [uni.relationships]</h3>
+<h3>Character type, encoding type, and encoding relationships [uni.relationships]</h3>
 
 <p>The 
 relationship between character types, encoding types, and encodings is specified by the following 
 table:</p>
 
 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
+  <tr>
+    <td colspan="3" align="center"><i><b>Table of Relationships</b></i></td>
+  </tr>
   <tr>
     <td><b>Character type</b></td>
     <td><b>Encoding type</b></td>
@@ -546,10 +556,13 @@ table:</p>
   <tr>
     <td rowspan="2"><code>char</code></td>
     <td><code>narrow</code></td>
-    <td>The encoding of characters of type <code>char</code> for a user-supplied 
-    object 
-    of a type derived from <code>std::codecvt&lt;wchar_t, char, mbstate_t&gt;</code> 
-    which shall meet the requirements of the standard code-conversion facet
+    <td>
+    <p>The encoding of characters of type <code>char</code> for a user-supplied 
+    type derived from
+    <code>std::codecvt&lt;<i>Elem</i>, char, std::mbstate_t&gt;</code> where <i>
+    <code>Elem</code></i> is <code>wchar_t</code> or <code>char32_t</code>. Implementations 
+    are permitted to support additional implementation defined types. The 
+    derived type shall meet the requirements of the standard code-conversion facet
     <code>std::codecvt&lt;Elem, char, std::mbstate_t&gt;</code>. (C++ [locale.codecvt]).</td>
   </tr>
   <tr>
@@ -583,11 +596,12 @@ table:</p>
 conversion function, an <i>error handler</i> function object shall be invoked. Unless 
 the error handler throws an exception, the string returned by the error handler 
 shall be added to the output sequence and the ill-formed input code unit subsequence 
-shall not be converted and added to the output sequence. Detection of ill-formed code unit 
+shall not be converted and added to the output sequence. Detection and error 
+handling for ill-formed code unit 
 subsequences is required even when the input and output encodings are the same. 
 [<i>Note:</i> If the error handler function object always returns a 
-well-formed UTF character sequence, the conversions function&#39;s entire output 
-sequence is a well-formed UTF sequence. &mdash; <i>end note</i>]</p>
+pointer to a well-formed code point sequence, the conversion function&#39;s entire 
+output sequence will be a well-formed code point sequence. &mdash; <i>end note</i>]</p>
 
 <pre>template &lt;class CharT&gt; struct ufffd;
 template &lt;&gt; struct ufffd&lt;char&gt;;
@@ -635,31 +649,37 @@ OutputIterator recode(InputIterator first, InputIterator last,
                       OutputIterator result, const T&amp; ... args);</pre>
     
   <blockquote>
-     <p><i>Effects:</i> For each minimal well-formed or ill-formed code unit 
+     <p><i>Effects:</i> For each minimal code unit 
      subsequence in the range [<code>first, last</code>):</p>
      <ul>
        <li>
-       <p>If the code unit subsequence is well-formed, copies the subsequence&#39;s 
-       Unicode scalar value by performing <code>*result++ = *u++</code> where 
-       <code>u</code> 
-       is a <code>ToCharT*</code> pointing to the code units required to 
-       represent the subsequence&#39;s Unicode scalar value in the encoding form of <code>
-       result</code>.</li>
+       <p>If the code unit subsequence is well-formed, convert the code point it 
+       represents from the input sequence encoding to the output sequence 
+       encoding and then copy the code units of that code point as if by <code>*result++ = *u++</code> where 
+       <code>u</code> is an iterator over the code units making up the code 
+       point.</li>
        <li>
-       <p>Otherwise, copies the null-terminated string returned by the <code>eh</code> 
-       function object by performing <code>*result++ = *p++</code> for each 
-       successive value of a pointer <code>p</code> to the returned string.</li>
+       <p>Otherwise, copy the null-terminated string returned by the <code>eh</code> 
+       function object to the output result as if by <code>*result++ = *p++</code> 
+       where <code>p</code> iterates over the string returned 
+       by <code>eh</code>.</li>
      </ul>
      <p><i>Returns: </i><code>result</code>.</p>
-     <p><i>Remarks:</i>&nbsp; The requirements for the <code>args</code> 
+     <p><i>Remarks:</i>&nbsp; An implementation is permitted to first convert 
+     from the input encoding to an intermediate encoding, and then convert the 
+     intermediate encoding to the output encoding. [<i>Note:</i> This permission 
+     allows implementations to perform conversions to or from <code>narrow</code> 
+     via an intermediate string of a <code> <i>Codecvt</i></code> argument&#39;s <code>intern_type</code> 
+     and encoding. <i>&mdash;end note</i>]</p>
+     <p>The requirements for the <code>args</code> 
      parameter pack arguments are shown in the following table.</p>
-  </blockquote>
-    
-     <div align="center">
-       <center>
-
+   
     
      <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+       <tr>
+         <td colspan="5" align="center"><i><b>Parameter pack argument 
+         requirements</b></i></td>
+        </tr>
        <tr>
          <td><b><code>FromEncoding</code></b></td>
          <td><b><code>ToEncoding</code></b></td>
@@ -675,7 +695,8 @@ OutputIterator recode(InputIterator first, InputIterator last,
          <td><code>utf8</code>, <code>utf16</code>,<br>
          <code>utf32</code>, or <code>
          wide</code></td>
-         <td>Optional error handler function object [uni.err]</td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
          <td>Not allowed; diagnostic required</td>
          <td>Not allowed; diagnostic required</td>
        </tr>
@@ -684,8 +705,9 @@ OutputIterator recode(InputIterator first, InputIterator last,
          <code>utf32</code>, or <code>
          wide</code></td>
          <td><code>narrow</code></td>
-         <td><code>const ccvt_type&amp; ccvt</code></td>
-         <td>Optional error handler function object [uni.err]</td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
          <td>Not allowed; diagnostic required</td>
        </tr>
        <tr>
@@ -693,26 +715,29 @@ OutputIterator recode(InputIterator first, InputIterator last,
          <td><code>utf8</code>, <code>utf16</code>,<br>
          <code>utf32</code>, or <code>
          wide</code></td>
-         <td><code>const ccvt_type&amp; ccvt</code></td>
-         <td>Optional error handler function object [uni.err]</td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
          <td>Not allowed; diagnostic required</td>
        </tr>
        <tr>
          <td><code>narrow</code></td>
          <td><code>narrow</code></td>
-         <td><code>const ccvt_type&amp; from_ccvt</code></td>
-         <td><code>const ccvt_type&amp; to_ccvt</code></td>
-         <td>Optional error handler function object [uni.err]</td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
        </tr>
      </table>
-       </center>
-     </div>
-     
-   <blockquote>
+    
+     <p>Type <i><code>Codecvt</code></i> is the <code>std::codecvt</code> derived type described in 
+         the [uni.relationships] table. Used to perform the conversion to <code>
+         char</code> from <code>Elem</code>. </p>
+    
     
      <p><i>Postcondition: </i>If the string returned by each call to the <code>
-     eh</code> function object during the execution of the algorithm is a well 
-     formed  sequence, then the output sequence is a well formed  sequence.</p>
+     eh</code> function object during the execution of the algorithm is a well-formed  
+     code point sequence, then the output sequence is a well-formed code point  sequence.</p>
     
     
   </blockquote>                           
