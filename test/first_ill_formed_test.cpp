@@ -14,7 +14,8 @@ using std::endl;
 #include <string>
 #include <cstring>
 #include <iterator>
-//#define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
+#define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
+#include <boost/assert.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <boost/detail/lightweight_main.hpp>
 
@@ -43,106 +44,143 @@ namespace
     pedantic_first_ill_formed(const char* first, const char* last) BOOST_NOEXCEPT
   {
     const char* first_code_unit;
+
     for (; first != last;) // each code point
     {
-      first_code_unit = first;
-      unsigned octet = static_cast<unsigned char>(*first++);
+      //  Loop invariants:
+      //    first points to the next unprocessed code_unit
+      //    first_code_unit points to the first code unit for the code point
+      //    octet contains the value of the current code unit
 
+      first_code_unit = first;
+      bool error = false;
+      unsigned octet = static_cast<unsigned char>(*first++);
+      
       if (octet <= 0x7Fu)
-        continue;
-      else if (octet >= 0xC2u && octet <= 0xDFu)  // two octets
+        continue;  // 7-bit ASCII so nothing further to do
+
+      //  The sequence 'a', 0xE0, 'b' must treat 0xE0 as having a missing continuation
+      //  octet (i.e. error range [1, 2)) rather than treating 'b' as an invalid
+      //  continuation octet (i.e. error range [1, 3)).
+      //
+      //  In terms of code, this means that paths through "else if" blocks below must
+      //  increment first for each valid octet, but not for an invalid continuation octet. 
+
+      else if (octet >= 0xC2u && octet <= 0xDFu)  // two octets required
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0x80u && octet <= 0xBFu)  // octet two
-          continue;
+        if (first == last
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u
+            || octet > 0xBFu)  // octet two is invalid
+          error = true;
+        else
+          ++first;
       }
       else if (octet == 0xE0u)  // three octets case one
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0xA0u && octet <= 0xBFu)  // octet two
+        if (first == last
+            || (octet = static_cast<unsigned char>(*first)) < 0xA0u
+            || octet > 0xBFu)   // octet two is invalid
+          error = true;
+        else
         {
-          if (first == last)
-            break;
-          octet = static_cast<unsigned char>(*first++);
-          if (octet >= 0x80u && octet <= 0xBFu)  // octet three
-            continue;
+          if (++first == last
+              || (octet = static_cast<unsigned char>(*first)) < 0x80u
+              || octet > 0xBFu)  // octet three is invalid
+            error = true;
+          else
+           ++first;
         }
       }
       else if ((octet >= 0xE1u && octet <= 0xECu)
         || (octet >= 0xEEu && octet <= 0xEFu))  // three octets case two
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0x80u && octet <= 0xBFu)  // octet two
+        if (first == last  // octet two is invalid
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+          error = true;
+        else
         {
-          if (first == last)
-            break;
-          octet = static_cast<unsigned char>(*first++);
-          if (octet >= 0x80u && octet <= 0xBFu)  // octet three
-            continue;
+          if (++first == last  // octet three is invalid
+              || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+            error = true;
+          else
+            ++first;
         }
       }
       else if (octet == 0xEDu)  // three octets case three
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0x80u && octet <= 0x9Fu)  // octet two
+        if (first == last
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0x9Fu)
+          error = true;  // octet two is invalid
+        else
         {
-          if (first == last)
-            break;
-          octet = static_cast<unsigned char>(*first++);
-          if (octet >= 0x80u && octet <= 0xBFu)  // octet three
-            continue;
+          if (++first == last
+              || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+            error = true;  // octet three is invalid
+          else
+            ++first;
         }
       }
       else if (octet == 0xF0u)  // four octets case one
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0x90u && octet <= 0xBFu)  // octet two
+        if (first == last
+          || (octet = static_cast<unsigned char>(*first)) < 0x90u || octet > 0xBFu)
+          error = true;  // octet two is invalid
+        else
         {
-          if (first == last)
-            break;
-          octet = static_cast<unsigned char>(*first++);
-          if (octet >= 0x80u && octet <= 0xBFu)  // octet three
+          if (++first == last
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+            error = true;  // octet three is invalid
+          else
           {
-            if (first == last)
-              break;
-            octet = static_cast<unsigned char>(*first++);
-            if (octet >= 0x80u && octet <= 0xBFu)  // octet four
-              continue;
+            if (++first == last
+              || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+              error = true;  // octet four is invalid
+            else
+              ++first;
           }
         }
       }
       else if (octet >= 0xF1u && octet <= 0xF4u)  // four octets case two
       {
-        if (first == last)
-          break;
-        octet = static_cast<unsigned char>(*first++);
-        if (octet >= 0x80u && octet <= 0xBFu)  // octet two
+        if (first == last  // octet two is invalid
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+          error = true;  // octet two is invalid
+        else
         {
-          if (first == last)
-            break;
-          octet = static_cast<unsigned char>(*first++);
-          if (octet >= 0x80u && octet <= 0xBFu)  // octet three
+          if (++first == last
+            || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+            error = true;  // octet three is invalid
+          else
           {
-            if (first == last)
-              break;
-            octet = static_cast<unsigned char>(*first++);
-            if (octet >= 0x80u && octet <= 0xBFu)  // octet four
-              continue;
+            if (++first == last
+              || (octet = static_cast<unsigned char>(*first)) < 0x80u || octet > 0xBFu)
+              error = true;  // octet four is invalid
+            else
+              ++first;
           }
         }
       }
-      return std::make_pair(first_code_unit, first);   // failure
-    }
+      else
+        error = true;  // first octet is invalid (and first has already been incremented)
+
+      if (error)
+      {
+        //  First is pointing to last, the first octet after an invalid first octet,
+        //  or to the first invalid continuation octet. Bypass octets not last and not a
+        //  valid initial octet so that these invalid octets are included in the error
+        //  range.
+        
+        for (;  //  bypass octets not last and not a valid initial octet
+             first != last  // not last
+               && ((octet = static_cast<unsigned char>(*first)) == 0xC0u
+                 || octet == 0xC1u
+                 || (octet >= 0xF5u && octet <= 0xFEu)); // not valid initial octet
+             ++first) {}
+        return std::make_pair(first_code_unit, first);
+      }
+    } // each code point
+
+    BOOST_ASSERT(first == last);
     return std::make_pair(last, last);                 // success
   }
 
@@ -150,7 +188,7 @@ namespace
   {
     cout << "start utf8_test" << endl;
 
-    for (uint32_t i = 0;;)
+    for (uint32_t i = 0u;;)
     {
       auto pedantic = pedantic_first_ill_formed(reinterpret_cast<const char *>(&i),
         reinterpret_cast<const char *>(&i) + 4);
