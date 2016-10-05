@@ -148,8 +148,8 @@ namespace unicode
 
   //  [uni.utf-query] UTF encoding queries
   template <class ForwardIterator>
-    ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
-      BOOST_NOEXCEPT;
+    std::pair<ForwardIterator, ForwardIterator>
+      first_ill_formed(ForwardIterator first, ForwardIterator last) BOOST_NOEXCEPT;
 
   bool is_well_formed(boost::string_view v) BOOST_NOEXCEPT;
   bool is_well_formed(boost::u16string_view v) BOOST_NOEXCEPT;
@@ -786,6 +786,45 @@ namespace unicode
       return result;
     }
 
+    //  table3
+    //
+    //  Based on ISO/IEC 10646:2014 9.2 Table 3, Well-formed UTF-8 Octet sequences
+    //
+    //  The entries represent the first octet values 0xC2-0xF5
+    //  Format bits:  llhh00cc
+    //    ll is the offset above 0x80 for the second octet's lowest valid value.
+    //    hh is the offset below 0xBF for the second octet's highest valid value.
+    //    cc is the number of continuation octets (0x01-0x03).
+
+    constexpr const unsigned char table3[] = {
+      // one continuation octet
+      1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, // 0xC2 - 0xCF
+      1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, 1u, // 0xD0 - 0xDF
+      // two continuation octets
+      0x82u,   // 0xE0  A0-BF
+      0x02u,   // 0xE1
+      0x02u,   // 0xE2
+      0x02u,   // 0xE3
+      0x02u,   // 0xE4
+      0x02u,   // 0xE5
+      0x02u,   // 0xE6
+      0x02u,   // 0xE7
+      0x02u,   // 0xE8
+      0x02u,   // 0xE9
+      0x02u,   // 0xEA
+      0x02u,   // 0xEB
+      0x02u,   // 0xEC
+      0x22u,   // 0xED  80-9F    (i.e. surrogates are invalid)
+      0x02u,   // 0xEE
+      0x02u,   // 0xEF
+      // three continuation octets
+      0x43u,   // 0xF0  90-BF
+      0x03u,   // 0xF1
+      0x03u,   // 0xF2
+      0x03u,   // 0xF3
+      0x03u,   // 0xF4
+    };
+
     template <class ToCharT, class InputIterator, class OutputIterator,
       class U32Error, class OutError>
     inline
@@ -1044,21 +1083,21 @@ namespace unicode
   //template <class T> constexpr bool is_known_encoding_v = is_known_encoding<T>::value;
 
   template <class ForwardIterator>
-  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf32)
-    BOOST_NOEXCEPT
+  std::pair<ForwardIterator, ForwardIterator>
+    first_ill_formed(ForwardIterator first, ForwardIterator last, utf32) BOOST_NOEXCEPT
   {
     for (; first != last; ++first)
     {
       auto c = static_cast<char32_t>(*first);
       if (c > 0x10FFFFu || (c >= 0xD800u && c < 0xE000u))
-        return first;
+        return std::make_pair(first, first+1);
     }
-    return last;
+    return std::make_pair(last, last);
   }
 
   template <class ForwardIterator>
-  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf16)
-    BOOST_NOEXCEPT
+  std::pair<ForwardIterator, ForwardIterator>
+    first_ill_formed(ForwardIterator first, ForwardIterator last, utf16) BOOST_NOEXCEPT
   {
     for (; first != last; ++first)
     {
@@ -1066,79 +1105,94 @@ namespace unicode
       if (c >= 0xD800u && c < 0xE000u)  // surrogates must always be paired
       {
         auto first_code_unit = first;
-        if (++first == last
-          || ((c = static_cast<char16_t>(*first)) < 0xD800u || c > 0xDFFFu))
-          return first_code_unit;
+        if (++first == last)
+          return std::make_pair(first_code_unit, first);
+        else if ((c = static_cast<char16_t>(*first)) < 0xD800u || c > 0xDFFFu)
+          return std::make_pair(first_code_unit, ++first);
       }
     }
-    return last;
+    return std::make_pair(last, last);
   }
 
   template <class ForwardIterator>
-  ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last, utf8)
-    BOOST_NOEXCEPT
+  std::pair<ForwardIterator, ForwardIterator>
+    first_ill_formed(ForwardIterator first, ForwardIterator last, utf8) BOOST_NOEXCEPT
   {
+    ForwardIterator first_code_unit;
+
     for (; first != last;) // each code point
     {
-      auto first_code_unit = first;
-      char32_t u32 = static_cast<unsigned char>(*first++);
+      //  Loop invariants:
+      //    first points to the next unprocessed code_unit
+      //    first_code_unit points to the first code unit for the code point
+      //    octet contains the value of the current code unit
 
-      if (u32 <= 0x7Fu)  // 7-bit ASCII
-      {
-        //  by definition, 7-bit ASCII is valid UTF-8, so bypass further checking
-        continue;
-      }
+      first_code_unit = first;
+      bool error = false;
+      unsigned octet = static_cast<unsigned char>(*first++);
+      
+      if (octet <= 0x7Fu)
+        continue;  // 7-bit ASCII so nothing further to do
 
-      int continues = 0;
-      bool overlong = false;
+      //  The sequence 'a', 0xE0, 'b' must treat 0xE0 as having a missing continuation
+      //  octet (i.e. error range [1, 2)) rather than treating 'b' as an invalid
+      //  continuation octet (i.e. error range [1, 3)).
+      //
+      //  In terms of code, this means that paths through "else if" block below must
+      //  increment first for each valid octet, but not for an invalid continuation octet. 
 
-      if ((u32 & 0xE0u) == 0xC0u)    // 2 byte sequence
+      else if (octet >= 0xC2u && octet <= 0xF4u)  // first octet is valid
       {
-        u32 &= 0x1Fu;
-        continues = 1;
-        if ((u32 & 0xFEu) == 0xC0)   // overlong?
-          overlong = true;
-      }
-      else if ((u32 & 0xF0u) == 0xE0u)  // 3 byte sequence
-      {
-        u32 &= 0x0Fu;
-        continues = 2;
-        if (u32 == 0xE0u               
-          && first != last
-          && (static_cast<unsigned char>(*first) & 0xE0u) == 0x80u)  // overlong?
-          overlong = true;
-      }
-      else if ((u32 & 0xF8u) == 0xF0u)  // 4 byte sequence
-      {
-        u32 &= 0x07u;
-        continues = 3;
-        if (u32 == 0xF0u               
-          && first != last
-          && (static_cast<unsigned char>(*first) & 0xF0u) == 0x80u)  // overlong?
-          overlong = true;
-      }
-      else
-        continues = -1;  // flag as error
+        // unpack the table entries
+        unsigned continuations = table3[octet - 0xC2u];
+        unsigned lowest = 0x80u + ((continuations & 0xC0) >> 2);
+        unsigned highest = 0xBFu - (continuations & 0x30u);
+        continuations &= 0x03u;
 
-      //  process the continuation bytes
-      //    requirement: increment past continuation bytes even if overlong 
-      for (; continues > 0
-        && first != last                                          // continuation byte
-        && (static_cast<unsigned char>(*first) & 0xC0u) == 0x80u; //   not missing
-        --continues)
-      {
-        u32 <<= 6;
-        u32 += static_cast<unsigned char>(*first++) & 0x3Fu;
-      }
+        //lowest_trace = lowest;      // debugging aid
+        //highest_trace = highest;
 
-      if (overlong                             // overlong sequence
-        || continues != 0                      // missing continuation
-        || u32 > 0x10FFFFu                     // out-of-range
-        || (u32 >= 0xD800u && u32 <= 0xDFFFu)  // surrogate (which is ill-formed UTF-8)
-        )
-      { return first_code_unit; }
-    }  // each code point
-    return last;
+        // validate the continuation octets
+        for (;;)
+        {
+          if (first == last
+            || (octet = static_cast<unsigned char>(*first)) < lowest
+            || octet > highest)  // octet  is invalid
+          {
+            error = true;
+            break;
+          }
+          ++first;
+          if (--continuations == 0)
+            break;
+          // third and fourth octets, if present, require value in range 0x80u-0xBFu 
+          lowest = 0x80u;
+          highest = 0xBFu;
+        }  // each continuation octet
+
+      }  // first octet is valid and any continuation octets have been processed
+      else  // first octet is invalid (and first has already been incremented)
+        error = true;
+
+      if (error)
+      {
+        //  First is pointing to last, the first octet after an invalid first octet,
+        //  or to the first invalid continuation octet. Bypass octets not last and not a
+        //  valid initial octet so that these invalid octets are included in the error
+        //  range.
+
+        for (;  //  bypass octets not last and not a valid initial octet
+             first != last  // not last
+               && (((octet = static_cast<unsigned char>(*first)) >= 0x80u
+                 && octet <= 0xC1u)
+                 || (octet >= 0xF5u && octet <= 0xFEu)); // not valid initial octet
+             ++first) {}
+        return std::make_pair(first_code_unit, first);
+      }
+    } // each code point
+
+    BOOST_ASSERT(first == last);
+    return std::make_pair(last, last);  // success
   }
 
 } // namespace detail
@@ -1164,8 +1218,8 @@ namespace unicode
   };
 
   template <class ForwardIterator> inline
-    ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
-    BOOST_NOEXCEPT
+  std::pair<ForwardIterator, ForwardIterator>
+    first_ill_formed(ForwardIterator first, ForwardIterator last) BOOST_NOEXCEPT
   {
     static_assert(is_encoded_character
         <typename std::iterator_traits<ForwardIterator>::value_type>::value,
@@ -1177,19 +1231,19 @@ namespace unicode
 
   inline bool is_well_formed(boost::string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()).first == v.end();
   }
   inline bool is_well_formed(boost::u16string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()).first == v.end();
   }
   inline bool is_well_formed(boost::u32string_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()).first == v.end();
   }
   inline bool is_well_formed(boost::wstring_view v) BOOST_NOEXCEPT
   {
-    return first_ill_formed(v.cbegin(), v.cend()) == v.end();
+    return first_ill_formed(v.cbegin(), v.cend()).first == v.end();
   }
 }  // namespace unicode
 }  // namespace boost
