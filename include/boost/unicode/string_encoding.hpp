@@ -1153,7 +1153,7 @@ namespace unicode
         //highest_trace = highest;
 
         // validate the continuation octets
-        for (;;)
+        for (;;)  // for each continuation octet
         {
           if (first == last
             || (octet = static_cast<unsigned char>(*first)) < lowest

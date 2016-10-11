@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-09-27<!--webbot bot="Timestamp" endspan i-checksum="12598" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-10-03<!--webbot bot="Timestamp" endspan i-checksum="12044" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -418,9 +418,11 @@ various encoding forms. Encoding forms UTF-8, UTF-16, and UTF-32 are supported, 
 character encodings having a <code>codecvt</code> facet meeting requirements 
 described below.</p>
 
-<p>[<i>Note:</i> The C++ standard does not require that the encoding of <code>
-char</code>, <code>char16_t</code>, <code>char32_t</code>, and <code>wchar_t</code> 
-objects be one of the UTF encodings. The components in this sub-clause use the 
+<p>[<i>Note:</i> The C++ standard does not require  the encoding of <code>
+char</code>, <code>
+char16_t</code>, <code>
+char32_t,</code> and <code>wchar_t</code> strings be UTF encoded, although <code>
+u8</code>, <code>u</code>, and <code>U</code> string literals are UTF encoded. The components in this sub-clause use the 
 provided types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>utf32</code>, and 
 <code>wide</code> to identify specific 
 encodings [uni.relationships]. &mdash; <i>end note</i>]</p>
@@ -448,13 +450,47 @@ code unit
 minimal well-formed code unit sequence (UCS 4.41), well-formed code unit 
 sequence (UCS 4.61).&nbsp; &mdash;<i>end examples</i>]</p>
 
-<p>Throughout this sub-clause <code>char</code>, <code>char16_t</code>, <code>
-char32_t</code>, and&nbsp; <code>wchar_t</code> are collectively called <i>
-encoded character types</i>.</p>
+<h4>Encoded character types [ucs.defs.enc-char-type]</h4>
+
+<p>The types <code>char</code>, <code>char16_t</code>, <code>
+char32_t</code>, and&nbsp; <code>wchar_t</code>.</p>
+
+<h4>Minimal code unit sequence [ucs.def.min-cus]</h4>
+
+<ul>
+  <li>If present, a minimal well-formed code unit sequence ([ucs.def.min-well-cus]), 
+  otherwise</li>
+  <li>a minimal ill-formed code unit sequence ([ucs.def.min-ill-cus]).</li>
+</ul>
+
+<h4>Minimal ill-formed code unit sequence [ucs.def.min-ill-cus]</h4>
+
+<ul>
+  <li>If present, the longest initial subset of a minimal well-formed code unit 
+  sequence, followed by</li>
+  <li>all subsequent code units not valid as the initial code unit of a minimal 
+  well-formed code unit sequence.</li>
+</ul>
+
+<h4>Minimal well-formed code unit sequence [ucs.def.min-well-cus]</h4>
+
+<p>Determined by the encoding type [uni.encoding]:</p>
+
+<ul>
+  <li>For encoding types <code>utf8</code>, <code>utf16</code>, and <code>utf32</code>, 
+  a well-formed code unit sequence (UCS 4.61) that maps to a single UCS scalar 
+  value.</li>
+  <li>For encoding type <code>narrow</code>, implementation defined according to 
+  a facet argument of a type derived from <code>std::codecvt</code>.</li>
+  <li>For encoding type <code>wide</code>, implementation defined.</li>
+</ul>
 
 <h3>Requirements [ucs.req]</h3>
 
 <p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]).</p>
+
+<p>Template parameters named <code>ForwardIterator</code> shall satisfy the requirements of an 
+forward iterator (C++ [forward.iterators]).</p>
 
 <p>Template parameters named <code>OutputIterator</code> shall satisfy the 
 requirements of an output iterator (C++ [output.iterators]).</p>
@@ -521,11 +557,10 @@ namespace unicode {
     basic_string&lt;typename ToEncoding::value_type&gt;
       to_string(wstring_view v, const Pack&amp; ... args);
 
-  // [uni.utf-query] UTF encoding queries
-  template &lt;class ForwardIterator&gt;
-    ForwardIterator first_ill_formed(ForwardIterator first,
-      ForwardIterator last) noexcept;
-
+  // [uni.utf-query] Encoding queries
+  template &lt;class ForwardIterator&gt; 
+&nbsp;   std::pair&lt;ForwardIterator, ForwardIterator&gt;
+      first_ill_formed(ForwardIterator first, ForwardIterator last) noexcept;&nbsp;
   bool is_well_formed(string_view v) noexcept;
   bool is_well_formed(u16string_view v) noexcept;
   bool is_well_formed(u32string_view v) noexcept;
@@ -535,6 +570,19 @@ namespace unicode {
 }  // namespace fundamentals_v2
 }  // namespace experimental
 }  // namespace std</pre>
+
+
+
+<h3>Encoding types [uni.encoding]</h3>
+
+
+
+<p><span style="background-color: #FFFF00">TBS</span></p>
+
+
+
+<p><span style="background-color: #FFFF00">Encoding types may be implicit or 
+explicit.</span></p>
 
 
 
@@ -667,7 +715,7 @@ OutputIterator recode(InputIterator first, InputIterator last,
      <p><i>Returns: </i><code>result</code>.</p>
      <p><i>Remarks:</i>&nbsp; An implementation is permitted to first convert 
      from the input encoding to an intermediate encoding, and then convert the 
-     intermediate encoding to the output encoding. [<i>Note:</i> This permission 
+     intermediate encoding to the output encoding. [<i>Note:</i> This 
      allows implementations to perform conversions to or from <code>narrow</code> 
      via an intermediate string of a <code> <i>Codecvt</i></code> argument&#39;s <code>intern_type</code> 
      and encoding. <i>&mdash;end note</i>]</p>
@@ -844,22 +892,35 @@ int main()
 <p>&mdash; <i>end example</i>]</p>
 
     
-<h4>UTF encoding queries [<a name="uni.utf-query">uni.utf-query</a>]</h4>
+<h4>Encoding queries [<a name="uni.utf-query">uni.encoding-query</a>]</h4>
 
     
-<p>These functions determine whether or not character sequences and strings consist of 
-well-formed UTF code unit sequences (UCS 4.61). </p>
+<p>These functions determine whether or not character sequences or string views consist of 
+well-formed  code unit sequences (UCS 4.61). </p>
 
 <pre>template &lt;class ForwardIterator&gt; 
-&nbsp; ForwardIterator first_ill_formed(ForwardIterator first, ForwardIterator last)
-    noexcept;&nbsp;</pre>
+&nbsp; std::pair&lt;ForwardIterator, ForwardIterator&gt;
+    first_ill_formed(ForwardIterator first, ForwardIterator last) noexcept;&nbsp;</pre>
   <blockquote>
-     <p><i>Returns: </i>The first iterator <code>iter</code> in the range <code>
-     [first, last)</code> for which <code>iter</code> points to the start of a minimal ill-formed 
-     UTF code unit 
-     subsequence. Returns <code>last</code> if no ill-formed code unit 
-     subsequence is found.</p>
-     <p><i>Remarks:</i>&nbsp; The specific UTF encoding form is determined by the <code>
+     <p><i>Effects: </i>Equivalent to:</p>
+     <p>Searches for the first minimal ill-formed 
+      
+     code unit 
+     subsequence ([ucs.def.min-ill-cus]) in the half-open range [<code>first, 
+     last</code>).</p>
+     <p>If such a minimal ill-formed code unit 
+     subsequence is found, returns <code>std::make_pair(begin, end)</code> where
+     <code>begin</code> is an iterator to the first element of the minimal ill-formed 
+      
+     code unit 
+     subsequence and <code>end</code> is a past-the-end iterator for the 
+     past-the-end element of the minimal ill-formed 
+      
+     code unit 
+     subsequence.</p>
+     <p>Otherwise returns <code>std::make_pair(last, last)</code>.</p>
+     <p><i>Returns: </i>See <i>Effects</i>. </p>
+     <p><i>Remarks:</i>&nbsp; The specific  encoding form is determined by the <code>
      ForwardIterator</code> value type ([uni.relationships]).</p>
   </blockquote>                           
 
@@ -868,7 +929,7 @@ bool is_well_formed(u16string_view v) noexcept;
 bool is_well_formed(u32string_view v) noexcept;
 bool is_well_formed(wstring_view v) noexcept;&nbsp;</pre>
   <blockquote>
-     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.cbegin(), v.cend()) 
+     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.cbegin(), v.cend()).first 
      == v.cend()</code>.</p>
   </blockquote>                           
 <hr>
