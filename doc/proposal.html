@@ -61,7 +61,7 @@ either a library TS or the standard itself.</p>
 
 <p  style="margin-left:20%; margin-right:20%;">
 <a href="#Major-interface-revision">Major interface revision</a>: R1 adds important functionality 
-yet reduces interface size. </p>
+yet markedly reduces interface size. </p>
 
 
 
@@ -153,7 +153,8 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <ul>
-  <li><p><a name="Major-interface-revision">Major interface revision</a>: Experimental use of the R0 interface exposed serious issues:</p>
+  <li><p><a name="Major-interface-revision">Major interface revision</a>: 
+  Discussion in Oulu and experimental use of the R0 interface exposed serious issues:</p>
 
 
 
@@ -171,7 +172,7 @@ winner &mdash; Unicode.&quot;</p>
 
 
 <p>The R1 interface provides both UTF-based and codecvt-based encoding 
-conversion, yet consists of only two functions; a <code>recode</code> algorithm 
+conversion, yet consists of only two levels of functionality and two conversions functions; a <code>recode</code> algorithm 
 with a single signature and a <code>to_string</code> convenience function with 
 four overloads.<br>
 &nbsp;</p></li>
@@ -179,13 +180,11 @@ four overloads.<br>
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
   <li>
-  <p>Now assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
+  <p>Assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
   and so that will be the base document for references.</li>
+  <li>
+  <p>Lots of general refinement of the proposed wording.</li>
 </ul>
-
-
-
-<p><b>R0 - pre-Oulu mailing</b></p>
 
 
 
@@ -194,7 +193,7 @@ four overloads.<br>
 
 
 <p>A Boost licensed preliminary implementation is available at
-<a href="https://github.com/beman/unicode/tree/std-proposal">github.com/beman/unicode/tree/std-proposal</a>.</p>
+<a href="github.com/beman/unicode">github.com/beman/unicode</a>.</p>
 
 
 
@@ -202,12 +201,16 @@ four overloads.<br>
 
 
 
-<p><span style="background-color: #FFFF00">Oulu</span><span style="background-color: #FFFF00"> 
-small group</span></p>
+<p>Jeffrey Yasskin, Titus Winters, Michael Spenser, and Fabio participated in a 
+small group discussion of P0353R0 in Oulu. Lots of direction and specific 
+comments that came out of the discussion are reflected in P0353R0. For example, 
+removal of the requirement that <code>wchar_t</code> be UTF encoded and need to 
+be more explicit about narrow encoding.</p>
 
 
 
-<p><span style="background-color: #FFFF00">Tom</span></p>
+<p>Tom Honermann provided insights about environments no based on POSIX or 
+Windows, such as IBM&#39;s z/OS.</p>
 
 
 
