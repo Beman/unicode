@@ -24,7 +24,7 @@ body
 <table>
 <tr>
   <td align="left">Doc. no.:</td>
-  <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R1</span></td>
+  <td align="left">P0353R1</td>
 </tr>
 <tr>
   <td align="left">Date:</td>
@@ -81,7 +81,8 @@ via&nbsp;conversion to a wide character encoding.</p>
 <p>Users may 
 need to use multiple encodings in the same 
 application, or even the same function. Yet neither the language nor the 
-standard library provides a modern C++11 way to conveniently convert between these encodings. 
+standard library provides a convenient C++ way to  convert between these encodings, 
+let alone a way to do that securely. 
 There is no equivalent to the ease with which the <code>std::to_string</code> 
 family of functions can convert an arithmetic value to a string.</p>
 
@@ -101,10 +102,7 @@ requested by Unicode experts.</p>
 
 
 
-  <p><b>Problem: </b>Given a third-party function <code>f()</code> that returns a UTF-8 
-  encoded <code>std::string</code> from a database, and a different 
-  third-party&#39;s function <code>g()</code> expects a UTF-16 encoded <code>std::u16string</code> as an argument, <code>
-  call g()</code> with <code>f()</code> in a way that converts the string types 
+  <p><b>Problem: </b>Convert a string <code>s</code> to UTF-16 in a way that converts the string types 
   and encodings, and handles errors according to the best practices documented in 
   the ISO/IEC 10646 and Unicode standards.</p>
   <p><b>Using the proposal:</b></p>
@@ -113,11 +111,23 @@ requested by Unicode experts.</p>
   <code>
   to_string&lt;utf16&gt;(s);</code></p>
   </blockquote>
+  <p dir="ltr">Where <code>s</code> can be anything convertible to <code>
+  std::basic_string_view&lt;<i>char/char16_t/char32_t/wchar_t</i>&gt;</code> encoded 
+  in the associated UTF-8, UTF-16, UTF-32, or wide character encoding. If <code>
+  s</code> has a value type of <code>char</code>, but is not UTF-8 encoded, a 
+  second argument supplies a <code>std::codecvt</code> derived facet that 
+  converts to an internal type such as <code>wchar_t</code> or <code>char32_t</code> 
+  and its associated encoding:</p>
+<blockquote>
+  <p>&nbsp;<code>to_string&lt;utf16&gt;(s, ccvt_facet);</code></p>
+</blockquote>
 <p><b>Without the proposal, using only the standard library:</b> This might not 
 be too difficult using a third-party library, but is surprisingly difficult 
-using only the standard library. Unless the developer had enough Unicode 
-experience to focus on error detection and to test against one of the existing 
-UTF-8 test data sets, a roll-your-own solution would probably be very 
+using only the standard library. Unless the developer has enough Unicode 
+experience to focus on error detection and to test against an existing 
+ 
+test data set, a roll-your-own solution would probably be very time 
+consuming and 
 error-prone.</p>
 
 
@@ -140,7 +150,7 @@ winner &mdash; Unicode.&quot;</p>
 
 
 
-<p>The current proposal is completely new and not a revision of N3398.</p>
+<p>This P0353 proposal is completely new and not a revision of N3398.</p>
 
 
 
@@ -180,10 +190,10 @@ four overloads.<br>
   functions.</li>
   <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
   <li>
-  <p>Assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
+  Assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
   and so that will be the base document for references.</li>
   <li>
-  <p>Lots of general refinement of the proposed wording.</li>
+  Lots of general refinement of the proposed wording.</li>
 </ul>
 
 
@@ -203,7 +213,7 @@ four overloads.<br>
 
 <p>Jeffrey Yasskin, Titus Winters, Michael Spenser, and Fabio participated in a 
 small group discussion of P0353R0 in Oulu. Lots of direction and specific 
-comments that came out of the discussion are reflected in P0353R0. For example, 
+comments that came out of the discussion are reflected in P0353R1. For example, 
 removal of the requirement that <code>wchar_t</code> be UTF encoded and need to 
 be more explicit about narrow encoding.</p>
 
