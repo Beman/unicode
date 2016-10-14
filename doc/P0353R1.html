@@ -1,0 +1,957 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+body
+{
+  font-family: arial, sans-serif;
+  max-width: 6.75in;
+  margin: 0px auto;
+  font-size: 85%;
+}
+ ins  {background-color: #CCFFCC; text-decoration: none;}
+ del  {background-color: #FFCACA; text-decoration: none;}
+ pre  {background-color: #D7EEFF; font-size: 95%; font-family: "courier new", courier, serif;}
+ code {font-family: "courier new", courier, serif;}
+ table {font-size: 90%;}
+</style>
+<title>Unicode Encoding conversions</title>
+</head>
+
+<body>
+<table>
+<tr>
+  <td align="left">Doc. no.:</td>
+  <td align="left">P0353R1</td>
+</tr>
+<tr>
+  <td align="left">Date:</td>
+  <td align="left">
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-10-14<!--webbot bot="Timestamp" endspan i-checksum="12047" --></td>
+</tr>
+<tr>
+  <td align="left">Reply to:</td>
+  <td align="left">Beman Dawes &lt;bdawes at acm dot org&gt;
+</tr>
+<tr>
+  <td align="left">Audience:</td>
+  <td align="left">Library Evolution</td>
+</tr>
+</table>
+
+
+
+<h1 align="center">Unicode Friendly Encoding Conversions for the Standard Library (R1)</h1>
+
+<p  style="margin-left:20%; margin-right:20%;">Proposes character encoding conversion 
+and related functions to ease interoperability between  
+strings and other sequences of character types <code>char</code>, <code>char16_t</code>, 
+<code>char32_t</code>, and <code>wchar_t</code>. Support for Unicode 
+Transformation Form (UTF) and wide character encodings is built-in, while narrow 
+character encodings are supported via traditional codecvt facets. Pure addition to the standard library. 
+No changes to the 
+core language or existing standard library components. Breaks no existing code 
+or ABI. <a href="#Proposed-wording">Proposed wording</a> 
+provided. Specified in accordance with ISO/IEC 10646 and the Unicode Standard. Has been implemented. Suitable for 
+either a library TS or the standard itself.</p>
+
+
+
+<p  style="margin-left:20%; margin-right:20%;">
+<a href="#Major-interface-revision">Major interface revision</a>: R1 adds important functionality 
+yet markedly reduces interface size. </p>
+
+
+
+<h2>Introduction and Motivation</h2>
+
+
+
+<p>C++ types <code>char</code>, <code>char16_t</code>, 
+and
+<code>char32_t</code> support character and string literals encoded in Unicode 
+Transformation Forms UTF-8, UTF-16, and UTF-32 respectively. Additional narrow 
+character encodings are supported by the standard library&#39;s codecvt facets 
+via&nbsp;conversion to a wide character encoding.</p>
+
+
+
+<p>Users may 
+need to use multiple encodings in the same 
+application, or even the same function. Yet neither the language nor the 
+standard library provides a convenient C++ way to  convert between these encodings, 
+let alone a way to do that securely. 
+There is no equivalent to the ease with which the <code>std::to_string</code> 
+family of functions can convert an arithmetic value to a string.</p>
+
+
+
+<p>This proposal 
+markedly eases the problems encountered by users due to the lack of convenient encoding conversion in the standard library. 
+Knowledge of UTF-8, UTF-16, UTF-32, and the implementation defined <code>wchar_t</code> 
+wide encoding is built-in to make the interface Unicode friendly. The interface meets the 
+error handling requirements of the Unicode and ISO/IEC 10646 standards, and 
+meets the error handling needs 
+requested by Unicode experts.</p>
+
+
+
+<h3>Example</h3>
+
+
+
+  <p><b>Problem: </b>Convert a string <code>s</code> to UTF-16 in a way that converts the string types 
+  and encodings, and handles errors according to the best practices documented in 
+  the ISO/IEC 10646 and Unicode standards.</p>
+  <p><b>Using the proposal:</b></p>
+  <blockquote>
+  <p>
+  <code>
+  to_string&lt;utf16&gt;(s);</code></p>
+  </blockquote>
+  <p dir="ltr">Where <code>s</code> can be anything convertible to <code>
+  std::basic_string_view&lt;<i>char/char16_t/char32_t/wchar_t</i>&gt;</code> encoded 
+  in the associated UTF-8, UTF-16, UTF-32, or wide character encoding. If <code>
+  s</code> has a value type of <code>char</code>, but is not UTF-8 encoded, a 
+  second argument supplies a <code>std::codecvt</code> derived facet that 
+  converts to an internal type such as <code>wchar_t</code> or <code>char32_t</code> 
+  and its associated encoding:</p>
+<blockquote>
+  <p>&nbsp;<code>to_string&lt;utf16&gt;(s, ccvt_facet);</code></p>
+</blockquote>
+<p><b>Without the proposal, using only the standard library:</b> This might not 
+be too difficult using a third-party library, but is surprisingly difficult 
+using only the standard library. Unless the developer has enough Unicode 
+experience to focus on error detection and to test against an existing 
+ 
+test data set, a roll-your-own solution would probably be very time 
+consuming and 
+error-prone.</p>
+
+
+
+<h2>Prior proposal</h2>
+
+
+
+<p><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3398.html">
+N3398</a>, <i>String Interoperation Library</i>, proposed a complete overhaul of 
+the standard library&#39;s mechanisms for character encoding conversion. The 
+proposal was discussed at the Portland meeting in 2012. Some aspects of the 
+proposal drew strong support, such as improving Unicode string interoperability. 
+Other aspects drew strong opposition, such as new low level functionality to 
+replace <code>std::codecvt</code>. Clearly participants did not want N3398 - 
+they wanted a different proposal, less overreaching and more focused on Unicode 
+encoding conversions. Bill Plauger summed it up when he said something like 
+&quot;Don&#39;t reinvent <code>codecvt</code>. That said, we should pick  a 
+winner &mdash; Unicode.&quot;</p>
+
+
+
+<p>This P0353 proposal is completely new and not a revision of N3398.</p>
+
+
+
+<h2>Revision history</h2>
+
+
+
+<p><b>R1 - Pre-Issaquah mailing</b></p>
+
+
+
+<ul>
+  <li><p><a name="Major-interface-revision">Major interface revision</a>: 
+  Discussion in Oulu and experimental use of the R0 interface exposed serious issues:</p>
+
+
+
+    <ul>
+      <li>Users who need UTF-based encoding conversion also often need 
+      codecvt-based encoding 
+      conversion and visa versa. Yet R0 did not provided codecvt-based 
+      conversion.</li>
+      <li>The R0 interface had 18 signatures spread over three levels of 
+      functionality, and that was very confusing. Adding codecvt-based 
+      conversion would have doubled the number of signatures further increasing 
+      user confusion.</li>
+    </ul>
+
+
+
+<p>The R1 interface provides both UTF-based and codecvt-based encoding 
+conversion, yet consists of only two levels of functionality and two conversions functions; a <code>recode</code> algorithm 
+with a single signature and a <code>to_string</code> convenience function with 
+four overloads.<br>
+&nbsp;</p></li>
+  <li>Added <a href="#uni.utf-query">UTF encoding query</a> 
+  functions.</li>
+  <li>Added <i><a href="#Requirements">Requirements</a></i> section.</li>
+  <li>
+  Assume the C++ WP will be changed to specify ISO/IEC 10646:2014, 
+  and so that will be the base document for references.</li>
+  <li>
+  Lots of general refinement of the proposed wording.</li>
+</ul>
+
+
+
+<h2>Implementation</h2>
+
+
+
+<p>A Boost licensed preliminary implementation is available at
+<a href="github.com/beman/unicode">github.com/beman/unicode</a>.</p>
+
+
+
+<h2>Acknowledgements</h2>
+
+
+
+<p>Jeffrey Yasskin, Titus Winters, Michael Spenser, and Fabio participated in a 
+small group discussion of P0353R0 in Oulu. Lots of direction and specific 
+comments that came out of the discussion are reflected in P0353R1. For example, 
+removal of the requirement that <code>wchar_t</code> be UTF encoded and need to 
+be more explicit about narrow encoding.</p>
+
+
+
+<p>Tom Honermann provided insights about environments no based on POSIX or 
+Windows, such as IBM&#39;s z/OS.</p>
+
+
+
+<p>Alisdair Meredith, Eric Niebler, Howard Hinnant, Jeffrey Yasskin, 
+Marshall Clow, PJ Plauger, and Stephan T. Lavavej participated in the Portland 
+discussion of N3398. Many of the design decisions that have gone into the current 
+proposal flow directly from the Portland discussion.</p>
+
+
+
+<p>After the Portland meeting, Matt Austern sat down with Google&#39;s &quot;Unicode 
+people&quot; to &quot;clarify things&quot;. His summary of that discussion was very helpful. 
+Its guidance on error handling is  reflected in current  
+proposal.</p>
+
+
+
+<h2>Design decisions</h2>
+
+
+
+<p><b>Limit this proposal to encoding conversion and other encoding-related functionality</b></p>
+
+
+
+  <ul>
+    <li>Getting UTF encoding conversion right is hard enough without also coping 
+    with other Unicode needs.</li>
+    <li>No all-encompassing Unicode proposal is on the horizon.</li>
+    <li>Other needs requested by domain experts, such as code point iterators, 
+    are important enough to deserve their own proposals.</li>
+    <li>Guidance from both the committee and domain experts clearly favors a 
+    proposal focusing on UTF conversions.</li>
+  </ul>
+
+
+
+<p><b>Build in support for UTF-8, UTF16, UTF-32 and wide (i.e. <code>wchar_t</code>) 
+encodings</b></p>
+<ul>
+  <li>The UTF encodings are a critical need for the standard to become Unicode 
+  friendlier.</li>
+  <li>Support for the implementation defined wide character encoding ensures 
+  support for much existing code. </li>
+</ul>
+
+
+
+<p><b>Build in support for existing narrow to/from wide codecvt facets</b></p>
+<ul>
+  <li>Allows this brand-new library to immediately support non-UTF encodings 
+  without having to repeat two decades of codecvt facet development.</li>
+</ul>
+
+
+
+<p><b>Provide two levels of functionality</b></p>
+<blockquote>
+
+
+
+<p>The <code>recode</code> function provides a recoding conversion 
+algorithm. It operates on an input sequence and produces an output sequence, so 
+provides STL-like functionality to meet generic needs.</p>
+
+
+
+<p>The <code>to_string</code> function templates provide convenient encoding 
+conversion for <code>string_view</code>, <code>u16string_view</code>, <code>
+u32string_view</code>, and <code>wstring_view</code> arguments, and are intended 
+to complement the existing standard library <code>to_string</code> family of 
+functions.</p>
+
+
+
+</blockquote>
+
+
+
+<p><b>Provide a coherent error detection and handling policy</b></p>
+
+
+
+<ul>
+  <li>Follow the Unicode standard&#39;s requirement that &quot;A conformant encoding form 
+  conversion will treat any ill-formed code unit
+  sequence as an error condition.&quot; (Unicode 3.9 D93 and C10).</li>
+  <li>Provide a note to inform users of as to when they do and do not have to 
+  explicitly check for errors themselves.</li>
+  <li>Provide error checking functions so that users can also explicitly check for errors 
+  to meet application needs.</li>
+  <li>Handle errors via function objects to support the varied user needs 
+  described by domain experts.</li>
+  <li>Default error handler function object follows the Unicode standard&#39;s 
+  recommendation of U+FFFD as a replacement character. Their rationale is that 
+  the other common approaches, including throwing an exception, can be and have 
+  been used as attack vectors.</li>
+</ul>
+
+
+
+<p><b>Provide encoding conversions as explicitly called non-member functions</b></p>
+
+
+
+<ul>
+  <li>Avoids possibly expensive hidden automatic encoding conversions in 
+  unexpected places.</li>
+  <li>Avoids the need to change existing standard library components.</li>
+  <li>Builds on the other STL algorithms and the <code>to_string</code> functions already in the 
+  standard library.</li>
+</ul>
+
+
+
+<p><b>Place the proposed components in namespace <code>unicode</code></b></p>
+
+
+
+<ul>
+  <li>
+  <p>Emphasizes that these functions assume <code>
+  char</code> strings use a Unicode encoding.</li>
+  <li>Signals that the committee cares about Unicode, but doesn&#39;t want to force 
+  it on users who prefer other encodings.</li>
+  <li>Provides a home for these and future Unicode specific functions.</li>
+</ul>
+
+
+
+<p><b>Keep interfaces neutral as to which character type or UTF encoding is 
+&quot;best&quot;</b></p>
+
+
+
+<ul>
+  <li>
+
+
+
+<p>Each of these encodings have uses where it is preferred or required, and all 
+of these needs may appear in the same application. For example:</p>
+
+
+
+  <ul>
+    <li>UTF-8 is required by the API&#39;s for some operating systems.</li>
+    <li>UTF-16 is required to interfacing with existing databases that use UTF-16 
+    encoding.</li>
+    <li>UTF-32 is preferred in code where every 
+    Unicode code point being encoded as a single code unit is advantageous.</li>
+  </ul>
+
+
+
+  </li>
+</ul>
+<p><b>Provide types <code>narrow</code>, <code>utf8</code>, <code>
+utf16</code>, <code>utf32</code>, and <code>wide</code> to identify encodings</b></p>
+<ul>
+  <li>
+  <p>String <code>value_type</code> alone is insufficient because in 
+  the case of <code>char</code> it is ambiguous.</li>
+  <li>
+  <p>The resulting user code more explicit and so easier to read. </li>
+</ul>
+<p><b>Base conformance and definitions on ISO/IEC 10646:2014</b></p>
+<ul>
+  <li>Rewriting specifications that are already covered by another standard, 
+  and then trying to keep that wording in sync as the other standard evolves, is 
+  a path 
+  to insanity.</li>
+</ul>
+<p><b>Use variadic templates to minimize interface surface area</b></p>
+<ul>
+  <li>Converting between each two pairs of five encodings (narrow, UTF-8, 
+  UTF-16, UTF-32, wide) results in twenty-five possible conversion functions. 
+  Providing conversion in both algorithm form and convenience function form 
+  doubles the number of functions to fifty. Initially, use of templates reduced the 
+  number of functions quite a bit, but trial use of an implementation for real 
+  work was discouraging; it was too easy to get the arguments right but then 
+  call the wrong function name.</li>
+  <li>Use of variadic templates (i.e. a generative approach) reduced the 
+  interface to two functions - one <code>recode</code> conversion algorithm and one <code>to_string</code> 
+  convenience function. These closely match the abstraction and mental model of 
+  their behavior; the differing arguments are just a detail. Static asserts can 
+  ensure comprehensible error messages when contradictory argument types are 
+  passed.</li>
+</ul>
+
+<h2>To Do</h2>
+
+<ul>
+  <li>Use case (which would also make a good example): when recoding &quot;Kr<font face="Arial">ü</font>gler&quot; to 
+  ASCII, output &quot;Kruegler&quot;. See <a href="https://en.wikipedia.org/wiki/%C3%9C">
+  en.wikipedia.org/wiki/Ü</a>. Approach: Loop over find_first_ill_formed(). 
+  Approach rejected as overly complicated: Revise error handling to (1) add 
+  arguments specifying range of ill-formed input, (2) return a 
+  basic_string&lt;ToCharT&gt;. The concern has more to do with added implementation 
+  complexity than interface complexity, so consider if imp could call (in an 
+  inline detail function) first_ill_formed() to get the ill-formed range. Would 
+  require ForwardIterators, which is probably OK. </li>
+  <li>Add an optional codecvt argument to first_ill_formed() so it can also be 
+  applied to narrow strings.</li>
+</ul>
+
+<h1><a name="Proposed-wording">Proposed wording</a></h1>
+
+<p><i><span style="background-color: #C0C0C0">This wording assumes P0417</span></i><span style="background-color: #C0C0C0"> C++17 should refer to ISO/</span><span style="background-color: #C0C0C0">IEC</span><span style="background-color: #C0C0C0"> 
+10646 2014 instead of 1994 </span><i><span style="background-color: #C0C0C0">
+has been accepted into the C++ working paper.</span></i></p>
+
+<h2>Unicode library [ucs]</h2>
+
+<p>This sub-clause describes components that C++ programs may use to perform 
+operations on characters, strings, and other sequences of characters encoded in 
+various encoding forms. Encoding forms UTF-8, UTF-16, and UTF-32 are supported, as are  narrow 
+character encodings having a <code>codecvt</code> facet meeting requirements 
+described below.</p>
+
+<p>[<i>Note:</i> The C++ standard does not require  the encoding of <code>
+char</code>, <code>
+char16_t</code>, <code>
+char32_t,</code> and <code>wchar_t</code> strings be UTF encoded, although <code>
+u8</code>, <code>u</code>, and <code>U</code> string literals are UTF encoded. The components in this sub-clause use the 
+provided types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>utf32</code>, and 
+<code>wide</code> to identify specific 
+encodings [uni.encoding]. &mdash; <i>end note</i>]</p>
+
+<h3>Normative references [ucs.refs]</h3>
+
+<p>Within this sub-clause a reference written in the form &quot;(UCS <i>number</i>)&quot; refers to section <i>
+number</i> of ISO/IEC 10646:2014 (C++ [intro.refs]).</p>
+
+<p>[<i>Note</i>: ISO/IEC 10646 Universal Coded 
+Character Set (UCS) is the ISO/IEC standard for
+<a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a>. It is synchronized 
+with <i>The Unicode Standard</i> maintained by the Unicode Consortium. &mdash;<i>end note</i>]</p>
+
+<p><sup><font face="Arial">[Footnote]</font></sup> Unicode® is a registered 
+trademark of Unicode, Inc. This information is given for the convenience of 
+users of this document and does not constitute an endorsement by ISO or IEC of 
+this product.</p>
+
+<h3>Definitions&nbsp; [ucs.defs]</h3>
+
+<p>The definitions from (UCS 4.) apply throughout. [<i>Examples: </i>code point (UCS 4.10), 
+code unit 
+(UCS 4.11), encoding form (UCS 4.23), ill-formed code unit sequence (UCS 4.33), 
+minimal well-formed code unit sequence (UCS 4.41), well-formed code unit 
+sequence (UCS 4.61).&nbsp; &mdash;<i>end examples</i>]</p>
+
+<h4>Encoded character types [ucs.defs.enc-char-type]</h4>
+
+<p>The types <code>char</code>, <code>char16_t</code>, <code>
+char32_t</code>, and&nbsp; <code>wchar_t</code>.</p>
+
+<h4>Minimal code unit sequence [ucs.def.min-cus]</h4>
+
+<ul>
+  <li>If present, a minimal well-formed code unit sequence ([ucs.def.min-well-cus]), 
+  otherwise</li>
+  <li>a minimal ill-formed code unit sequence ([ucs.def.min-ill-cus]).</li>
+</ul>
+
+<h4>Minimal ill-formed code unit sequence [ucs.def.min-ill-cus]</h4>
+
+<ul>
+  <li>If present, the longest initial subset of a minimal well-formed code unit 
+  sequence, followed by</li>
+  <li>all subsequent code units not valid as the initial code unit of a minimal 
+  well-formed code unit sequence.</li>
+</ul>
+
+<h4>Minimal well-formed code unit sequence [ucs.def.min-well-cus]</h4>
+
+<p>Determined by the encoding type [uni.encoding]:</p>
+
+<ul>
+  <li>For encoding types <code>utf8</code>, <code>utf16</code>, and <code>utf32</code>, 
+  a well-formed code unit sequence (UCS 4.61) that maps to a single UCS scalar 
+  value.</li>
+  <li>For encoding type <code>narrow</code>, implementation defined according to 
+  a facet argument of a type derived from <code>std::codecvt</code>.</li>
+  <li>For encoding type <code>wide</code>, implementation defined.</li>
+</ul>
+
+<h3>Requirements [ucs.req]</h3>
+
+<p>Template parameters named <code>InputIterator</code> shall satisfy the requirements of an input iterator (C++ [input.iterators]).</p>
+
+<p>Template parameters named <code>ForwardIterator</code> shall satisfy the requirements of an 
+forward iterator (C++ [forward.iterators]).</p>
+
+<p>Template parameters named <code>OutputIterator</code> shall satisfy the 
+requirements of an output iterator (C++ [output.iterators]).</p>
+
+<h3>Header &lt;experimental/unicode&gt; synopsis</h3>
+
+<pre>namespace std {
+namespace experimental {
+inline namespace fundamentals_v2 {
+namespace unicode {
+
+  //  [uni.encoding] encoding types
+  struct narrow {using value_type = char;};     // codecvt determined encoding
+  struct utf8   {using value_type = char;};     // UTF-8 encoding
+  struct utf16  {using value_type = char16_t;}; // UTF-16 encoding
+  struct utf32  {using value_type = char32_t;}; // UTF-32 encoding
+  struct wide   {using value_type = wchar_t;};  // wide-character literal
+                                                //   encoding [lex.ccon]
+
+  // [uni.is_encoding] is_encoding type-trait
+  template &lt;class T&gt; struct is_encoding : public false_type {};
+  template&lt;&gt; struct is_encoding&lt;narrow&gt; : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf8&gt;   : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf16&gt;  : true_type {};
+  template&lt;&gt; struct is_encoding&lt;utf32&gt;  : true_type {};
+  template&lt;&gt; struct is_encoding&lt;wide&gt;   : true_type {};
+
+  template &lt;class T&gt; constexpr bool is_encoding_v = is_encoding&lt;T&gt;::value;
+
+  // [uni.is_encoded_character] is_encoded_character type-trait
+  template &lt;class T&gt; struct is_encoded_character   : public false_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char&gt;     : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char16_t&gt; : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;char32_t&gt; : true_type {};
+  template&lt;&gt; struct is_encoded_character&lt;wchar_t&gt;  : true_type {};
+
+  template &lt;class T&gt; constexpr bool is_encoded_character_v
+    = is_encoded_character&lt;T&gt;::value;
+
+  // [uni.err] default error handler
+  template &lt;class CharT&gt; struct ufffd;
+  template &lt;&gt; struct ufffd&lt;char&gt;;
+  template &lt;&gt; struct ufffd&lt;char16_t&gt;;
+  template &lt;&gt; struct ufffd&lt;char32_t&gt;;
+  template &lt;&gt; struct ufffd&lt;wchar_t&gt;;
+
+  // [uni.recode] encoding conversion algorithm
+  template &lt;class FromEncoding, class ToEncoding,
+    class InputIterator, class OutputIterator, class ... T&gt;
+  OutputIterator recode(InputIterator first, InputIterator last,
+                        OutputIterator result, const T&amp; ... args);
+
+  // [uni.to_string] string encoding conversion
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(u16string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(u32string_view v, const Pack&amp; ... args);
+  template &lt;class ToEncoding = utf8, class ...Pack&gt;
+    basic_string&lt;typename ToEncoding::value_type&gt;
+      to_string(wstring_view v, const Pack&amp; ... args);
+
+  // [uni.utf-query] Encoding queries
+  template &lt;class ForwardIterator&gt; 
+&nbsp;   std::pair&lt;ForwardIterator, ForwardIterator&gt;
+      first_ill_formed(ForwardIterator first, ForwardIterator last) noexcept;&nbsp;
+  bool is_well_formed(string_view v) noexcept;
+  bool is_well_formed(u16string_view v) noexcept;
+  bool is_well_formed(u32string_view v) noexcept;
+  bool is_well_formed(wstring_view v) noexcept;
+
+}  // namespace unicode
+}  // namespace fundamentals_v2
+}  // namespace experimental
+}  // namespace std</pre>
+
+
+
+<h3>Character type, encoding type, and encoding relationships [uni.encoding]</h3>
+
+<p>The types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>
+utf32</code>, and <code>wide</code> provided by header <code>&lt;unicode&gt;</code> 
+identify the encoding of strings and sequences of the encoded character types ([ucs.defs.enc-char-type]).</p>
+
+<p>[<i>Note:</i> Users must supply arguments of <code>std::codecvt</code> 
+derived types for operations on <code>narrow</code> encoded strings and 
+sequences. For the other encoding types, such facets are not necessary.&nbsp; <i>&mdash; end note</i>]</p>
+
+<p>The 
+relationship between encoded character types, encoding types, and encodings is specified by the following 
+table:</p>
+
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
+  <tr>
+    <td colspan="3" align="center"><i><b>Table of Relationships</b></i></td>
+  </tr>
+  <tr>
+    <td><b>Character type</b></td>
+    <td><b>Encoding type</b></td>
+    <td><b>Encoding</b></td>
+  </tr>
+  <tr>
+    <td rowspan="2"><code>char</code></td>
+    <td><code>narrow</code></td>
+    <td>
+    <p>The encoding of characters of type <code>char</code> for a user-supplied 
+    type derived from
+    <code>std::codecvt&lt;<i>Elem</i>, char, std::mbstate_t&gt;</code> where <i>
+    <code>Elem</code></i> is <code>wchar_t</code> or <code>char32_t</code>. Implementations 
+    are permitted to support additional implementation defined types. The 
+    derived type shall meet the requirements of the standard code-conversion facet
+    <code>std::codecvt&lt;Elem, char, std::mbstate_t&gt;</code>. (C++ [locale.codecvt]).</td>
+  </tr>
+  <tr>
+    <td><code>utf8</code></td>
+    <td>UTF-8 (UCS 9.2).</td>
+  </tr>
+  <tr>
+    <td><code>char16_t</code></td>
+    <td><code>utf16</code></td>
+    <td>UTF-16 (UCS 9.3).</td>
+  </tr>
+  <tr>
+    <td><code>char32_t</code></td>
+    <td><code>utf32</code></td>
+    <td>UFT-32 (UCS 9.4)</td>
+  </tr>
+  <tr>
+    <td><code>wchar_t</code></td>
+    <td><code>wide</code></td>
+    <td>The implementation defined encoding of wide-character literals (C++ [lex.ccon]). </td>
+  </tr>
+</table>
+
+
+
+<h4>Error handling [uni.err]</h4>
+
+
+
+<p>When an ill-formed code unit subsequence is detected during execution of a 
+conversion function, an <i>error handler</i> function object shall be invoked. Unless 
+the error handler throws an exception, the string returned by the error handler 
+shall be added to the output sequence and the ill-formed input code unit subsequence 
+shall not be converted and added to the output sequence. Detection and error 
+handling for ill-formed code unit 
+subsequences is required even when the input and output encodings are the same. 
+[<i>Note:</i> If the error handler function object always returns a 
+pointer to a well-formed code point sequence, the conversion function&#39;s entire 
+output sequence will be a well-formed code point sequence. &mdash; <i>end note</i>]</p>
+
+<pre>template &lt;class CharT&gt; struct ufffd;
+template &lt;&gt; struct ufffd&lt;char&gt;;
+template &lt;&gt; struct ufffd&lt;char16_t&gt;;
+template &lt;&gt; struct ufffd&lt;char32_t&gt;;
+template &lt;&gt; struct ufffd&lt;wchar_t&gt;;</pre>
+
+
+<p><code>struct ufffd</code> is the default error handler function object for conversion functions. 
+The default error 
+handling function object returns U+FFFD REPLACEMENT CHARACTER as a single code point error marker. Each specialization shall provide a member function with the signature:</p>
+
+<blockquote>
+
+
+<p> <code>constexpr const CharT* operator()() const noexcept;</code></p>
+
+</blockquote>
+
+
+<p>that returns a pointer to the value indicated in the Specializations table: </p>
+
+<blockquote>
+<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+<tr><td colspan="2"><p align="center"><i><b>Specializations</b></i></td></tr>
+<tr><td><i><b><code>CharT</code></b></i></td><td><i><b>Returns</b></i></td></tr>
+<tr><td><code>char</code></td><td><code>u8&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>char16_t</code></td><td><code>u&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>char32_t</code></td><td><code>U&quot;\uFFFD&quot;</code></td></tr>
+<tr><td><code>wchar_t</code></td><td><code>L&quot;\uFFFD&quot;</code></td></tr>
+</table>
+</blockquote>
+
+  <p>[<i>Note:</i> U+FFFD REPLACEMENT CHARACTER is returned as the default 
+  single code point error marker in accordance with the recommendations of the Unicode Standard. 
+  The rationale given by the Unicode standard is essentially that other commonly used approaches, including 
+  throwing exceptions, can be and have been used as security attack vectors.
+  &mdash;<i>end note</i>]</p>
+
+<h4>Encoding conversion algorithm [uni.recode]</h4>
+
+<pre>template &lt;class FromEncoding, class ToEncoding,
+  class InputIterator, class OutputIterator, class ... T&gt;
+OutputIterator recode(InputIterator first, InputIterator last,
+                      OutputIterator result, const T&amp; ... args);</pre>
+    
+  <blockquote>
+     <p><i>Effects:</i> For each minimal code unit 
+     subsequence in the range [<code>first, last</code>):</p>
+     <ul>
+       <li>
+       <p>If the code unit subsequence is well-formed, convert the code point it 
+       represents from the input sequence encoding to the output sequence 
+       encoding and then copy the code units of that code point as if by <code>*result++ = *u++</code> where 
+       <code>u</code> is an iterator over the code units making up the code 
+       point.</li>
+       <li>
+       <p>Otherwise, copy the null-terminated string returned by the <code>eh</code> 
+       function object to the output result as if by <code>*result++ = *p++</code> 
+       where <code>p</code> iterates over the string returned 
+       by <code>eh</code>.</li>
+     </ul>
+     <p><i>Returns: </i><code>result</code>.</p>
+     <p><i>Remarks:</i>&nbsp; An implementation is permitted to first convert 
+     from the input encoding to an intermediate encoding, and then convert the 
+     intermediate encoding to the output encoding. [<i>Note:</i> This 
+     allows implementations to perform conversions to or from <code>narrow</code> 
+     via an intermediate string of a <code> <i>Codecvt</i></code> argument&#39;s <code>intern_type</code> 
+     and encoding. <i>&mdash;end note</i>]</p>
+     <p>The requirements for the <code>args</code> 
+     parameter pack arguments are shown in the following table.</p>
+   
+    
+     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+       <tr>
+         <td colspan="5" align="center"><i><b>Parameter pack argument 
+         requirements</b></i></td>
+        </tr>
+       <tr>
+         <td><b><code>FromEncoding</code></b></td>
+         <td><b><code>ToEncoding</code></b></td>
+         <td>
+         <p><b>First <code>args</code> argument</b></td>
+         <td><b>Second <code>args</code> argument</b></td>
+         <td><b>Third <code>args</code> argument</b></td>
+       </tr>
+       <tr>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>narrow</code></td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>narrow</code></td>
+         <td><code>utf8</code>, <code>utf16</code>,<br>
+         <code>utf32</code>, or <code>
+         wide</code></td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
+         <td>Not allowed; diagnostic required</td>
+       </tr>
+       <tr>
+         <td><code>narrow</code></td>
+         <td><code>narrow</code></td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td><code>const <i>Codecvt</i>&amp;</code></td>
+         <td>Optional error handler<br>
+         function object [uni.err]</td>
+       </tr>
+     </table>
+    
+     <p>Type <i><code>Codecvt</code></i> is the <code>std::codecvt</code> derived type described in 
+         the [uni.encoding] table. Used to perform the conversion to <code>
+         char</code> from <code>Elem</code>. </p>
+    
+    
+     <p><i>Postcondition: </i>If the string returned by each call to the <code>
+     eh</code> function object during the execution of the algorithm is a well-formed  
+     code point sequence, then the output sequence is a well-formed code point  sequence.</p>
+    
+    
+  </blockquote>                           
+    
+    
+<h4>String encoding conversion [uni.to_string]</h4>
+
+<pre>template &lt;class ToEncoding, class ...Pack&gt; 
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; 
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(u16string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; 
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(u32string_view v, const Pack&amp; ... args);
+template &lt;class ToEncoding, class ...Pack&gt; 
+  basic_string&lt;typename ToEncoding::value_type&gt;
+    to_string(wstring_view v, const Pack&amp; ... args);
+</pre>
+<blockquote>
+    
+    
+<p><i>Effects:</i> Equivalent to:</p>
+
+<blockquote>
+    
+    
+<p><code>basic_string&lt;typename ToEncoding::value_type&gt; tmp;<br>
+recode&lt;<b><i>FromEncoding</i></b>, ToEncoding&gt;(v.cbegin(), v.cend(), <br>
+&nbsp; back_inserter(tmp), args ...);<br>
+return tmp;</code></p>
+
+    
+<p>For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
+narrow</code> if there are two function arguments convertible to <code>ccvt_type</code>, 
+and <code><b><i>FromEncoding</i></b></code> is <code>
+narrow</code> 
+and if there is one argument convertible to <code>ccvt_type</code> and <code>
+ToEncoding</code> is not <code>
+narrow</code>. Otherwise <code><b><i>FromEncoding</i></b></code> is <code>utf8.</code></p>
+
+    
+<p>For the second, third, and fourth overloads, <code><b><i>FromEncoding</i></b></code> is <code>utf16</code>, <code>
+utf32</code>, and <code>wide</code>, 
+respectively.</p>
+
+    
+</blockquote>
+    
+    
+</blockquote>
+    
+    
+<p>[<i><a name="uni.to_string.example">Example</a>:</i></p>
+
+    
+<pre>#include &lt;string_encoding&gt;
+#include &lt;string&gt;
+#include &lt;locale&gt;
+#include &lt;cvt/big5&gt;  // vendor supplied
+#include &lt;cvt/sjis&gt;  // vendor supplied
+
+using namespace std::unicode;
+using namespace std;
+
+string sjisstr() { string s; /*load s*/ return s; }
+string big5str() { string s; /*load s*/ return s; }
+
+int main()
+{
+  string     locstr(&quot;abc123...&quot;);       // narrow encoding known to std::locale()
+  string     u8str(u8&quot;abc123$€𐐷𤭢...&quot;); // UTF-8 encoded
+  u16string u16str(u&quot;abc123$€𐐷𤭢...&quot;);  // UTF-16 encoded
+  u32string u32str(U&quot;abc123$€𐐷𤭢...&quot;);  // UTF-32 encoding
+  wstring     wstr(L&quot;abc123$€𐐷𤭢...&quot;);  // implementation defined wide encoding
+
+  stdext::cvt::codecvt_big5&lt;wchar_t&gt; big5;  // vendor supplied Big-5 facet
+  stdext::cvt::codecvt_sjis&lt;wchar_t&gt; sjis;  // vendor supplied Shift-JIS facet
+
+  auto loc = std::locale();
+  auto&amp; loc_ccvt(std::use_facet&lt;ccvt_type&gt;(loc));
+
+  u16string s1 = to_string&lt;utf16&gt;(u8str);                // UTF-16 from UTF-8
+  wstring   s2 = to_string&lt;wide&gt;(locstr, loc_ccvt);      // wide from narrow
+  u32string s3 = to_string&lt;utf32&gt;(sjisstr(), sjis);      // UTF-32 from Shift-JIS
+  string  s4 = to_string&lt;narrow&gt;(u32str, big5);          // Big-5 from UTF-32
+  string  s5 = to_string&lt;narrow&gt;(big5str(), big5, sjis); // Shift-JIS from Big-5
+
+  string s6 = to_string&lt;utf8&gt;(u8str);  // replace errors with u8&quot;\uFFFD&quot;
+  string s7 = to_string(u16str, []() {return &quot;?&quot;;});  // replace errors with &#39;?&#39;
+  string s8 = to_string(wstr, []() {throw &quot;barf&quot;; return &quot;&quot;;}); // throw on error
+
+  string s9 = to_string&lt;narrow&gt;(u16str, big5);// OK
+  string s10 = to_string&lt;utf8&gt;(u16str, big5); // error: ccvt_type arg not allowed
+  string s11 = to_string&lt;narrow&gt;(u16str);     // error: ccvt_type arg required
+  string s12 = to_string&lt;narrow&gt;(u16str, big5, big5); // error: &gt;1 ccvt_type arg
+  wstring s13 = to_string&lt;wide&gt;(locstr, big5, big5);  // error: &gt;1 ccvt_type arg
+  string  s14 = to_string&lt;narrow&gt;(locstr);    // error: ccvt_type arg required
+}
+</pre>
+
+    
+<p>&mdash; <i>end example</i>]</p>
+
+    
+<h4>Encoding queries [<a name="uni.utf-query">uni.encoding-query</a>]</h4>
+
+    
+<p>These functions determine whether or not character sequences or string views consist of 
+well-formed  code unit sequences (UCS 4.61). </p>
+
+<pre>template &lt;class ForwardIterator&gt; 
+&nbsp; std::pair&lt;ForwardIterator, ForwardIterator&gt;
+    first_ill_formed(ForwardIterator first, ForwardIterator last) noexcept;&nbsp;</pre>
+  <blockquote>
+     <p><i>Effects: </i>Equivalent to:</p>
+     <p>Searches for the first minimal ill-formed 
+      
+     code unit 
+     subsequence ([ucs.def.min-ill-cus]) in the half-open range [<code>first, 
+     last</code>).</p>
+     <p>If such a minimal ill-formed code unit 
+     subsequence is found, returns <code>std::make_pair(begin, end)</code> where
+     <code>begin</code> is an iterator to the first element of the minimal ill-formed 
+      
+     code unit 
+     subsequence and <code>end</code> is a past-the-end iterator for the 
+     past-the-end element of the minimal ill-formed 
+      
+     code unit 
+     subsequence.</p>
+     <p>Otherwise returns <code>std::make_pair(last, last)</code>.</p>
+     <p><i>Returns: </i>See <i>Effects</i>. </p>
+     <p><i>Remarks:</i>&nbsp; The specific  encoding form is determined by the <code>
+     ForwardIterator</code> value type ([uni.encoding]).</p>
+  </blockquote>                           
+
+<pre>bool is_well_formed(string_view v) noexcept;
+bool is_well_formed(u16string_view v) noexcept;
+bool is_well_formed(u32string_view v) noexcept;
+bool is_well_formed(wstring_view v) noexcept;&nbsp;</pre>
+  <blockquote>
+     <p><i>Returns: </i>Equivalent to <code>first_ill_formed(v.cbegin(), v.cend()).first 
+     == v.cend()</code>.</p>
+  </blockquote>                           
+<hr>
+
+</body>
+
+</html>
