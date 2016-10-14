@@ -23,13 +23,13 @@ body
 <body>
 <table>
 <tr>
-  <td align="left">oc. no.:</td>
+  <td align="left">Doc. no.:</td>
   <td align="left"><span style="background-color:yellow">D</span><span style="background-color: #FFFF00">0353</span><span style="background-color:yellow">R1</span></td>
 </tr>
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-10-03<!--webbot bot="Timestamp" endspan i-checksum="12044" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2016-10-14<!--webbot bot="Timestamp" endspan i-checksum="12047" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -386,22 +386,32 @@ utf16</code>, <code>utf32</code>, and <code>wide</code> to identify encodings</b
   <li>Converting between each two pairs of five encodings (narrow, UTF-8, 
   UTF-16, UTF-32, wide) results in twenty-five possible conversion functions. 
   Providing conversion in both algorithm form and convenience function form 
-  doubles the number of functions to fifty. Initial use of templates reduced the 
+  doubles the number of functions to fifty. Initially, use of templates reduced the 
   number of functions quite a bit, but trial use of an implementation for real 
-  work was discouraging.</li>
+  work was discouraging; it was too easy to get the arguments right but then 
+  call the wrong function name.</li>
   <li>Use of variadic templates (i.e. a generative approach) reduced the 
-  interface to two functions - one conversion algorithm and one <code>to_string</code> 
-  convenience function. </li>
+  interface to two functions - one <code>recode</code> conversion algorithm and one <code>to_string</code> 
+  convenience function. These closely match the abstraction and mental model of 
+  their behavior; the differing arguments are just a detail. Static asserts can 
+  ensure comprehensible error messages when contradictory argument types are 
+  passed.</li>
 </ul>
 
 <h2>To Do</h2>
 
 <ul>
-  <li>Pass to the error handling function object the range of the minimal 
-  ill-formed code unit sequence and also an error enum identifying the error 
-  specifics. Use case (which would also make a good example): when recoding &quot;Kr<font face="Arial">ü</font>gler&quot; to 
+  <li>Use case (which would also make a good example): when recoding &quot;Kr<font face="Arial">ü</font>gler&quot; to 
   ASCII, output &quot;Kruegler&quot;. See <a href="https://en.wikipedia.org/wiki/%C3%9C">
-  en.wikipedia.org/wiki/Ü</a></li>
+  en.wikipedia.org/wiki/Ü</a>. Approach: Loop over find_first_ill_formed(). 
+  Approach rejected as overly complicated: Revise error handling to (1) add 
+  arguments specifying range of ill-formed input, (2) return a 
+  basic_string&lt;ToCharT&gt;. The concern has more to do with added implementation 
+  complexity than interface complexity, so consider if imp could call (in an 
+  inline detail function) first_ill_formed() to get the ill-formed range. Would 
+  require ForwardIterators, which is probably OK. </li>
+  <li>Add an optional codecvt argument to first_ill_formed() so it can also be 
+  applied to narrow strings.</li>
 </ul>
 
 <h1><a name="Proposed-wording">Proposed wording</a></h1>
@@ -425,7 +435,7 @@ char32_t,</code> and <code>wchar_t</code> strings be UTF encoded, although <code
 u8</code>, <code>u</code>, and <code>U</code> string literals are UTF encoded. The components in this sub-clause use the 
 provided types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>utf32</code>, and 
 <code>wide</code> to identify specific 
-encodings [uni.relationships]. &mdash; <i>end note</i>]</p>
+encodings [uni.encoding]. &mdash; <i>end note</i>]</p>
 
 <h3>Normative references [ucs.refs]</h3>
 
@@ -573,23 +583,18 @@ namespace unicode {
 
 
 
-<h3>Encoding types [uni.encoding]</h3>
+<h3>Character type, encoding type, and encoding relationships [uni.encoding]</h3>
 
+<p>The types <code>narrow</code>, <code>utf8</code>, <code>utf16</code>, <code>
+utf32</code>, and <code>wide</code> provided by header <code>&lt;unicode&gt;</code> 
+identify the encoding of strings and sequences of the encoded character types ([ucs.defs.enc-char-type]).</p>
 
-
-<p><span style="background-color: #FFFF00">TBS</span></p>
-
-
-
-<p><span style="background-color: #FFFF00">Encoding types may be implicit or 
-explicit.</span></p>
-
-
-
-<h3>Character type, encoding type, and encoding relationships [uni.relationships]</h3>
+<p>[<i>Note:</i> Users must supply arguments of <code>std::codecvt</code> 
+derived types for operations on <code>narrow</code> encoded strings and 
+sequences. For the other encoding types, such facets are not necessary.&nbsp; <i>&mdash; end note</i>]</p>
 
 <p>The 
-relationship between character types, encoding types, and encodings is specified by the following 
+relationship between encoded character types, encoding types, and encodings is specified by the following 
 table:</p>
 
 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
@@ -779,7 +784,7 @@ OutputIterator recode(InputIterator first, InputIterator last,
      </table>
     
      <p>Type <i><code>Codecvt</code></i> is the <code>std::codecvt</code> derived type described in 
-         the [uni.relationships] table. Used to perform the conversion to <code>
+         the [uni.encoding] table. Used to perform the conversion to <code>
          char</code> from <code>Elem</code>. </p>
     
     
@@ -921,7 +926,7 @@ well-formed  code unit sequences (UCS 4.61). </p>
      <p>Otherwise returns <code>std::make_pair(last, last)</code>.</p>
      <p><i>Returns: </i>See <i>Effects</i>. </p>
      <p><i>Remarks:</i>&nbsp; The specific  encoding form is determined by the <code>
-     ForwardIterator</code> value type ([uni.relationships]).</p>
+     ForwardIterator</code> value type ([uni.encoding]).</p>
   </blockquote>                           
 
 <pre>bool is_well_formed(string_view v) noexcept;
