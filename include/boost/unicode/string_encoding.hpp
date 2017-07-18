@@ -156,6 +156,44 @@ namespace unicode
   bool is_well_formed(boost::u32string_view v) BOOST_NOEXCEPT;
   bool is_well_formed(boost::wstring_view v) BOOST_NOEXCEPT;
 
+  //  The R2 experimental signatures
+
+  //  [uni.to_string] string encoding conversion
+
+  //  The built-in encodings (i.e. UTF-8, UTF-16, UTF-32, and wchar_t)
+
+  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
+    class Error = ufffd<char>> inline
+    std::basic_string<typename ToEncoding::value_type>
+    r2_to_string(boost::string_view v, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    return tmp;
+  }
+
+  template <class ToEncoding,   // enable_if ToEncoding is narrow
+    class Error = ufffd<char>, class Elem = wchar_t> inline
+    std::basic_string<typename ToEncoding::value_type>
+    r2_to_string(boost::string_view v,
+      const std::codecvt<Elem, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp),  eh);
+    return tmp;
+  }
+
+  //template <class ToEncoding = utf8, class ...Pack>
+  //std::basic_string<typename ToEncoding::value_type>
+  //  to_string(boost::u16string_view v, const Pack& ... args);
+  //template <class ToEncoding = utf8, class ...Pack>
+  //std::basic_string<typename ToEncoding::value_type>
+  //  to_string(boost::u32string_view v, const Pack& ... args);
+  //template <class ToEncoding = utf8, class ...Pack>
+  //std::basic_string<typename ToEncoding::value_type>
+  //  to_string(boost::wstring_view v, const Pack& ... args);
+
+
 }  // namespace unicode
 }  // namespace boost
 // <!-- end snippet -->

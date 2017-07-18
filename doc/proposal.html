@@ -436,6 +436,11 @@ utf16</code>, <code>utf32</code>, and <code>wide</code> to identify encodings</b
   require ForwardIterators, which is probably OK. </li>
   <li>Add an optional codecvt argument to first_ill_formed() so it can also be 
   applied to narrow strings.</li>
+  <li><span style="background-color: #FFFF00">Specify handling of an initial
+  </span><span style="background-color: #FFFF00">BOM</span><span style="background-color: #FFFF00">. 
+  Or is it the user&#39;s job to remove a leading BOM?</span></li>
+  <li><span style="background-color: #FFFF00">Specify handling of an embedded
+  </span><span style="background-color: #FFFF00">BOM</span><span style="background-color: #FFFF00">.</span></li>
 </ul>
 
 <h1><a name="Proposed-wording">Proposed wording</a></h1>
