@@ -132,19 +132,19 @@ namespace unicode
   OutputIterator recode(InputIterator first, InputIterator last, OutputIterator result,  
     const T& ... args);
 
-  //  [uni.to_string] string encoding conversion
-  template <class ToEncoding = utf8, class ...Pack>
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack>
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::u16string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack>
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::u32string_view v, const Pack& ... args);
-  template <class ToEncoding = utf8, class ...Pack>
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::wstring_view v, const Pack& ... args);
+  ////  [uni.to_string] string encoding conversion
+  //template <class ToEncoding = utf8, class ...Pack>
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::string_view v, const Pack& ... args);
+  //template <class ToEncoding = utf8, class ...Pack>
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::u16string_view v, const Pack& ... args);
+  //template <class ToEncoding = utf8, class ...Pack>
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::u32string_view v, const Pack& ... args);
+  //template <class ToEncoding = utf8, class ...Pack>
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::wstring_view v, const Pack& ... args);
 
   //  [uni.utf-query] UTF encoding queries
   template <class ForwardIterator>
@@ -165,23 +165,53 @@ namespace unicode
   template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
     class Error = ufffd<char>> inline
     std::basic_string<typename ToEncoding::value_type>
-    r2_to_string(boost::string_view v, Error eh = Error())
+    to_string(boost::string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
     recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
     return tmp;
   }
 
-  template <class ToEncoding,   // enable_if ToEncoding is narrow
-    class Error = ufffd<char>, class Elem = wchar_t> inline
+  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
+    class Error = ufffd<char>> inline
     std::basic_string<typename ToEncoding::value_type>
-    r2_to_string(boost::string_view v,
-      const std::codecvt<Elem, char, std::mbstate_t>& ccvt, Error eh = Error())
+    to_string(boost::u16string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp),  eh);
+    recode<utf16, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
     return tmp;
   }
+
+  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
+    class Error = ufffd<char>> inline
+    std::basic_string<typename ToEncoding::value_type>
+    to_string(boost::u32string_view v, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<utf32, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    return tmp;
+  }
+
+  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
+    class Error = ufffd<char>> inline
+    std::basic_string<typename ToEncoding::value_type>
+    to_string(boost::wstring_view v, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<wide, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), eh);
+    return tmp;
+  }
+
+  //template <class ToEncoding,   // enable_if ToEncoding is narrow
+  //  class Error = ufffd<char>, class Elem = wchar_t> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //  string(boost::string_view v,
+  //    const std::codecvt<Elem, char, std::mbstate_t>& ccvt, Error eh = Error())
+  //{
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp),  eh);
+  //  return tmp;
+  //}
 
   //template <class ToEncoding = utf8, class ...Pack>
   //std::basic_string<typename ToEncoding::value_type>

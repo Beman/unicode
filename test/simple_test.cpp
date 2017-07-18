@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <string>
-#include <boost/unicode/string_encoding.hpp>
+#include "../include/boost/unicode/string_encoding.hpp"
 #include <boost/unicode/detail/hex_string.hpp>
 #include <boost/unicode/detail/utf8_codecvt_facet.hpp>
 #define BOOST_LIGHTWEIGHT_TEST_OSTREAM std::cout
