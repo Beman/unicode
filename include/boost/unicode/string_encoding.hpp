@@ -158,12 +158,13 @@ namespace unicode
 
   //  The R2 experimental signatures
 
-  //  [uni.to_string] string encoding conversion
+  //  [uni.to_string] string encoding conversion convenience functions
 
-  //  The built-in encodings (i.e. UTF-8, UTF-16, UTF-32, and wchar_t)
+  //  Convert between the sixteen combinations of built-in encodings
+  //  i.e. utf8, utf16, utf32, or wide from utf8, utf16, utf32, or wide
 
-  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
-    class Error = ufffd<char>> inline
+  template <class ToEncoding = utf8,  // utf8, utf16, utf32, or wide required
+    class Error = ufffd<typename ToEncoding::value_type>> inline
     std::basic_string<typename ToEncoding::value_type>
     to_string(boost::string_view v, Error eh = Error())
   {
@@ -172,8 +173,8 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
-    class Error = ufffd<char>> inline
+  template <class ToEncoding = utf8,
+    class Error = ufffd<typename ToEncoding::value_type>> inline
     std::basic_string<typename ToEncoding::value_type>
     to_string(boost::u16string_view v, Error eh = Error())
   {
@@ -182,8 +183,8 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
-    class Error = ufffd<char>> inline
+  template <class ToEncoding = utf8,
+    class Error = ufffd<typename ToEncoding::value_type>> inline
     std::basic_string<typename ToEncoding::value_type>
     to_string(boost::u32string_view v, Error eh = Error())
   {
@@ -192,8 +193,8 @@ namespace unicode
     return tmp;
   }
 
-  template <class ToEncoding = utf8,   // enable_if ToEncoding is utf8, utf16, utf32, or wide
-    class Error = ufffd<char>> inline
+  template <class ToEncoding = utf8,
+    class Error = ufffd<typename ToEncoding::value_type>> inline
     std::basic_string<typename ToEncoding::value_type>
     to_string(boost::wstring_view v, Error eh = Error())
   {
@@ -202,27 +203,82 @@ namespace unicode
     return tmp;
   }
 
-  //template <class ToEncoding,   // enable_if ToEncoding is narrow
-  //  class Error = ufffd<char>, class Elem = wchar_t> inline
-  //  std::basic_string<typename ToEncoding::value_type>
-  //  string(boost::string_view v,
-  //    const std::codecvt<Elem, char, std::mbstate_t>& ccvt, Error eh = Error())
-  //{
-  //  std::basic_string<typename ToEncoding::value_type> tmp;
-  //  recode<utf8, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp),  eh);
-  //  return tmp;
-  //}
+  //  Convert from the built-in encodings (i.e. utf8, utf16, utf32, or wide) to narrow
+  //  These functions shall not participate in overload resolution unless ToEncoding is
+  //  narrow.
 
-  //template <class ToEncoding = utf8, class ...Pack>
-  //std::basic_string<typename ToEncoding::value_type>
-  //  to_string(boost::u16string_view v, const Pack& ... args);
-  //template <class ToEncoding = utf8, class ...Pack>
-  //std::basic_string<typename ToEncoding::value_type>
-  //  to_string(boost::u32string_view v, const Pack& ... args);
-  //template <class ToEncoding = utf8, class ...Pack>
-  //std::basic_string<typename ToEncoding::value_type>
-  //  to_string(boost::wstring_view v, const Pack& ... args);
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    std::string to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::string tmp;
+    recode<utf8, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
 
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    std::string to_string(boost::u16string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::string tmp;
+    recode<utf16, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
+
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    std::string to_string(boost::u32string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::string tmp;
+    recode<utf32, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
+
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    std::string to_string(boost::wstring_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::string tmp;
+    recode<wide, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
+
+  //  Convert from narrow to the built-in encodings (i.e. utf8, utf16, utf32, or wide).
+  //  This function shall not participate in overload resolution unless ToEncoding is
+  //  utf8, utf16, utf32, or wide.
+
+  template <class ToEncoding,   // utf8, utf16, utf32, or wide required
+    class Error = ufffd<char>> inline
+    std::basic_string<typename ToEncoding::value_type>
+    to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<narrow, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
+
+  //  Convert from narrow to narrow.
+  //  This function shall not participate in overload resolution unless ToEncoding is
+  //  narrow.
+
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    std::string
+    to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
+      Error eh = Error())
+  {
+    std::string tmp;
+    recode<narrow, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp),
+      from_ccvt, to_ccvt, eh);
+    return tmp;
+  }
 
 }  // namespace unicode
 }  // namespace boost
