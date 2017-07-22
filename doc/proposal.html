@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2017-07-16<!--webbot bot="Timestamp" endspan i-checksum="12475" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2017-07-21<!--webbot bot="Timestamp" endspan i-checksum="12466" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -856,9 +856,7 @@ return tmp;</code></p>
     
 <p>For the first overload, <code><b><i>FromEncoding</i></b></code> is <code>
 narrow</code> if there are two function arguments convertible to <code>ccvt_type</code>, 
-and <code><b><i>FromEncoding</i></b></code> is <code>
-narrow</code> 
-and if there is one argument convertible to <code>ccvt_type</code> and <code>
+or if there is one argument convertible to <code>ccvt_type</code> and <code>
 ToEncoding</code> is not <code>
 narrow</code>. Otherwise <code><b><i>FromEncoding</i></b></code> is <code>utf8.</code></p>
 
@@ -892,7 +890,7 @@ string big5str() { string s; /*load s*/ return s; }
 int main()
 {
   string     locstr(&quot;abc123...&quot;);       // narrow encoding known to std::locale()
-  string     u8str(u8&quot;abc123$€𐐷𤭢...&quot;); // UTF-8 encoded
+  string    u8str(u8&quot;abc123$€𐐷𤭢...&quot;);  // UTF-8 encoded
   u16string u16str(u&quot;abc123$€𐐷𤭢...&quot;);  // UTF-16 encoded
   u32string u32str(U&quot;abc123$€𐐷𤭢...&quot;);  // UTF-32 encoding
   wstring     wstr(L&quot;abc123$€𐐷𤭢...&quot;);  // implementation defined wide encoding

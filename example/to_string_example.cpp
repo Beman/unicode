@@ -14,8 +14,8 @@
 using namespace boost::unicode;
 using namespace std;
 
-string sjisstr() { string s; /*load s*/ return s; }
-string big5str() { string s; /*load s*/ return s; }
+string sjis_str() { string s; /*load s*/ return s; }
+string big5_str() { string s; /*load s*/ return s; }
 
 int main()
 {
@@ -34,6 +34,8 @@ int main()
   auto& loc_ccvt(std::use_facet<codecvt_narrow>(loc));
 
   //  test each "from" encoding for each "to" encoding including the default
+
+  //  both encodings known (i.e. UTF-8, UTF-16, UTF-32, wide)
 
   auto default_from_utf8 = to_string(utf8_str);        // default (i.e. UTF-8) from UTF-8
   assert(default_from_utf8 == utf8_str);              
@@ -94,6 +96,12 @@ int main()
 
   auto wide_from_wide = to_string<wide>(wide_str);      // wide from wide
   assert(wide_from_wide == wide_str);
+
+  //  to encoding known, from encoding narrow
+
+  //  to encoding narrow, from encoding known
+
+  //  both to and from encoding narrow 
 
   //u16string s1 = to_string<utf16>(u8str);                  // UTF-16 from UTF-8
   //wstring   s2 = to_string<wide>(locstr, loc_ccvt);        // wide from narrow

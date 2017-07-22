@@ -126,6 +126,9 @@ namespace unicode
   template <> struct ufffd<char32_t>;
   template <> struct ufffd<wchar_t>;
 
+  // [uni.codecvt_type] codecvt type used for conversions to and from narrow
+  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_narrow;
+
   //  [uni.recode] encoding conversion algorithm
   template <class FromEncoding, class ToEncoding, class InputIterator,
     class OutputIterator, class ... T>
@@ -313,91 +316,91 @@ namespace unicode
     }
   }
  
-  template <class ToEncoding, class ...Pack> inline
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::string_view v, const Pack& ... args)
-  {
-    static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
-    //static_assert(detail::ccvt_count<Pack...>() >= 0,
-    //  "Yuck!");  // fails if expression did not evaluate to a constant
-    //std::cout << detail::ccvt_count<Pack...>() << std::endl;
+  //template <class ToEncoding, class ...Pack> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::string_view v, const Pack& ... args)
+  //{
+  //  static_assert(is_encoding<ToEncoding>::value,
+  //    "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+  //  //static_assert(detail::ccvt_count<Pack...>() >= 0,
+  //  //  "Yuck!");  // fails if expression did not evaluate to a constant
+  //  //std::cout << detail::ccvt_count<Pack...>() << std::endl;
 
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
-    static_assert((!std::is_same<ToEncoding, narrow>::value
-        || detail::ccvt_count<Pack...>() <= 2)
-      && (std::is_same<ToEncoding, narrow>::value
-        || detail::ccvt_count<Pack...>() <= 1),
-      "Too many ccvt_type arguments");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
+  //  static_assert((!std::is_same<ToEncoding, narrow>::value
+  //      || detail::ccvt_count<Pack...>() <= 2)
+  //    && (std::is_same<ToEncoding, narrow>::value
+  //      || detail::ccvt_count<Pack...>() <= 1),
+  //    "Too many ccvt_type arguments");
 
-    using FromEncoding = typename std::conditional<
-      (detail::ccvt_count<Pack...>() == 1 && !std::is_same<ToEncoding, narrow>::value)
-      || detail::ccvt_count<Pack...>() == 2,
-      narrow, utf8>::type;
+  //  using FromEncoding = typename std::conditional<
+  //    (detail::ccvt_count<Pack...>() == 1 && !std::is_same<ToEncoding, narrow>::value)
+  //    || detail::ccvt_count<Pack...>() == 2,
+  //    narrow, utf8>::type;
 
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp), args...);
-    return tmp;
-  }
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<FromEncoding, ToEncoding>(v.cbegin(), v.cend(),
+  //    std::back_inserter(tmp), args...);
+  //  return tmp;
+  //}
 
-  template <class ToEncoding, class ...Pack> inline
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::u16string_view v, const Pack& ... args)
-  {
-    static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() < 2,
-          "Multiple ccvt_type arguments are not allowed");
-    static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp), args ...);
-    return tmp;
-  }
+  //template <class ToEncoding, class ...Pack> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::u16string_view v, const Pack& ... args)
+  //{
+  //  static_assert(is_encoding<ToEncoding>::value,
+  //    "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() < 2,
+  //        "Multiple ccvt_type arguments are not allowed");
+  //  static_assert(std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<utf16, ToEncoding>(v.cbegin(), v.cend(),
+  //    std::back_inserter(tmp), args ...);
+  //  return tmp;
+  //}
 
-  template <class ToEncoding, class ...Pack> inline
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::u32string_view v, const Pack& ... args)
-  {
-    static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() < 2,
-          "Multiple ccvt_type arguments are not allowed");
-    static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp), args ...);
-    return tmp;
-  }
+  //template <class ToEncoding, class ...Pack> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::u32string_view v, const Pack& ... args)
+  //{
+  //  static_assert(is_encoding<ToEncoding>::value,
+  //    "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() < 2,
+  //        "Multiple ccvt_type arguments are not allowed");
+  //  static_assert(std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<utf32, ToEncoding>(v.cbegin(), v.cend(),
+  //    std::back_inserter(tmp), args ...);
+  //  return tmp;
+  //}
 
-  template <class ToEncoding, class ...Pack> inline
-    std::basic_string<typename ToEncoding::value_type>
-      to_string(boost::wstring_view v, const Pack& ... args)
-  {
-    static_assert(is_encoding<ToEncoding>::value,
-      "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
-    static_assert(!std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() < 2,
-          "Multiple ccvt_type arguments are not allowed");
-    static_assert(std::is_same<ToEncoding, narrow>::value
-      || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<wide, ToEncoding>(v.cbegin(), v.cend(),
-      std::back_inserter(tmp), args ...);
-    return tmp;
-  }
+  //template <class ToEncoding, class ...Pack> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //    to_string(boost::wstring_view v, const Pack& ... args)
+  //{
+  //  static_assert(is_encoding<ToEncoding>::value,
+  //    "ToEncoding must be utf8, utf16, utf32, narrow, or wide");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() != 0, "A ccvt_type argument is required");
+  //  static_assert(!std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() < 2,
+  //        "Multiple ccvt_type arguments are not allowed");
+  //  static_assert(std::is_same<ToEncoding, narrow>::value
+  //    || detail::ccvt_count<Pack...>() == 0, "A ccvt_type argument is not allowed");
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<wide, ToEncoding>(v.cbegin(), v.cend(),
+  //    std::back_inserter(tmp), args ...);
+  //  return tmp;
+  //}
 
   namespace detail
   {

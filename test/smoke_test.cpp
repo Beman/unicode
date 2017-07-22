@@ -308,36 +308,36 @@ namespace
     cout << "  all_utf_test done" << endl;
   }
 
-  void all_codecvt_test()
-  {
-    cout << "all_codecvt_test" << endl;
+  //void all_codecvt_test()
+  //{
+  //  cout << "all_codecvt_test" << endl;
 
-    //  for now, limit code points to the BMP to ensure test codecvt facet support
+  //  //  for now, limit code points to the BMP to ensure test codecvt facet support
 
-    const string     u8s(u8"$€Ꭶ❄");
-    const wstring      ws(L"$€Ꭶ❄");
+  //  const string     u8s(u8"$€Ꭶ❄");
+  //  const wstring      ws(L"$€Ꭶ❄");
 
-    boost::unicode::detail::utf8_codecvt_facet ccvt(0);
+  //  boost::unicode::detail::utf8_codecvt_facet ccvt(0);
 
-    cout << u8s.size() << endl;
-    cout << hex_string(u8s) << endl;
-    wstring w = to_string<wide>(u8s, ccvt);
-    BOOST_TEST(w == ws);
-    cout << ws.size() << endl;
-    cout << hex_string(ws) << endl;
-    cout << w.size() << endl;
-    cout << hex_string(w) << endl;
+  //  cout << u8s.size() << endl;
+  //  cout << hex_string(u8s) << endl;
+  //  wstring w = to_string<wide>(u8s, ccvt);
+  //  BOOST_TEST(w == ws);
+  //  cout << ws.size() << endl;
+  //  cout << hex_string(ws) << endl;
+  //  cout << w.size() << endl;
+  //  cout << hex_string(w) << endl;
 
-    BOOST_TEST((to_string<wide>(u8s, ccvt) == ws));
-    cout << hex_string(to_string<wide>(u8s, ccvt)) << endl;
-    cout << hex_string(ws) << endl;
-    BOOST_TEST((to_string<wide>(u8s, ccvt, ufffd<wchar_t>()) == ws));
+  //  BOOST_TEST((to_string<wide>(u8s, ccvt) == ws));
+  //  cout << hex_string(to_string<wide>(u8s, ccvt)) << endl;
+  //  cout << hex_string(ws) << endl;
+  //  BOOST_TEST((to_string<wide>(u8s, ccvt, ufffd<wchar_t>()) == ws));
 
-    BOOST_TEST((to_string<narrow>(ws, ccvt) == u8s));
-    BOOST_TEST((to_string<narrow>(ws, ccvt, ufffd<char>()) == u8s));
+  //  BOOST_TEST((to_string<narrow>(ws, ccvt) == u8s));
+  //  BOOST_TEST((to_string<narrow>(ws, ccvt, ufffd<char>()) == u8s));
 
-    cout << "  all_codecvt_test done" << endl;
-  }
+  //  cout << "  all_codecvt_test done" << endl;
+  //}
 
   //  Probe CharTraits template argument deduction
 
@@ -364,15 +364,16 @@ namespace
 int main()
 {
   //  Probe CharTraits template argument deduction
+  std::string std_string("std::string");
   f(boost::string_view("string_view"));                     // works
-  f<char>(string("std::string"));                           // works
+  f<char>(std_string);                                      // works
   f<char>("C-string");                                      // works
-  f<char, std::char_traits<char>>(string("std::string"));   // works
+  f<char, std::char_traits<char>>(std_string);              // works
   f<char, std::char_traits<char>>("C-string");              // works
   g(boost::string_view("string_view"));                     // works
-  //g<char>(string("std::string"));             // CharTraits template arg deduction fails
+  //g<char>(std_string);                        // CharTraits template arg deduction fails
   //g<char>("C-string");                        // CharTraits template arg deduction fails
-  g<char, std::char_traits<char>>(string("std::string"));   // works
+  g<char, std::char_traits<char>>(std_string);              // works
   g<char, std::char_traits<char>>("C-string");              // works
 
   cout << "WCHAR_MAX: " << std::hex << WCHAR_MAX << std::dec << endl;
@@ -395,7 +396,7 @@ int main()
   to_u16string_test();
   to_u32string_test();
   all_utf_test();
-  all_codecvt_test();
+  //all_codecvt_test();
   first_ill_formed_test();
   is_well_formed_test();
 
