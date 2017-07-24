@@ -32,7 +32,7 @@ using namespace boost::unicode::detail;
 using std::string;
 using std::wstring;
 using std::u16string;
-using std::u32string;
+using std::u32string;                                                                    
 
 namespace
 {

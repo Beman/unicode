@@ -16,7 +16,9 @@
 #include <cstdint>
 #include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
-#include <boost/utility/string_view.hpp> 
+#include <boost/utility/string_view.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
 
@@ -119,12 +121,20 @@ namespace unicode
     = is_encoded_character<T>::value;
 # endif
 
-  // [uni.err] default error handler
+  // [uni.err] error handlers
+  // default error handler for UTF and wide encodings
   template <class CharT> struct ufffd;
   template <> struct ufffd<char>;
   template <> struct ufffd<char16_t>;
   template <> struct ufffd<char32_t>;
   template <> struct ufffd<wchar_t>;
+
+  // default error handler for narrow encodings
+  template <class CharT> struct u003f;
+  template <> struct u003f<char>;
+  template <> struct u003f<char16_t>;
+  template <> struct u003f<char32_t>;
+  template <> struct u003f<wchar_t>;
 
   // [uni.codecvt_type] codecvt type used for conversions to and from narrow
   typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_narrow;
@@ -168,7 +178,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,  // utf8, utf16, utf32, or wide required
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    std::basic_string<typename ToEncoding::value_type>
+    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
+    std::basic_string<typename ToEncoding::value_type>>::type
     to_string(boost::string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -178,7 +189,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    std::basic_string<typename ToEncoding::value_type>
+    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
+    std::basic_string<typename ToEncoding::value_type>>::type
     to_string(boost::u16string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -188,7 +200,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    std::basic_string<typename ToEncoding::value_type>
+    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
+    std::basic_string<typename ToEncoding::value_type>>::type
     to_string(boost::u32string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -198,7 +211,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    std::basic_string<typename ToEncoding::value_type>
+    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
+    std::basic_string<typename ToEncoding::value_type>>::type
     to_string(boost::wstring_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -211,8 +225,10 @@ namespace unicode
   //  narrow.
 
   template <class ToEncoding,   // narrow required
-    class Error = ufffd<char>> inline
-    std::string to_string(boost::string_view v,
+    class Error = u003f<char>> inline
+    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
+      std::string>::type
+    to_string(boost::string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
     std::string tmp;
@@ -221,8 +237,9 @@ namespace unicode
   }
 
   template <class ToEncoding,   // narrow required
-    class Error = ufffd<char>> inline
-    std::string to_string(boost::u16string_view v,
+    class Error = u003f<char>> inline
+    std::string
+    to_string(boost::u16string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
     std::string tmp;
@@ -231,8 +248,9 @@ namespace unicode
   }
 
   template <class ToEncoding,   // narrow required
-    class Error = ufffd<char>> inline
-    std::string to_string(boost::u32string_view v,
+    class Error = u003f<char>> inline
+    std::string
+    to_string(boost::u32string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
     std::string tmp;
@@ -241,8 +259,9 @@ namespace unicode
   }
 
   template <class ToEncoding,   // narrow required
-    class Error = ufffd<char>> inline
-    std::string to_string(boost::wstring_view v,
+    class Error = u003f<char>> inline
+    std::string
+    to_string(boost::wstring_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
     std::string tmp;
@@ -250,38 +269,38 @@ namespace unicode
     return tmp;
   }
 
-  //  Convert from narrow to the built-in encodings (i.e. utf8, utf16, utf32, or wide).
-  //  This function shall not participate in overload resolution unless ToEncoding is
-  //  utf8, utf16, utf32, or wide.
+  ////  Convert from narrow to the built-in encodings (i.e. utf8, utf16, utf32, or wide).
+  ////  This function shall not participate in overload resolution unless ToEncoding is
+  ////  utf8, utf16, utf32, or wide.
 
-  template <class ToEncoding,   // utf8, utf16, utf32, or wide required
-    class Error = ufffd<char>> inline
-    std::basic_string<typename ToEncoding::value_type>
-    to_string(boost::string_view v,
-      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
-  {
-    std::basic_string<typename ToEncoding::value_type> tmp;
-    recode<narrow, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
-    return tmp;
-  }
+  //template <class ToEncoding,   // utf8, utf16, utf32, or wide required
+  //  class Error = ufffd<char>> inline
+  //  std::basic_string<typename ToEncoding::value_type>
+  //  to_string(boost::string_view v,
+  //    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  //{
+  //  std::basic_string<typename ToEncoding::value_type> tmp;
+  //  recode<narrow, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+  //  return tmp;
+  //}
 
-  //  Convert from narrow to narrow.
-  //  This function shall not participate in overload resolution unless ToEncoding is
-  //  narrow.
+  ////  Convert from narrow to narrow.
+  ////  This function shall not participate in overload resolution unless ToEncoding is
+  ////  narrow.
 
-  template <class ToEncoding,   // narrow required
-    class Error = ufffd<char>> inline
-    std::string
-    to_string(boost::string_view v,
-      const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
-      const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
-      Error eh = Error())
-  {
-    std::string tmp;
-    recode<narrow, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp),
-      from_ccvt, to_ccvt, eh);
-    return tmp;
-  }
+  //template <class ToEncoding,   // narrow required
+  //  class Error = ufffd<char>> inline
+  //  std::string
+  //  to_string(boost::string_view v,
+  //    const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
+  //    const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
+  //    Error eh = Error())
+  //{
+  //  std::string tmp;
+  //  recode<narrow, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp),
+  //    from_ccvt, to_ccvt, eh);
+  //  return tmp;
+  //}
 
 }  // namespace unicode
 }  // namespace boost
@@ -1324,25 +1343,45 @@ namespace unicode
 
 } // namespace detail
 
-  template <> struct ufffd<char>
-  {
-    constexpr const char* operator()() const noexcept { return u8"\uFFFD"; }
-  };
+template <> struct ufffd<char>
+{
+  constexpr const char* operator()() const noexcept { return u8"\uFFFD"; }
+};
 
-  template <> struct ufffd<char16_t>
-  { 
-    constexpr const char16_t* operator()() const noexcept { return u"\uFFFD"; }
-  };
+template <> struct ufffd<char16_t>
+{
+  constexpr const char16_t* operator()() const noexcept { return u"\uFFFD"; }
+};
 
-  template <> struct ufffd<char32_t>
-  { 
-    constexpr const char32_t* operator()() const noexcept { return U"\uFFFD"; }
-  };
+template <> struct ufffd<char32_t>
+{
+  constexpr const char32_t* operator()() const noexcept { return U"\uFFFD"; }
+};
 
-  template <> struct ufffd<wchar_t>
-  { 
-    constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
-  };
+template <> struct ufffd<wchar_t>
+{
+  constexpr const wchar_t* operator()() const noexcept { return L"\uFFFD"; }
+};
+
+template <> struct u003f<char>
+{
+  constexpr const char* operator()() const noexcept { return u8"\u003F"; }
+};
+
+template <> struct u003f<char16_t>
+{
+  constexpr const char16_t* operator()() const noexcept { return u"\u003F"; }
+};
+
+template <> struct u003f<char32_t>
+{
+  constexpr const char32_t* operator()() const noexcept { return U"\u003F"; }
+};
+
+template <> struct u003f<wchar_t>
+{
+  constexpr const wchar_t* operator()() const noexcept { return L"\u003F"; }
+};
 
   template <class ForwardIterator> inline
   std::pair<ForwardIterator, ForwardIterator>
