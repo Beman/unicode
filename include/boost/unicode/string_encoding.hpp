@@ -17,7 +17,7 @@
 #include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
 #include <boost/utility/string_view.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
@@ -100,10 +100,17 @@ namespace unicode
   //  [uni.is_encoding] is_encoding type-trait
   template <class T> struct is_encoding : public std::false_type {};
   template<> struct is_encoding<narrow> : std::true_type {};
-  template<> struct is_encoding<utf8>   : std::true_type {};
-  template<> struct is_encoding<utf16>  : std::true_type {};
-  template<> struct is_encoding<utf32>  : std::true_type {};
-  template<> struct is_encoding<wide>   : std::true_type {};
+  template<> struct is_encoding<utf8> : std::true_type {};
+  template<> struct is_encoding<utf16> : std::true_type {};
+  template<> struct is_encoding<utf32> : std::true_type {};
+  template<> struct is_encoding<wide> : std::true_type {};
+
+  //  [uni.is_known_encoding] is_known_encoding type-trait
+  template <class T> struct is_known_encoding : public std::false_type {};
+  template<> struct is_known_encoding<utf8> : std::true_type {};
+  template<> struct is_known_encoding<utf16> : std::true_type {};
+  template<> struct is_known_encoding<utf32> : std::true_type {};
+  template<> struct is_known_encoding<wide> : std::true_type {};
 
 # ifndef BOOST_NO_CXX14_VARIABLE_TEMPLATES
   template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
@@ -174,7 +181,9 @@ namespace unicode
   //  [uni.to_string] string encoding conversion convenience functions
 
   //  Convert between the sixteen combinations of built-in encodings
-  //  i.e. utf8, utf16, utf32, or wide from utf8, utf16, utf32, or wide
+  //  i.e. utf8, utf16, utf32, or wide from utf8, utf16, utf32, or wide.
+  //  These functions shall not participate in overload resolution if ToEncoding is
+  //  not a built-in encoding or if Error is a codecvt facet.
 
   template <class ToEncoding = utf8,  // utf8, utf16, utf32, or wide required
     class Error = ufffd<typename ToEncoding::value_type>> inline
@@ -238,7 +247,8 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    std::string
+    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
+      std::string>::type
     to_string(boost::u16string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -249,7 +259,8 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    std::string
+    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
+      std::string>::type
     to_string(boost::u32string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -260,7 +271,8 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    std::string
+    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
+      std::string>::type
     to_string(boost::wstring_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -269,38 +281,40 @@ namespace unicode
     return tmp;
   }
 
-  ////  Convert from narrow to the built-in encodings (i.e. utf8, utf16, utf32, or wide).
-  ////  This function shall not participate in overload resolution unless ToEncoding is
-  ////  utf8, utf16, utf32, or wide.
+  //  Convert from narrow to the built-in encodings (i.e. utf8, utf16, utf32, or wide).
+  //  This function shall not participate in overload resolution unless ToEncoding is
+  //  utf8, utf16, utf32, or wide.
 
-  //template <class ToEncoding,   // utf8, utf16, utf32, or wide required
-  //  class Error = ufffd<char>> inline
-  //  std::basic_string<typename ToEncoding::value_type>
-  //  to_string(boost::string_view v,
-  //    const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
-  //{
-  //  std::basic_string<typename ToEncoding::value_type> tmp;
-  //  recode<narrow, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
-  //  return tmp;
-  //}
+  template <class ToEncoding,   // utf8, utf16, utf32, or wide required
+    class Error = ufffd<char>> inline
+    typename boost::enable_if<is_known_encoding<ToEncoding>,
+    std::basic_string<typename ToEncoding::value_type>>::type
+    to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
+  {
+    std::basic_string<typename ToEncoding::value_type> tmp;
+    recode<narrow, ToEncoding>(v.cbegin(), v.cend(), std::back_inserter(tmp), ccvt, eh);
+    return tmp;
+  }
 
-  ////  Convert from narrow to narrow.
-  ////  This function shall not participate in overload resolution unless ToEncoding is
-  ////  narrow.
+  //  Convert from narrow to narrow.
+  //  This function shall not participate in overload resolution unless ToEncoding is
+  //  narrow.
 
-  //template <class ToEncoding,   // narrow required
-  //  class Error = ufffd<char>> inline
-  //  std::string
-  //  to_string(boost::string_view v,
-  //    const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
-  //    const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
-  //    Error eh = Error())
-  //{
-  //  std::string tmp;
-  //  recode<narrow, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp),
-  //    from_ccvt, to_ccvt, eh);
-  //  return tmp;
-  //}
+  template <class ToEncoding,   // narrow required
+    class Error = ufffd<char>> inline
+    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
+    std::string>::type
+    to_string(boost::string_view v,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
+      const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
+      Error eh = Error())
+  {
+    std::string tmp;
+    recode<narrow, narrow>(v.cbegin(), v.cend(), std::back_inserter(tmp),
+      from_ccvt, to_ccvt, eh);
+    return tmp;
+  }
 
 }  // namespace unicode
 }  // namespace boost
