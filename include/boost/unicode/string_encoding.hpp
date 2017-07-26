@@ -17,8 +17,6 @@
 #include <boost/config.hpp>
 #include <boost/utility/string_view_fwd.hpp> 
 #include <boost/utility/string_view.hpp>
-#include <boost/core/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>     // todo: remove me
 
@@ -105,12 +103,12 @@ namespace unicode
   template<> struct is_encoding<utf32> : std::true_type {};
   template<> struct is_encoding<wide> : std::true_type {};
 
-  //  [uni.is_known_encoding] is_known_encoding type-trait
-  template <class T> struct is_known_encoding : public std::false_type {};
-  template<> struct is_known_encoding<utf8> : std::true_type {};
-  template<> struct is_known_encoding<utf16> : std::true_type {};
-  template<> struct is_known_encoding<utf32> : std::true_type {};
-  template<> struct is_known_encoding<wide> : std::true_type {};
+  //  [uni.is_builtin_encoding] is_builtin_encoding type-trait
+  template <class T> struct is_builtin_encoding : public std::false_type {};
+  template<> struct is_builtin_encoding<utf8> : std::true_type {};
+  template<> struct is_builtin_encoding<utf16> : std::true_type {};
+  template<> struct is_builtin_encoding<utf32> : std::true_type {};
+  template<> struct is_builtin_encoding<wide> : std::true_type {};
 
 # ifndef BOOST_NO_CXX14_VARIABLE_TEMPLATES
   template <class T> constexpr bool is_encoding_v = is_encoding<T>::value;
@@ -144,7 +142,7 @@ namespace unicode
   template <> struct u003f<wchar_t>;
 
   // [uni.codecvt_type] codecvt type used for conversions to and from narrow
-  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_narrow;
+  typedef std::codecvt<wchar_t, char, std::mbstate_t> codecvt_type;
 
   //  [uni.recode] encoding conversion algorithm
   template <class FromEncoding, class ToEncoding, class InputIterator,
@@ -180,15 +178,34 @@ namespace unicode
 
   //  [uni.to_string] string encoding conversion convenience functions
 
+  namespace detail
+  {
+    // see stackoverflow.com/questions/42480669/how-to-use-sfinae-to-check-whether-type-has-operator
+    template <typename T>
+    class has_parenthesis
+    {
+      typedef char one;
+      typedef long two;
+
+      template <typename C> static one test(decltype(&C::operator()));
+      template <typename C> static two test(...);
+
+    public:
+      enum { value = sizeof(test<T>(0)) == sizeof(char) };
+    };
+
+  }
+
   //  Convert between the sixteen combinations of built-in encodings
   //  i.e. utf8, utf16, utf32, or wide from utf8, utf16, utf32, or wide.
-  //  These functions shall not participate in overload resolution if ToEncoding is
-  //  not a built-in encoding or if Error is a codecvt facet.
+  //  These functions shall only participate in overload resolution if ToEncoding is
+  //  a built-in encoding && Error is not codecvt facet.
 
   template <class ToEncoding = utf8,  // utf8, utf16, utf32, or wide required
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
-    std::basic_string<typename ToEncoding::value_type>>::type
+    std::enable_if_t<is_builtin_encoding<ToEncoding>::value
+      && detail::has_parenthesis<Error>::value,
+    std::basic_string<typename ToEncoding::value_type>>
     to_string(boost::string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -198,8 +215,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
-    std::basic_string<typename ToEncoding::value_type>>::type
+    std::enable_if_t<is_builtin_encoding<ToEncoding>::value,
+    std::basic_string<typename ToEncoding::value_type>>
     to_string(boost::u16string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -209,8 +226,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
-    std::basic_string<typename ToEncoding::value_type>>::type
+    std::enable_if_t<is_builtin_encoding<ToEncoding>::value,
+    std::basic_string<typename ToEncoding::value_type>>
     to_string(boost::u32string_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -220,8 +237,8 @@ namespace unicode
 
   template <class ToEncoding = utf8,
     class Error = ufffd<typename ToEncoding::value_type>> inline
-    typename boost::disable_if < boost::is_same<ToEncoding, boost::unicode::narrow>,
-    std::basic_string<typename ToEncoding::value_type>>::type
+    std::enable_if_t<is_builtin_encoding<ToEncoding>::value,
+    std::basic_string<typename ToEncoding::value_type>>
     to_string(boost::wstring_view v, Error eh = Error())
   {
     std::basic_string<typename ToEncoding::value_type> tmp;
@@ -235,8 +252,8 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
-      std::string>::type
+    std::enable_if_t<std::is_same<ToEncoding, narrow>::value
+      && detail::has_parenthesis<Error>::value, std::string>
     to_string(boost::string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -247,8 +264,7 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
-      std::string>::type
+    std::enable_if_t<std::is_same<ToEncoding, narrow>::value, std::string>
     to_string(boost::u16string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -259,8 +275,7 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
-      std::string>::type
+    std::enable_if_t<std::is_same<ToEncoding, narrow>::value, std::string>
     to_string(boost::u32string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -271,8 +286,7 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = u003f<char>> inline
-    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
-      std::string>::type
+    std::enable_if_t<std::is_same<ToEncoding, narrow>::value, std::string>
     to_string(boost::wstring_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -287,8 +301,8 @@ namespace unicode
 
   template <class ToEncoding,   // utf8, utf16, utf32, or wide required
     class Error = ufffd<char>> inline
-    typename boost::enable_if<is_known_encoding<ToEncoding>,
-    std::basic_string<typename ToEncoding::value_type>>::type
+    std::enable_if_t<is_builtin_encoding<ToEncoding>::value,
+    std::basic_string<typename ToEncoding::value_type>>
     to_string(boost::string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& ccvt, Error eh = Error())
   {
@@ -303,8 +317,8 @@ namespace unicode
 
   template <class ToEncoding,   // narrow required
     class Error = ufffd<char>> inline
-    typename boost::enable_if<boost::is_same<ToEncoding, boost::unicode::narrow>,
-    std::string>::type
+    std::enable_if_t<std::is_same<ToEncoding, boost::unicode::narrow>::value,
+    std::string>
     to_string(boost::string_view v,
       const std::codecvt<wchar_t, char, std::mbstate_t>& from_ccvt,
       const std::codecvt<wchar_t, char, std::mbstate_t>& to_ccvt,
@@ -647,7 +661,7 @@ namespace unicode
     
     // forward declare functions used to implement recode to/from narrow 
     template <class OutputIterator, class Codecvt, class Error> inline
-      OutputIterator codecvt_narrow_to_utf(const char* from, const char* from_end,
+      OutputIterator codecvt_type_to_utf(const char* from, const char* from_end,
         OutputIterator result, const Codecvt& ccvt, Error eh);
     template <class FromCharT, class OutputIterator, class Error> inline
       OutputIterator codecvt_utf_to_narrow(const FromCharT* from,
@@ -731,7 +745,7 @@ namespace unicode
         " or type std::codecvt<char32_t, char, std::mbstate_t>");
       using intermediate_type = typename Codecvt::intern_type;
       std::basic_string<intermediate_type> tmp;
-      codecvt_narrow_to_utf(first, last, std::back_inserter(tmp), ccvt,
+      codecvt_type_to_utf(first, last, std::back_inserter(tmp), ccvt,
         wide_err_pass_thru());
       return recode<typename encoding<intermediate_type>::type,
         ToEncoding>(tmp.cbegin(), tmp.cend(), result, eh);
@@ -752,7 +766,7 @@ namespace unicode
         "fourth and fifth arguments must have same intern_type");
       using intermediate_type = typename FromCodecvt::intern_type;
       std::basic_string<intermediate_type> tmp;
-      codecvt_narrow_to_utf(first, last, std::back_inserter(tmp), from_ccvt,
+      codecvt_type_to_utf(first, last, std::back_inserter(tmp), from_ccvt,
         wide_err_pass_thru());
       return codecvt_utf_to_narrow(tmp.data(), tmp.data()+tmp.size(), result,
         to_ccvt, eh);
@@ -1176,10 +1190,10 @@ namespace unicode
     return result;
   }
 
-  //  codecvt_narrow_to_utf
+  //  codecvt_type_to_utf
   template <class OutputIterator, class Codecvt, class Error> inline
     //  for clarity, use the same names for ccvt.in() arguments as the standard library
-  OutputIterator codecvt_narrow_to_utf(const char* from, const char* from_end,
+  OutputIterator codecvt_type_to_utf(const char* from, const char* from_end,
     OutputIterator result, const Codecvt& ccvt, Error eh)
   {
     using utf_type = typename Codecvt::intern_type;
@@ -1233,14 +1247,14 @@ namespace unicode
     }
     return result;
   }
-  template <class T> struct is_known_encoding : public std::false_type {};
-  template<> struct is_known_encoding<utf8>   : std::true_type {};
-  template<> struct is_known_encoding<utf16>  : std::true_type {};
-  template<> struct is_known_encoding<utf32>  : std::true_type {};
-  template<> struct is_known_encoding<wide>   : std::true_type {};
+  template <class T> struct is_builtin_encoding : public std::false_type {};
+  template<> struct is_builtin_encoding<utf8>   : std::true_type {};
+  template<> struct is_builtin_encoding<utf16>  : std::true_type {};
+  template<> struct is_builtin_encoding<utf32>  : std::true_type {};
+  template<> struct is_builtin_encoding<wide>   : std::true_type {};
 
   //  TODO: variable templates only available with -std=c++14  
-  //template <class T> constexpr bool is_known_encoding_v = is_known_encoding<T>::value;
+  //template <class T> constexpr bool is_builtin_encoding_v = is_builtin_encoding<T>::value;
 
   template <class ForwardIterator>
   std::pair<ForwardIterator, ForwardIterator>
