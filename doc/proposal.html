@@ -29,7 +29,7 @@ body
 <tr>
   <td align="left">Date:</td>
   <td align="left">
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2017-07-16<!--webbot bot="Timestamp" endspan i-checksum="12475" --></td>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2017-08-05<!--webbot bot="Timestamp" endspan i-checksum="12536" --></td>
 </tr>
 <tr>
   <td align="left">Reply to:</td>
@@ -113,7 +113,7 @@ requested by Unicode experts.</p>
   <code>
   to_string&lt;utf16&gt;(s);</code></p>
   </blockquote>
-  <p dir="ltr">Where <code>s</code> can be anything convertible to <code>
+  <p>Where <code>s</code> can be anything convertible to <code>
   std::basic_string_view&lt;<i>char/char16_t/char32_t/wchar_t</i>&gt;</code> encoded 
   in the associated UTF-8, UTF-16, UTF-32, or wide character encoding. If <code>
   s</code> has a value type of <code>char</code>, but is not UTF-8 encoded, a 
@@ -821,6 +821,123 @@ OutputIterator recode(InputIterator first, InputIterator last,
     
     
 <h4>String encoding conversion [uni.to_string]</h4>
+
+    
+<p>These functions provide convenient conversions to <code>std::basic_string</code> 
+for the twenty-five possible combinations of the five encodings <code>utf8</code>, <code>utf16</code>, <code>
+utf32</code>, <code>wide</code>, and <code>
+narrow</code>. [Note: They are designed to complement the <code>to_string</code> 
+family of numeric conversions provided by [string.conversions] <i>&mdash;end note</i>]</p>
+
+    
+     <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111">
+       <tr>
+         <td colspan="5" align="center" width="734"><b><i><code>to_string</code> encoding 
+         conversion examples [informative]</i></b></td>
+        </tr>
+       <tr>
+         <td>
+         <b>Example</b></td>
+         <td>
+         <p align="center"><b>Return<br>
+         type</b></td>
+         <td>
+         <p align="center"><b>Return<br>
+         encoding</b></td>
+         <td>
+         <p align="center"><b>Source<br>
+         formal parameter</b></td>
+         <td>
+         <p align="center"><b>Source<br>
+         encoding</b></td>
+       </tr>
+       <tr>
+         <td><code>to_string(u8str)</code></td>
+         <td><code>string</code></td>
+         <td>UTF-8</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf8&gt;(u8str)</code></td>
+         <td><code>string</code></td>
+         <td>UTF-8</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf16&gt;(u8str)</code></td>
+         <td><code>u16string</code></td>
+         <td>UTF-16</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf32&gt;(u8str)</code></td>
+         <td><code>u32string</code></td>
+         <td>UTF-32</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+   wstring</code></td>
+         <td><code>to_string&lt;wide&gt;(u8str)</code></td>
+         <td><code>wstring</code></td>
+         <td>wide</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;narrow&gt;(u8str, big5)</code></td>
+         <td><code>string</code></td>
+         <td>Big-5</td>
+         <td><code>string_view</code></td>
+         <td>UTF-8</td>
+       </tr>
+       <tr>
+         <td><code>to_string(u16str)</code></td>
+         <td><code>string</code></td>
+         <td>UTF-8</td>
+         <td><code>u16string_view</code></td>
+         <td>UTF-16</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf8&gt;(u16str)</code></td>
+         <td><code>string</code></td>
+         <td>UTF-8</td>
+         <td><code>u16string_view</code></td>
+         <td>UTF-16</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf16&gt;(u16str)</code></td>
+         <td><code>u16string</code></td>
+         <td>UTF-16</td>
+         <td><code>u16string_view</code></td>
+         <td>
+         <p>UTF-16</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;utf32&gt;(u16str)</code></td>
+         <td><code>u32string</code></td>
+         <td>UTF-32</td>
+         <td><code>u16string_view</code></td>
+         <td>UTF-16</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;wide&gt;(u16str)</code></td>
+         <td><code>wstring</code></td>
+         <td>wide</td>
+         <td><code>u16string_view</code></td>
+         <td>UTF-16</td>
+       </tr>
+       <tr>
+         <td><code>to_string&lt;narrow&gt;(u16str, big5)</code></td>
+         <td><code>string</code></td>
+         <td>Big-5</td>
+         <td><code>u16string_view</code></td>
+         <td>UTF-16</td>
+       </tr>
+     </table>
 
 <pre>template &lt;class ToEncoding, class ...Pack&gt; 
   basic_string&lt;typename ToEncoding::value_type&gt;
